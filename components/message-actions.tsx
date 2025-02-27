@@ -16,6 +16,7 @@ import {
 import { memo } from "react";
 import equal from "fast-deep-equal";
 import { deleteTrailingMessages } from "@/app/(chat)/actions";
+import { AudioPlayer } from "./audio-player";
 
 export function PureMessageActions({
   chatId,
@@ -79,6 +80,9 @@ export function PureMessageActions({
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex flex-row gap-2">
+        {/* Audio Player - Only show for assistant messages when audio is enabled */}
+        <AudioPlayer content={message.content as string} />
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
