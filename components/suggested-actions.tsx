@@ -12,10 +12,16 @@ interface SuggestedActionsProps {
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
+  onSelectStory?: (storyId: string) => void;
 }
 
-function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
+function PureSuggestedActions({
+  chatId,
+  append,
+  onSelectStory,
+}: SuggestedActionsProps) {
   const storyActions = stories.map((story) => ({
+    id: story.id,
     title: story.title,
     label: story.description,
     action: `Let's start the story "${story.title}". ${story.description}`,
@@ -36,6 +42,10 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
             variant="ghost"
             onClick={async () => {
               window.history.replaceState({}, "", `/chat/${chatId}`);
+
+              if (onSelectStory) {
+                onSelectStory(storyAction.id);
+              }
 
               append({
                 role: "user",
