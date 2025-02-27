@@ -31,7 +31,7 @@ export const voices = [
   },
   {
     id: "dAcds2QMcvmv86jQMC3Y",
-    name: "Jaice",
+    name: "Jayce",
     description: "The Gangster",
   },
   {
