@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { MessageIcon } from "./icons";
+import Image from "next/image";
 
 export const Overview = () => {
   return (
@@ -12,10 +13,16 @@ export const Overview = () => {
       transition={{ delay: 0.5 }}
     >
       <div className="rounded-xl p-6 flex flex-col gap-8 leading-relaxed text-center max-w-xl">
-        <p className="flex flex-row justify-center gap-4 items-center">
-          <MessageIcon size={32} />
-        </p>
-        <h1 className="text-3xl font-bold">The Shadows Await</h1>
+        <div className="flex flex-col items-center gap-4">
+          <Image
+            src="/images/pulse.jpg"
+            alt="Logo"
+            width={200}
+            height={200}
+            className="rounded-md"
+          />
+        </div>
+        <h1 className="text-3xl font-bold">The Pulse</h1>
       </div>
     </motion.div>
   );
