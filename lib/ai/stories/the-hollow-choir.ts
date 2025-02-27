@@ -2,6 +2,7 @@ export const theHollowChoir = {
   title: "The Hollow Choir",
   description:
     "A flooded, subtropical city where a haunting song rises from the depths",
+  writer: "J. G. Ballard",
   storyGuide: `
 <story-guide>
 

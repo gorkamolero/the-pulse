@@ -153,4 +153,5 @@ Narrator's Guide: Bringing It to Life
 
 </story-guide>
 `,
+  writer: "H.P. Lovecraft",
 };
