@@ -2,18 +2,17 @@
 import { useRouter } from "next/navigation";
 import { useWindowSize } from "usehooks-ts";
 import { useAtom } from "jotai";
-
-import { ModelSelector } from "@/components/model-selector";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, BrainIcon } from "./icons";
 import { useSidebar } from "./ui/sidebar";
 import { memo } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { type VisibilityType, VisibilitySelector } from "./visibility-selector";
+import type { VisibilityType } from "./visibility-selector";
 import { StorySelector } from "@/components/story-selector";
 import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import { showReasoningAtom } from "../lib/atoms";
+import { XIcon } from "lucide-react";
 
 function PureChatHeader({
   chatId,
@@ -22,6 +21,7 @@ function PureChatHeader({
   isReadonly,
   selectedStoryId = DEFAULT_STORY_ID,
   onSelectStory,
+  children,
 }: {
   chatId: string;
   selectedModelId: string;
@@ -29,6 +29,7 @@ function PureChatHeader({
   isReadonly: boolean;
   selectedStoryId?: string;
   onSelectStory?: (storyId: string) => void;
+  children?: React.ReactNode;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -59,12 +60,12 @@ function PureChatHeader({
         </Tooltip>
       )}
 
-      {!isReadonly && (
+      {/* {!isReadonly && (
         <ModelSelector
           selectedModelId={selectedModelId}
           className="order-1 md:order-2"
         />
-      )}
+      )} */}
 
       {!isReadonly && onSelectStory && (
         <StorySelector
@@ -74,13 +75,13 @@ function PureChatHeader({
         />
       )}
 
-      {!isReadonly && (
+      {/*  {!isReadonly && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}
           className="order-1 md:order-4"
         />
-      )}
+      )} */}
 
       <Tooltip>
         <TooltipTrigger asChild>
@@ -89,15 +90,19 @@ function PureChatHeader({
               showReasoning
                 ? "bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900"
                 : "bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800"
-            } flex py-1.5 px-2 h-fit md:h-[34px] order-5 md:ml-auto`}
+            } order-5 md:ml-auto`}
             onClick={() => setShowReasoning(!showReasoning)}
+            size="icon"
           >
-            <BrainIcon size={16} className="mr-2" />
-            {showReasoning ? "Collapse Reasoning" : "Expand Reasoning"}
+            {showReasoning ? <XIcon size={16} /> : <BrainIcon size={16} />}
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Toggle AI reasoning visibility</TooltipContent>
+        <TooltipContent>
+          {showReasoning ? "Collapse AI reasoning" : "Expand AI reasoning"}
+        </TooltipContent>
       </Tooltip>
+
+      {children}
     </header>
   );
 }
@@ -105,6 +110,7 @@ function PureChatHeader({
 export const ChatHeader = memo(PureChatHeader, (prevProps, nextProps) => {
   return (
     prevProps.selectedModelId === nextProps.selectedModelId &&
-    prevProps.selectedStoryId === nextProps.selectedStoryId
+    prevProps.selectedStoryId === nextProps.selectedStoryId &&
+    prevProps.children === nextProps.children
   );
 });
