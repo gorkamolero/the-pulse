@@ -4,7 +4,6 @@ import type { ChatRequestOptions, Message } from "ai";
 import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useState } from "react";
-import { Volume2, Pause } from "lucide-react";
 
 import type { Vote } from "@/lib/db/schema";
 
@@ -21,12 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { MessageEditor } from "./message-editor";
 import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
-import { useAudioNarrationContext } from "./audio-narration";
-import { AudioWave } from "./audio-narration/audio-wave";
 import { ALL_VOICES } from "@/lib/orate-service";
-
-// Use the combined voices array from the orate service
-const voices = ALL_VOICES;
 
 const PurePreviewMessage = ({
   chatId,
