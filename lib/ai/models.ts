@@ -19,7 +19,7 @@ const openRouter = createOpenRouter({
 export const myProvider = customProvider({
   languageModels: {
     "chat-model-small": openRouter.chat(
-      "anthropic/claude-3.7-sonnet"
+      "anthropic/claude-3.7-sonnet:thinking"
     ) as unknown as LanguageModelV1,
     "chat-model-large": openRouter.chat(
       "anthropic/claude-3.7-sonnet:thinking"
@@ -28,7 +28,7 @@ export const myProvider = customProvider({
       model: fireworks("accounts/fireworks/models/deepseek-r1"),
       middleware: extractReasoningMiddleware({ tagName: "think" }),
     }),
-    "title-model": openai("gpt-4-turbo"),
+    "title-model": openRouter.chat("anthropic/claude-3.5-haiku") as unknown as LanguageModelV1,
     "artifact-model": openai("gpt-4o-mini"),
   },
   imageModels: {
