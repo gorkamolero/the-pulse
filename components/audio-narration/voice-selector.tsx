@@ -91,12 +91,8 @@ export function VoiceSelector() {
       <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full"
-            >
-              <MicIcon className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="size-8 rounded-full">
+              <MicIcon className="size-4" />
             </Button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
@@ -118,7 +114,7 @@ export function VoiceSelector() {
               </div>
             </div>
             {voice.id === selectedVoiceId && (
-              <CheckIcon className="h-4 w-4 text-primary" />
+              <CheckIcon className="size-4 text-primary" />
             )}
           </DropdownMenuItem>
         ))}

@@ -41,11 +41,11 @@ export function AudioNarrationControls() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full"
+              className="size-8 rounded-full"
               onClick={handleStop}
             >
               <div className="relative flex items-center justify-center">
-                <PauseCircleIcon className="h-4 w-4 text-primary" />
+                <PauseCircleIcon className="size-4 text-primary" />
                 <AudioWave
                   isPlaying={true}
                   className="absolute -bottom-2 text-primary"
@@ -62,13 +62,13 @@ export function AudioNarrationControls() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full"
+            className="size-8 rounded-full"
             onClick={toggleAutoPlay}
           >
             {autoPlay ? (
               <div className="relative flex items-center justify-center">
                 <Volume2Icon
-                  className={`h-4 w-4 ${isPlaying ? "text-primary" : ""}`}
+                  className={`size-4 ${isPlaying ? "text-primary" : ""}`}
                 />
                 {isPlaying && (
                   <AudioWave
@@ -78,7 +78,7 @@ export function AudioNarrationControls() {
                 )}
               </div>
             ) : (
-              <VolumeXIcon className="h-4 w-4" />
+              <VolumeXIcon className="size-4" />
             )}
           </Button>
         </TooltipTrigger>

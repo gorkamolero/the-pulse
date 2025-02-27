@@ -87,10 +87,10 @@ function AudioStatusIndicator() {
       <Button
         variant="ghost"
         size="sm"
-        className="ml-2 p-1 h-6 w-6 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30"
+        className="ml-2 p-1 size-6 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30"
         onClick={handlePause}
       >
-        <PauseIcon className="h-3 w-3 text-primary-foreground" />
+        <PauseIcon className="size-3 text-primary-foreground" />
       </Button>
     </div>
   );
