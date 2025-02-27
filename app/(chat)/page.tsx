@@ -33,7 +33,7 @@ export default async function Page() {
         key={id}
         id={id}
         initialMessages={[]}
-        selectedChatModel={modelIdFromCookie.value}
+        selectedChatModel={modelIdFromCookie.value ?? DEFAULT_CHAT_MODEL}
         selectedVisibilityType="private"
         isReadonly={false}
       />

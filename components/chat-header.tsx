@@ -15,6 +15,7 @@ import { showReasoningAtom } from "../lib/atoms";
 import { XIcon } from "lucide-react";
 import { LanguageSelector } from "@/components/language-selector";
 import { VoiceSelector } from "./audio-narration";
+import { ModelSelector } from "./model-selector";
 
 function PureChatHeader({
   chatId,
@@ -62,12 +63,12 @@ function PureChatHeader({
         </Tooltip>
       )}
 
-      {/* {!isReadonly && (
+      {!isReadonly && (
         <ModelSelector
           selectedModelId={selectedModelId}
           className="order-1 md:order-2"
         />
-      )} */}
+      )}
 
       {!isReadonly && onSelectStory && (
         <StorySelector
