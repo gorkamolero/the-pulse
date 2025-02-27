@@ -1,6 +1,4 @@
 "use client";
-
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useWindowSize } from "usehooks-ts";
 import { useAtom } from "jotai";
@@ -12,7 +10,7 @@ import { PlusIcon, BrainIcon } from "./icons";
 import { useSidebar } from "./ui/sidebar";
 import { memo } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { VisibilityType, VisibilitySelector } from "./visibility-selector";
+import { type VisibilityType, VisibilitySelector } from "./visibility-selector";
 import { StorySelector } from "@/components/story-selector";
 import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import { showReasoningAtom } from "../lib/atoms";

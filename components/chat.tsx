@@ -13,7 +13,7 @@ import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import { Artifact } from "./artifact";
 import { MultimodalInput } from "./multimodal-input";
 import { Messages } from "./messages";
-import { VisibilityType } from "./visibility-selector";
+import type { VisibilityType } from "./visibility-selector";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { toast } from "sonner";
 

@@ -1,5 +1,5 @@
 import { getStoryById, stories } from "@/lib/ai/stories";
-import { Session } from "next-auth";
+import type { Session } from "next-auth";
 
 interface SelectStoryParams {
   session: Session;
@@ -11,7 +11,7 @@ interface SelectStoryInput {
 }
 
 export const selectStory = ({ session, dataStream }: SelectStoryParams) => {
-  return async function ({ storyId }: SelectStoryInput) {
+  return async ({ storyId }: SelectStoryInput) => {
     const story = getStoryById(storyId);
 
     if (!story) {

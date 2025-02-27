@@ -28,7 +28,7 @@ export const getRecipe = async (modelName: string) => {
  */
 export const getWeather = async (
   modelName: string,
-  location: string = "San Francisco, CA"
+  location = "San Francisco, CA"
 ) => {
   const openrouter = createOpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY || "",
