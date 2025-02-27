@@ -1,5 +1,5 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { streamText } from "ai";
+import { LanguageModelV1, streamText } from "ai";
 import { z } from "zod";
 
 /**
@@ -13,7 +13,7 @@ export const getRecipe = async (modelName: string) => {
   });
 
   const result = await streamText({
-    model: openrouter(modelName),
+    model: openrouter(modelName) as unknown as LanguageModelV1,
     prompt: "Write a vegetarian lasagna recipe for 4 people.",
   });
 
@@ -35,7 +35,7 @@ export const getWeather = async (
   });
 
   const result = await streamText({
-    model: openrouter(modelName),
+    model: openrouter(modelName) as unknown as LanguageModelV1,
     prompt: `What is the weather in ${location} in Fahrenheit?`,
     tools: {
       getCurrentWeather: {
@@ -103,7 +103,7 @@ export const generateCode = async (modelName: string, prompt: string) => {
   });
 
   const result = await streamText({
-    model: openrouter(modelName),
+    model: openrouter(modelName) as unknown as LanguageModelV1,
     prompt: prompt,
     tools: {
       searchDocumentation: {
