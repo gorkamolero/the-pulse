@@ -8,7 +8,7 @@ import {
 } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
-export const DEFAULT_CHAT_MODEL: string = "chat-model-small";
+export const DEFAULT_CHAT_MODEL: string = "chat-model-large";
 
 // Initialize OpenRouter with API key from environment variable
 const openRouter = createOpenRouter({
@@ -22,6 +22,9 @@ export const myProvider = customProvider({
       "anthropic/claude-3.7-sonnet:thinking"
     ) as unknown as LanguageModelV1,
     "chat-model-large": openRouter.chat(
+      "anthropic/claude-3.7-sonnet:thinking"
+    ) as unknown as LanguageModelV1,
+    "chat-model-search": openRouter.chat(
       "anthropic/claude-3.7-sonnet:thinking"
     ) as unknown as LanguageModelV1,
     "chat-model-reasoning": wrapLanguageModel({
