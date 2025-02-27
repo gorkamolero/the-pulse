@@ -1,5 +1,5 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { LanguageModelV1, streamText } from "ai";
+import { type LanguageModelV1, streamText } from "ai";
 import { z } from "zod";
 
 /**
