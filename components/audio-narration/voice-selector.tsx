@@ -1,124 +1,184 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { MicIcon, CheckIcon } from "lucide-react";
-import { DEFAULT_VOICE_ID } from "@/lib/elevenlabs";
-import { useAudioNarrationContext } from "./context";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  ELEVENLABS_VOICES,
+  OPENAI_VOICES,
+  Provider,
+} from "@/lib/orate-service";
+import { useAtom } from "jotai";
+import { audioEnabledAtom, selectedVoiceAtom } from "@/lib/atoms";
 
-// Voice options
-export const voices = [
+// Combine all voice options
+const allVoices = [
   {
-    id: DEFAULT_VOICE_ID,
-    name: "Carter the Mountain King",
-    description: "Rich, smooth, & rugged",
+    provider: "elevenlabs" as Provider,
+    label: "ElevenLabs",
+    voices: ELEVENLABS_VOICES,
   },
   {
-    id: "uVKHymY7OYMd6OailpG5",
-    name: "Frederick",
-    description: "Old Gnarly Narrator",
-  },
-  {
-    id: "dAcds2QMcvmv86jQMC3Y",
-    name: "Jayce",
-    description: "The Gangster",
-  },
-  {
-    id: "flHkNRp1BlvT73UL6gyz",
-    name: "Jessica Anne Bogart",
-    description: "Smooth female voice",
-  },
-  {
-    id: "0dPqNXnhg2bmxQv1WKDp",
-    name: "Grandpa Oxley",
-    description: "Wise elder voice",
+    provider: "openai" as Provider,
+    label: "OpenAI",
+    voices: OPENAI_VOICES,
   },
 ];
 
-export function VoiceSelector() {
-  const [selectedVoiceId, setSelectedVoiceId] =
-    useState<string>(DEFAULT_VOICE_ID);
-  const [open, setOpen] = useState(false);
-  const { clearAudioCache } = useAudioNarrationContext();
+// Define the voice type based on the structure in orate-service.ts
+interface Voice {
+  id: string;
+  name: string;
+  description: string;
+}
 
-  // Get the selected voice details
-  const selectedVoice =
-    voices.find((voice) => voice.id === selectedVoiceId) || voices[0];
+export function VoiceSelector() {
+  const [open, setOpen] = useState(false);
+  const [audioEnabled] = useAtom(audioEnabledAtom);
+  const [selectedVoice, setSelectedVoice] = useAtom(selectedVoiceAtom);
+
+  const voiceId = selectedVoice.voiceId;
+  const provider = selectedVoice.provider;
+
+  console.log("Current voice state:", { voiceId, provider });
+
+  // Find the currently selected voice
+  const currentVoice = allVoices
+    .find((group) => group.provider === provider)
+    ?.voices.find((voice: Voice) => voice.id === voiceId);
+
+  console.log("Current voice found:", currentVoice);
 
   // Handle voice selection
-  const handleSelectVoice = (voiceId: string) => {
-    if (voiceId !== selectedVoiceId) {
-      setSelectedVoiceId(voiceId);
-      // Clear the audio cache when changing voices
-      clearAudioCache();
+  const handleSelect = useCallback(
+    (value: string) => {
+      // The value format is "provider-id"
+      const [providerValue, voiceId] = value.split("-");
+      const providerType = providerValue as Provider;
 
-      // Store the selected voice ID in localStorage for persistence
-      localStorage.setItem("selectedVoiceId", voiceId);
+      console.log("Selecting voice:", { voiceId, provider: providerType });
 
-      // Dispatch a custom event to notify the AudioNarrationProvider
-      window.dispatchEvent(
-        new CustomEvent("voice-changed", { detail: { voiceId } })
-      );
-    }
-    setOpen(false);
-  };
+      setSelectedVoice({
+        provider: providerType,
+        voiceId,
+      });
+      setOpen(false);
 
-  // Load the selected voice from localStorage on mount
+      // Save to localStorage
+      try {
+        localStorage.setItem("audioNarrationVoiceId", voiceId);
+        localStorage.setItem("audioNarrationProvider", providerType);
+        console.log("Saved voice selection to localStorage");
+      } catch (e) {
+        console.error("Error saving voice selection to localStorage:", e);
+      }
+    },
+    [setSelectedVoice]
+  );
+
+  // Load saved voice on mount
   useEffect(() => {
-    const savedVoiceId = localStorage.getItem("selectedVoiceId");
-    if (savedVoiceId) {
-      setSelectedVoiceId(savedVoiceId);
-      // Dispatch event to update the provider
-      window.dispatchEvent(
-        new CustomEvent("voice-changed", { detail: { voiceId: savedVoiceId } })
-      );
+    try {
+      const savedVoice = localStorage.getItem("audioNarrationVoiceId");
+      const savedProvider = localStorage.getItem(
+        "audioNarrationProvider"
+      ) as Provider | null;
+
+      if (savedVoice && savedProvider) {
+        // Verify the saved voice exists in our current options
+        const providerExists = allVoices.some(
+          (group) => group.provider === savedProvider
+        );
+
+        const voiceExists = allVoices
+          .find((group) => group.provider === savedProvider)
+          ?.voices.some((voice: Voice) => voice.id === savedVoice);
+
+        if (providerExists && voiceExists) {
+          setSelectedVoice({
+            provider: savedProvider,
+            voiceId: savedVoice,
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Error loading voice selection from localStorage:", e);
     }
-  }, []);
+  }, [setSelectedVoice]);
+
+  if (!audioEnabled) return null;
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8 rounded-full">
-              <MicIcon className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          Voice: {selectedVoice.name}
-        </TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent align="end" className="min-w-[220px]">
-        {voices.map((voice) => (
-          <DropdownMenuItem
-            key={voice.id}
-            onSelect={() => handleSelectVoice(voice.id)}
-            className="gap-2 group/item flex flex-row justify-between items-center"
+    <div className="flex items-center gap-1">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
           >
-            <div className="flex flex-col gap-1 items-start">
-              <div>{voice.name}</div>
-              <div className="text-xs text-muted-foreground">
-                {voice.description}
-              </div>
-            </div>
-            {voice.id === selectedVoiceId && (
-              <CheckIcon className="size-4 text-primary" />
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            {currentVoice ? currentVoice.name : "Select voice..."}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-0">
+          <Command>
+            <CommandInput placeholder="Search voices..." />
+            <CommandList>
+              <CommandEmpty>No voice found.</CommandEmpty>
+              {allVoices.map((group, index) => (
+                <Fragment key={group.provider}>
+                  {index > 0 && <CommandSeparator />}
+                  <CommandGroup heading={group.label}>
+                    {group.voices.map((voice: Voice) => {
+                      const value = `${group.provider}-${voice.id}`;
+                      return (
+                        <CommandItem
+                          key={value}
+                          value={value}
+                          onSelect={handleSelect}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              voiceId === voice.id &&
+                                provider === group.provider
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span>{voice.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {voice.description}
+                            </span>
+                          </div>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </Fragment>
+              ))}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }

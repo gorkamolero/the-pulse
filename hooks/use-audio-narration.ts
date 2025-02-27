@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { textToSpeech, DEFAULT_VOICE_ID } from "@/lib/elevenlabs";
 import type { Message } from "ai";
+import { generateSpeech, blobToAudio, Provider } from "@/lib/orate-service";
 
 // Audio cache to prevent redundant API calls
 const AudioCache = {
@@ -189,12 +189,14 @@ interface UseAudioNarrationOptions {
   autoPlay?: boolean;
   voiceId?: string;
   apiKey?: string;
+  provider?: Provider;
 }
 
 export function useAudioNarration({
   autoPlay: initialAutoPlay = true,
-  voiceId = DEFAULT_VOICE_ID,
-  apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
+  voiceId = "",
+  apiKey,
+  provider = "elevenlabs",
 }: UseAudioNarrationOptions = {}) {
   const [isPlaying, setIsPlaying] = useState(AudioManager.isPlaying);
   const [autoPlay, setAutoPlay] = useState(initialAutoPlay);
@@ -279,164 +281,154 @@ export function useAudioNarration({
     }
   }, [cleanupAudio]);
 
-  // Function to actually play the audio
+  // Play audio for a specific message
   const playAudio = useCallback(
     async (message: Message) => {
-      try {
-        // Clean up any existing audio
-        AudioManager.stopPlayback();
-
-        // Set the current message ID
-        const messageId = message.id;
-        AudioManager.currentMessageId = messageId;
-        setCurrentMessageId(messageId);
-
-        let audio: HTMLAudioElement;
-
-        // Check if we have this audio in cache
-        if (AudioCache.has(messageId)) {
-          console.log(
-            `%c[AUDIO] PLAYING FROM CACHE: ${messageId}`,
-            "color: #2196f3; font-weight: bold"
-          );
-          const cachedBlob = AudioCache.get(messageId);
-          if (cachedBlob) {
-            // Create audio element from cached blob
-            audio = createAudioFromBlob(cachedBlob);
-          } else {
-            throw new Error("Cached blob is undefined");
-          }
-        } else {
-          console.log(
-            `%c[AUDIO] FETCHING FROM NETWORK: ${messageId}`,
-            "color: #f44336; font-weight: bold"
-          );
-          // Convert text to speech and get both audio element and blob
-          const result = await textToSpeech(
-            message.content as string,
-            voiceId,
-            apiKey
-          );
-
-          // Store the blob in cache
-          AudioCache.set(messageId, result.audioBlob);
-
-          // Use the audio element
-          audio = result.audioElement;
-
-          // Cache stats are logged by AudioCache.set
-        }
-
-        // Store the audio element in the AudioManager
-        AudioManager.currentAudio = audio;
-
-        // Set up event handlers
-        audio.onplay = () => {
-          AudioManager.isPlaying = true;
-          setIsPlaying(true);
-        };
-
-        audio.onended = () => {
-          AudioManager.isPlaying = false;
-          AudioManager.currentMessageId = null;
-          AudioManager.currentAudio = null;
-          setIsPlaying(false);
-          setCurrentMessageId(null);
-
-          // Process next item in queue
-          setTimeout(() => AudioManager.processQueue(), 300);
-        };
-
-        audio.onerror = (e) => {
-          console.error("Audio playback error:", e);
-          AudioManager.isPlaying = false;
-          AudioManager.currentMessageId = null;
-          AudioManager.currentAudio = null;
-          setIsPlaying(false);
-          setCurrentMessageId(null);
-          setError(new Error("Failed to play audio"));
-
-          // Process next item in queue
-          setTimeout(() => AudioManager.processQueue(), 300);
-        };
-
-        // Play the audio
-        await audio.play();
-      } catch (err) {
-        console.error("Error in playAudio:", err);
-        AudioManager.isPlaying = false;
-        AudioManager.currentMessageId = null;
-        AudioManager.currentAudio = null;
-        setIsPlaying(false);
-        setCurrentMessageId(null);
-        setError(err instanceof Error ? err : new Error(String(err)));
-
-        // Process next item in queue
-        setTimeout(() => AudioManager.processQueue(), 300);
-      }
-    },
-    [apiKey, voiceId]
-  );
-
-  // Speak a message - adds to queue if already playing
-  const speakMessage = useCallback(
-    async (message: Message) => {
-      // Only speak assistant messages with content
-      if (
-        message.role !== "assistant" ||
-        !message.content ||
-        typeof message.content !== "string"
-      ) {
+      if (!message.id || !message.content) {
+        console.warn("[AudioNarration] Message has no ID or content");
         return;
       }
 
-      const messageId = message.id;
-      const isCached = AudioCache.has(messageId);
-
-      console.log(
-        `%c[AudioNarration] Request to speak message: ${messageId}${
-          isCached ? " (CACHED)" : ""
-        }`,
-        "color: #607d8b; font-weight: bold"
-      );
-
-      // If this message is already playing, don't queue it again
+      // If already playing this message, do nothing
       if (
-        message.id === AudioManager.currentMessageId &&
-        AudioManager.isPlaying
+        AudioManager.isPlaying &&
+        AudioManager.currentMessageId === message.id
       ) {
         console.log(
-          "%c[AudioNarration] Message is already playing, stopping it",
-          "color: #ff9800; font-weight: bold"
-        );
-        stopSpeaking();
-        return;
-      }
-
-      // If already playing something else, add to queue
-      if (AudioManager.isPlaying) {
-        console.log(
-          `%c[AudioNarration] Already playing, adding message ${messageId} to queue`,
+          `%c[AudioNarration] Already playing message: ${message.id}`,
           "color: #9c27b0; font-weight: bold"
         );
-        AudioManager.queueRequest(() => playAudio(message));
         return;
       }
 
-      // Otherwise play immediately
-      console.log(
-        `%c[AudioNarration] Playing message ${messageId} immediately`,
-        "color: #4caf50; font-weight: bold"
-      );
-      await playAudio(message);
-    },
-    [playAudio, stopSpeaking]
-  );
+      // If playing a different message, stop it first
+      if (AudioManager.isPlaying) {
+        AudioManager.stopPlayback();
+      }
 
-  // Function to clear the audio cache
-  const clearAudioCache = useCallback(() => {
-    AudioCache.clear();
-  }, []);
+      // Create a cache key that includes the voice settings to ensure different voices get different cache entries
+      const cacheKey = `${message.id}-${provider}-${voiceId}`;
+
+      // Check if we have this audio in cache
+      if (AudioCache.has(cacheKey)) {
+        const playFromCache = async () => {
+          try {
+            const cachedBlob = AudioCache.get(cacheKey);
+            if (!cachedBlob) return;
+
+            console.log(
+              `%c[AudioNarration] Playing cached audio for message: ${message.id} with voice: ${voiceId} (${provider})`,
+              "color: #2196f3; font-weight: bold"
+            );
+
+            // Create audio element from cached blob
+            const { audioElement } = blobToAudio(cachedBlob);
+
+            // Set up the audio element
+            AudioManager.currentAudio = audioElement;
+            AudioManager.currentMessageId = message.id;
+            AudioManager.isPlaying = true;
+
+            // Update state
+            setIsPlaying(true);
+            setCurrentMessageId(message.id);
+
+            // Set up event listeners
+            audioElement.onplay = () => {
+              setIsPlaying(true);
+              // Dispatch a custom event to notify other components
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(
+                  new CustomEvent("audio-narration-playing", {
+                    detail: { messageId: message.id },
+                  })
+                );
+              }
+            };
+
+            audioElement.onended = () => {
+              cleanupAudio();
+            };
+
+            // Play the audio
+            await audioElement.play();
+          } catch (error) {
+            console.error(
+              `[AudioNarration] Error playing cached audio for message ${message.id}:`,
+              error
+            );
+            setError(error instanceof Error ? error : new Error(String(error)));
+            cleanupAudio();
+          }
+        };
+
+        AudioManager.queueRequest(playFromCache);
+        return;
+      }
+
+      // If not in cache, generate new audio
+      const generateAndPlay = async () => {
+        try {
+          console.log(
+            `%c[AudioNarration] Generating new audio for message: ${message.id} with voice: ${voiceId} (${provider})`,
+            "color: #4caf50; font-weight: bold"
+          );
+
+          // Generate speech with current voice settings
+          const audioBlob = await generateSpeech(
+            message.content,
+            provider,
+            voiceId
+          );
+
+          // Cache the audio blob with the voice-specific cache key
+          AudioCache.set(cacheKey, audioBlob);
+
+          // Create audio element
+          const { audioElement } = blobToAudio(audioBlob);
+
+          // Set up the audio element
+          AudioManager.currentAudio = audioElement;
+          AudioManager.currentMessageId = message.id;
+          AudioManager.isPlaying = true;
+
+          // Update state
+          setIsPlaying(true);
+          setCurrentMessageId(message.id);
+
+          // Set up event listeners
+          audioElement.onplay = () => {
+            setIsPlaying(true);
+            // Dispatch a custom event to notify other components
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("audio-narration-playing", {
+                  detail: { messageId: message.id },
+                })
+              );
+            }
+          };
+
+          audioElement.onended = () => {
+            cleanupAudio();
+          };
+
+          // Play the audio
+          await audioElement.play();
+        } catch (error) {
+          console.error(
+            `[AudioNarration] Error generating audio for message ${message.id}:`,
+            error
+          );
+          setError(error instanceof Error ? error : new Error(String(error)));
+          cleanupAudio();
+        }
+      };
+
+      AudioManager.queueRequest(generateAndPlay);
+    },
+    [provider, voiceId, cleanupAudio]
+  );
 
   // Sync local state with AudioManager state and listen for pause events
   useEffect(() => {
@@ -485,10 +477,10 @@ export function useAudioNarration({
     isPlaying,
     autoPlay,
     toggleAutoPlay,
-    speakMessage,
+    playAudio,
     stopSpeaking,
-    clearAudioCache,
-    error,
+    clearAudioCache: () => AudioCache.clear(),
     currentMessageId,
+    error,
   };
 }

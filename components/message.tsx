@@ -23,7 +23,10 @@ import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
 import { useAudioNarrationContext } from "./audio-narration";
 import { AudioWave } from "./audio-narration/audio-wave";
-import { voices } from "./audio-narration/voice-selector";
+import { ALL_VOICES } from "@/lib/orate-service";
+
+// Use the combined voices array from the orate service
+const voices = ALL_VOICES;
 
 const PurePreviewMessage = ({
   chatId,
@@ -47,15 +50,6 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const { speakMessage, isPlaying, currentMessageId, stopSpeaking, voiceId } =
-    useAudioNarrationContext();
-
-  // Get the current voice name
-  const currentVoice = voices.find((voice) => voice.id === voiceId);
-  const voiceName = currentVoice?.name || "Audio";
-
-  // Check if this message is currently being narrated
-  const isCurrentlyNarrating = isPlaying && currentMessageId === message.id;
 
   return (
     <AnimatePresence>
@@ -119,58 +113,6 @@ const PurePreviewMessage = ({
                     <TooltipContent>Edit message</TooltipContent>
                   </Tooltip>
                 )}
-
-                {message.role === "assistant" &&
-                  message.content &&
-                  typeof message.content === "string" && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className={cn(
-                            "px-2 h-fit rounded-full text-muted-foreground",
-                            isCurrentlyNarrating
-                              ? "text-primary opacity-100 bg-primary/10"
-                              : "opacity-0 group-hover/message:opacity-100"
-                          )}
-                          onClick={() => {
-                            if (isCurrentlyNarrating) {
-                              // If currently narrating this message, stop it
-                              console.log(
-                                "Pause button clicked in message component"
-                              );
-                              stopSpeaking();
-                            } else {
-                              // If not currently narrating, play this message
-                              console.log(
-                                "Play button clicked in message component"
-                              );
-                              speakMessage(message);
-                            }
-                          }}
-                        >
-                          <div className="relative flex items-center justify-center">
-                            {isCurrentlyNarrating ? (
-                              <>
-                                <Pause size={16} />
-                                <AudioWave
-                                  isPlaying={true}
-                                  className="absolute -bottom-2 text-primary"
-                                />
-                              </>
-                            ) : (
-                              <Volume2 size={16} />
-                            )}
-                          </div>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {isCurrentlyNarrating
-                          ? "Stop narration"
-                          : "Play narration"}
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
 
                 <div
                   className={cn("flex flex-col gap-4", {

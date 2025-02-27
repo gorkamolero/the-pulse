@@ -14,6 +14,7 @@ import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import { showReasoningAtom } from "../lib/atoms";
 import { XIcon } from "lucide-react";
 import { LanguageSelector } from "@/components/language-selector";
+import { VoiceSelector } from "./audio-narration";
 
 function PureChatHeader({
   chatId,
@@ -76,6 +77,8 @@ function PureChatHeader({
         />
       )}
 
+      <VoiceSelector />
+
       {/*  {!isReadonly && (
         <VisibilitySelector
           chatId={chatId}
@@ -93,7 +96,7 @@ function PureChatHeader({
               !showReasoning
                 ? "bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900"
                 : "bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800"
-            } order-5 md:ml-auto`}
+            } order-6 md:ml-auto`}
             onClick={() => setShowReasoning(!showReasoning)}
             size="icon"
           >

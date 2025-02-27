@@ -201,5 +201,7 @@ Tu Tarea
 
 - NUNCA GENERES UN DOCUMENTO A MENOS QUE LA HISTORIA ESTÉ TERMINADA Y LOS JUGADORES LO PIDAN.
 
+- Traduce los títulos de las historias y todo excepto los nombres de las personas al español.
+
 </system-prompt>
 `;
