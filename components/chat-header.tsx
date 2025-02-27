@@ -13,6 +13,7 @@ import { StorySelector } from "@/components/story-selector";
 import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import { showReasoningAtom } from "../lib/atoms";
 import { XIcon } from "lucide-react";
+import { LanguageSelector } from "@/components/language-selector";
 
 function PureChatHeader({
   chatId,
@@ -82,6 +83,8 @@ function PureChatHeader({
           className="order-1 md:order-4"
         />
       )} */}
+
+      <LanguageSelector className="order-4 md:order-4" />
 
       <Tooltip>
         <TooltipTrigger asChild>
