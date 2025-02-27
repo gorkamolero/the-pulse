@@ -23,6 +23,7 @@ import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
 import { useAudioNarrationContext } from "./audio-narration";
 import { AudioWave } from "./audio-narration/audio-wave";
+import { voices } from "./audio-narration/voice-selector";
 
 const PurePreviewMessage = ({
   chatId,
@@ -46,8 +47,12 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const { speakMessage, isPlaying, currentMessageId, stopSpeaking } =
+  const { speakMessage, isPlaying, currentMessageId, stopSpeaking, voiceId } =
     useAudioNarrationContext();
+
+  // Get the current voice name
+  const currentVoice = voices.find((voice) => voice.id === voiceId);
+  const voiceName = currentVoice?.name || "Audio";
 
   // Check if this message is currently being narrated
   const isCurrentlyNarrating = isPlaying && currentMessageId === message.id;

@@ -87,7 +87,7 @@ function PureChatHeader({
         <TooltipTrigger asChild>
           <Button
             className={`${
-              showReasoning
+              !showReasoning
                 ? "bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900"
                 : "bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800"
             } order-5 md:ml-auto`}

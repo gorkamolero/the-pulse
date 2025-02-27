@@ -21,15 +21,21 @@ import {
   AutoNarrator,
   AudioNarrationControls,
   useAudioNarrationContext,
+  VoiceSelector,
 } from "./audio-narration";
 import { AudioWave } from "./audio-narration/audio-wave";
 import { Button } from "@/components/ui/button";
 import { PauseIcon } from "lucide-react";
+import { voices } from "./audio-narration/voice-selector";
 
 // Audio status indicator component
 function AudioStatusIndicator() {
-  const { isPlaying, currentMessageId, stopSpeaking } =
+  const { isPlaying, currentMessageId, stopSpeaking, voiceId } =
     useAudioNarrationContext();
+
+  // Get the current voice name
+  const currentVoice = voices.find((voice) => voice.id === voiceId);
+  const voiceName = currentVoice?.name || "Audio";
 
   // Access the AudioManager directly to check queue status
   const hasQueuedMessages =
@@ -75,8 +81,8 @@ function AudioStatusIndicator() {
       <AudioWave isPlaying={true} className="text-primary-foreground" />
       <span className="text-sm">
         {hasQueuedMessages && window.AudioManager
-          ? `Audio playing (${window.AudioManager.pendingRequests.length} in queue)`
-          : "Audio playing"}
+          ? `${voiceName} speaking (${window.AudioManager.pendingRequests.length} in queue)`
+          : `${voiceName} speaking`}
       </span>
       <Button
         variant="ghost"
@@ -164,7 +170,10 @@ export function Chat({
           selectedStoryId={selectedStoryId}
           onSelectStory={handleStorySelection}
         >
-          <AudioNarrationControls />
+          <div className="flex items-center gap-1">
+            <VoiceSelector />
+            <AudioNarrationControls />
+          </div>
         </ChatHeader>
 
         <Messages
