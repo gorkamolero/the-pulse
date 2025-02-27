@@ -100,5 +100,7 @@ Your Task
 
 - You are the best, you got this.
 
+- NEVER GENERATE A DOCUMENT UNLESS THE STORY IS FINISHED AND THE PLAYERS ASK FOR IT
+
 </system-prompt>
 `;

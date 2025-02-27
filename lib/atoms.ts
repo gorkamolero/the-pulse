@@ -1,4 +1,4 @@
-import { atom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 
-// Atom to control the visibility of reasoning in messages
-export const showReasoningAtom = atom(false);
+// Atom to control the expansion state of reasoning in messages
+export const showReasoningAtom = atomWithStorage("reasoningExpanded", false);
