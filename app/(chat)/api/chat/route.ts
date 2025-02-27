@@ -56,7 +56,16 @@ export async function POST(request: Request) {
   const chat = await getChatById({ id });
 
   if (!chat) {
-    const title = await generateTitleFromUserMessage({ message: userMessage });
+    const userTitle = await generateTitleFromUserMessage({
+      message: userMessage,
+    });
+    const story = getStoryById(selectedStoryId);
+    const storyPrefix = story ? `[${story.title}] ` : "";
+
+    // Generate a random 4-character string
+    const randomChars = Math.random().toString(36).substring(2, 6);
+
+    const title = `${storyPrefix}${userTitle} (${randomChars})`;
     await saveChat({ id, userId: session.user.id, title });
   }
 
