@@ -7,7 +7,7 @@ import {
 
 import { auth } from "@/app/(auth)/auth";
 import { myProvider } from "@/lib/ai/models";
-import { systemPrompt } from "@/lib/ai/prompts/system";
+import { systemPrompt, systemPromptSpanish } from "@/lib/ai/prompts/system";
 import { getStoryById, DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import {
   deleteChatById,
@@ -34,11 +34,13 @@ export async function POST(request: Request) {
     messages,
     selectedChatModel,
     selectedStoryId = DEFAULT_STORY_ID,
+    language = "en",
   }: {
     id: string;
     messages: Array<Message>;
     selectedChatModel: string;
     selectedStoryId?: string;
+    language?: string;
   } = await request.json();
 
   const session = await auth();
@@ -73,13 +75,22 @@ export async function POST(request: Request) {
     messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
   });
 
+  // Select the appropriate system prompt based on the language
+  const getSystemPromptForLanguage = (language: string) => {
+    return language === "es"
+      ? systemPromptSpanish({
+          storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
+        })
+      : systemPrompt({
+          storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
+        });
+  };
+
   return createDataStreamResponse({
     execute: (dataStream) => {
       const result = streamText({
         model: myProvider.languageModel(selectedChatModel),
-        system: systemPrompt({
-          storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
-        }),
+        system: getSystemPromptForLanguage(language),
         messages,
         maxSteps: 5,
         experimental_activeTools:

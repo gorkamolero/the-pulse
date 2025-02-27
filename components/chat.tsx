@@ -2,7 +2,7 @@
 
 import type { Attachment, Message } from "ai";
 import { useChat } from "ai/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import useSWR, { useSWRConfig } from "swr";
 
 import { ChatHeader } from "@/components/chat-header";
@@ -111,6 +111,19 @@ export function Chat({
 }) {
   const { mutate } = useSWRConfig();
   const [selectedStoryId, setSelectedStoryId] = useState(DEFAULT_STORY_ID);
+  const [language, setLanguage] = useState<string>("en");
+
+  // Load the language preference from cookies on component mount
+  useEffect(() => {
+    const languageCookie = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("language="));
+
+    if (languageCookie) {
+      const language = languageCookie.split("=")[1];
+      setLanguage(language);
+    }
+  }, []);
 
   const {
     messages,
@@ -124,7 +137,7 @@ export function Chat({
     reload,
   } = useChat({
     id,
-    body: { id, selectedChatModel, selectedStoryId },
+    body: { id, selectedChatModel, selectedStoryId, language },
     initialMessages,
     experimental_throttle: 100,
     sendExtraMessageFields: true,

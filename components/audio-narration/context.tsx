@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAudioNarration } from "@/hooks/use-audio-narration";
-import { Message } from "ai";
+import type { Message } from "ai";
 import { DEFAULT_VOICE_ID } from "@/lib/elevenlabs";
 
 // Define the context type
