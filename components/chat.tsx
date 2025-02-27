@@ -8,6 +8,7 @@ import useSWR, { useSWRConfig } from "swr";
 import { ChatHeader } from "@/components/chat-header";
 import type { Vote } from "@/lib/db/schema";
 import { fetcher, generateUUID } from "@/lib/utils";
+import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 
 import { Artifact } from "./artifact";
 import { MultimodalInput } from "./multimodal-input";
@@ -30,6 +31,7 @@ export function Chat({
   isReadonly: boolean;
 }) {
   const { mutate } = useSWRConfig();
+  const [selectedStoryId, setSelectedStoryId] = useState(DEFAULT_STORY_ID);
 
   const {
     messages,
@@ -43,7 +45,7 @@ export function Chat({
     reload,
   } = useChat({
     id,
-    body: { id, selectedChatModel: selectedChatModel },
+    body: { id, selectedChatModel, selectedStoryId },
     initialMessages,
     experimental_throttle: 100,
     sendExtraMessageFields: true,
@@ -52,7 +54,7 @@ export function Chat({
       mutate("/api/history");
     },
     onError: (error) => {
-      toast.error("An error occured, please try again!");
+      toast.error(`An error occured, please try again! ${error}`);
     },
   });
 
@@ -72,6 +74,8 @@ export function Chat({
           selectedModelId={selectedChatModel}
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
+          selectedStoryId={selectedStoryId}
+          onSelectStory={setSelectedStoryId}
         />
 
         <Messages

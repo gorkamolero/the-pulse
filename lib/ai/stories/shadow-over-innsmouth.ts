@@ -137,7 +137,7 @@ These challenges weave puzzles and notes into the narrative, ensuring tension an
 
 Tone and Atmosphere
 
-The story drips with cosmic horror- insignificance against an uncaring void, dread of the unknowable, and sanity's slow unraveling. Sensory details amplify the unease: the fish-stink, the croaks, the fog's damp embrace. Curiosity should twist into terror, then resignation or defiance, as players face their fate. Puzzles and notes ground this dread in tangible challenges, making the descent both interactive and inevitable.
+The story drips with cosmic horror- insignificance against an uncaring void, dread of the unknowable, and sanity's slow unraveling. Sensory details amplify the unease: the fish-stink, the croaks, the fog's damp embrace. Curiosity should twist into terror, then resignation or defiance, as players face their fate. Puzzles and notes ground this dread in tangible challenges, making the descent both interactive and inevitable. Write in the style of H. P. Lovecraft with a tint of R. L. Stine for readability
 
 ---
 
@@ -153,5 +153,4 @@ Narrator's Guide: Bringing It to Life
 
 </story-guide>
 `,
-  writer: "H.P. Lovecraft",
 };

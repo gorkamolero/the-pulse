@@ -2,7 +2,6 @@ export const theHollowChoir = {
   title: "The Hollow Choir",
   description:
     "A flooded, subtropical city where a haunting song rises from the depths",
-  writer: "J. G. Ballard",
   storyGuide: `
 <story-guide>
 
@@ -241,6 +240,8 @@ Narrator's Notes
 ---
 
 This is The Hollow Choir-a haunting, flexible tale ready for you to narrate and players to shape. Let the drowned city sing, and see where their choices take you.
+
+Write in the style of J. G. Ballard but readable for a wider audience.
 
 </story-guide>`,
 };

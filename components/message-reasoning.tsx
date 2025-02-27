@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ChevronDownIcon, LoaderIcon } from './icons';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Markdown } from './markdown';
+import { useAtom } from "jotai";
+import { ChevronDownIcon, ChevronUpIcon, LoaderIcon } from "./icons";
+import { motion, AnimatePresence } from "framer-motion";
+import { Markdown } from "./markdown";
+import { showReasoningAtom } from "@/lib/atoms";
 
 interface MessageReasoningProps {
   isLoading: boolean;
@@ -14,7 +15,7 @@ export function MessageReasoning({
   isLoading,
   reasoning,
 }: MessageReasoningProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded] = useAtom(showReasoningAtom);
 
   const variants = {
     collapsed: {
@@ -24,10 +25,10 @@ export function MessageReasoning({
       marginBottom: 0,
     },
     expanded: {
-      height: 'auto',
+      height: "auto",
       opacity: 1,
-      marginTop: '1rem',
-      marginBottom: '0.5rem',
+      marginTop: "1rem",
+      marginBottom: "0.5rem",
     },
   };
 
@@ -43,13 +44,8 @@ export function MessageReasoning({
       ) : (
         <div className="flex flex-row gap-2 items-center">
           <div className="font-medium">Reasoned for a few seconds</div>
-          <div
-            className="cursor-pointer"
-            onClick={() => {
-              setIsExpanded(!isExpanded);
-            }}
-          >
-            <ChevronDownIcon />
+          <div className="cursor-pointer">
+            {isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
           </div>
         </div>
       )}
@@ -62,8 +58,8 @@ export function MessageReasoning({
             animate="expanded"
             exit="collapsed"
             variants={variants}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
-            style={{ overflow: 'hidden' }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            style={{ overflow: "hidden" }}
             className="pl-4 text-zinc-600 dark:text-zinc-400 border-l flex flex-col gap-4"
           >
             <Markdown>{reasoning}</Markdown>

@@ -8,6 +8,7 @@ import {
 import { auth } from "@/app/(auth)/auth";
 import { myProvider } from "@/lib/ai/models";
 import { systemPrompt } from "@/lib/ai/prompts/system";
+import { getStoryById, DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import {
   deleteChatById,
   getChatById,
@@ -32,8 +33,13 @@ export async function POST(request: Request) {
     id,
     messages,
     selectedChatModel,
-  }: { id: string; messages: Array<Message>; selectedChatModel: string } =
-    await request.json();
+    selectedStoryId = DEFAULT_STORY_ID,
+  }: {
+    id: string;
+    messages: Array<Message>;
+    selectedChatModel: string;
+    selectedStoryId?: string;
+  } = await request.json();
 
   const session = await auth();
 
@@ -62,7 +68,9 @@ export async function POST(request: Request) {
     execute: (dataStream) => {
       const result = streamText({
         model: myProvider.languageModel(selectedChatModel),
-        system: systemPrompt,
+        system: systemPrompt({
+          storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
+        }),
         messages,
         maxSteps: 5,
         experimental_activeTools:
