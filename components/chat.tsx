@@ -2,7 +2,7 @@
 
 import type { Attachment, Message } from "ai";
 import { useChat } from "ai/react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import useSWR, { useSWRConfig } from "swr";
 
 import { ChatHeader } from "@/components/chat-header";
@@ -131,6 +131,20 @@ export function Chat({
     },
   });
 
+  const handleStorySelection = useCallback(
+    async (storyId: string) => {
+      setSelectedStoryId(storyId);
+
+      // Only update the title if there are no messages yet (new chat)
+      if (messages.length === 0) {
+        // We don't need to update the title in the database here
+        // as it will be set when the first message is sent
+        mutate("/api/history");
+      }
+    },
+    [messages.length, mutate]
+  );
+
   const { data: votes } = useSWR<Array<Vote>>(
     `/api/vote?chatId=${id}`,
     fetcher
@@ -148,7 +162,7 @@ export function Chat({
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
           selectedStoryId={selectedStoryId}
-          onSelectStory={setSelectedStoryId}
+          onSelectStory={handleStorySelection}
         >
           <AudioNarrationControls />
         </ChatHeader>
