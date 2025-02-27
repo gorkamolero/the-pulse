@@ -7,8 +7,8 @@ import { NextRequest, NextResponse } from "next/server";
 export type Provider = "openai" | "elevenlabs";
 
 // Default voice IDs
-export const DEFAULT_ELEVENLABS_VOICE_ID = "qNkzaJoHLLdpvgh5tISm"; // Carter
-export const DEFAULT_OPENAI_VOICE_ID = "alloy";
+const DEFAULT_ELEVENLABS_VOICE_ID = "qNkzaJoHLLdpvgh5tISm"; // Carter
+const DEFAULT_OPENAI_VOICE_ID = "alloy";
 
 /**
  * POST handler for text-to-speech API
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       console.log(`[Orate API] Using ElevenLabs voice: ${voiceId}`);
 
       audioFile = await speak({
-        model: elevenlabs.tts("multilingual_v2", voiceId),
+        model: elevenlabs.tts("flash_v2_5", voiceId),
         prompt: text,
       });
     }
