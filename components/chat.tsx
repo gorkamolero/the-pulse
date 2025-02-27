@@ -16,6 +16,79 @@ import { Messages } from "./messages";
 import type { VisibilityType } from "./visibility-selector";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { toast } from "sonner";
+import {
+  AudioNarrationProvider,
+  AutoNarrator,
+  AudioNarrationControls,
+  useAudioNarrationContext,
+} from "./audio-narration";
+import { AudioWave } from "./audio-narration/audio-wave";
+import { Button } from "@/components/ui/button";
+import { PauseIcon } from "lucide-react";
+
+// Audio status indicator component
+function AudioStatusIndicator() {
+  const { isPlaying, currentMessageId, stopSpeaking } =
+    useAudioNarrationContext();
+
+  // Access the AudioManager directly to check queue status
+  const hasQueuedMessages =
+    typeof window !== "undefined" &&
+    window.AudioManager &&
+    window.AudioManager.pendingRequests &&
+    window.AudioManager.pendingRequests.length > 0;
+
+  if (!isPlaying && !hasQueuedMessages) return null;
+
+  // Direct pause handler
+  const handlePause = () => {
+    console.log("Status indicator pause button clicked");
+
+    // First try the stopSpeaking function from the context
+    // This will ensure all state is properly updated
+    stopSpeaking();
+
+    // As a backup, also try direct methods if available
+    if (typeof window !== "undefined" && window.AudioManager) {
+      if (window.AudioManager.pausePlayback) {
+        console.log("Using AudioManager.pausePlayback from status indicator");
+        const paused = window.AudioManager.pausePlayback();
+        console.log("Pause result:", paused);
+      } else if (window.AudioManager.currentAudio) {
+        // Fallback to direct pause
+        console.log(
+          "Directly pausing audio via window.AudioManager from status indicator"
+        );
+        window.AudioManager.currentAudio.pause();
+        window.AudioManager.isPlaying = false;
+      }
+
+      // Also clear the queue to prevent further playback
+      if (window.AudioManager.clearQueue) {
+        window.AudioManager.clearQueue();
+      }
+    }
+  };
+
+  return (
+    <div className="fixed bottom-4 right-4 bg-primary text-primary-foreground px-3 py-2 rounded-full shadow-lg z-50 flex items-center gap-2">
+      <AudioWave isPlaying={true} className="text-primary-foreground" />
+      <span className="text-sm">
+        {hasQueuedMessages && window.AudioManager
+          ? `Audio playing (${window.AudioManager.pendingRequests.length} in queue)`
+          : "Audio playing"}
+      </span>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="ml-2 p-1 h-6 w-6 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30"
+        onClick={handlePause}
+      >
+        <PauseIcon className="h-3 w-3 text-primary-foreground" />
+      </Button>
+    </div>
+  );
+}
 
 export function Chat({
   id,
@@ -67,7 +140,7 @@ export function Chat({
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
   return (
-    <>
+    <AudioNarrationProvider>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader
           chatId={id}
@@ -76,7 +149,9 @@ export function Chat({
           isReadonly={isReadonly}
           selectedStoryId={selectedStoryId}
           onSelectStory={setSelectedStoryId}
-        />
+        >
+          <AudioNarrationControls />
+        </ChatHeader>
 
         <Messages
           chatId={id}
@@ -124,6 +199,12 @@ export function Chat({
         votes={votes}
         isReadonly={isReadonly}
       />
-    </>
+
+      {/* Audio status indicator */}
+      <AudioStatusIndicator />
+
+      {/* This component will automatically narrate new assistant messages */}
+      <AutoNarrator messages={messages} />
+    </AudioNarrationProvider>
   );
 }

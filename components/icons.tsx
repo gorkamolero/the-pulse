@@ -1197,3 +1197,21 @@ export const ChevronUpIcon = ({ size = 16 }: { size?: number }) => (
     />
   </svg>
 );
+
+export const XIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M12 4L4 12"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
