@@ -1,7 +1,8 @@
 export const innsmouth = {
+  id: "shadow-over-innsmouth",
   title: "Shadow Over Innsmouth",
   description:
-    "A story about a group of people who go to a place called Innsmouth and find out a deep dark secret.",
+    "A decaying seaport hides a pact with the Deep Ones. Drawn by a cryptic call, players uncover a dread truth—or their own watery doom.",
   storyGuide: `
     <story-guide>
 

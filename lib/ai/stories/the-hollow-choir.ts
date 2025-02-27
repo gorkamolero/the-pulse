@@ -1,7 +1,8 @@
 export const theHollowChoir = {
+  id: "the-hollow-choir",
   title: "The Hollow Choir",
   description:
-    "A flooded, subtropical city where a haunting song rises from the depths",
+    "A flooded city echoes with a spectral song. Adrift on a raft with name-etched shards, players face a sunken mystery—or its haunting pull.",
   storyGuide: `
 <story-guide>
 
