@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAudioNarration } from "@/hooks/use-audio-narration";
-import type { Message } from "ai";
+import { Message } from "ai";
+import { DEFAULT_VOICE_ID } from "@/lib/elevenlabs";
 
 // Define the context type
 interface AudioNarrationContextType {
@@ -13,6 +14,7 @@ interface AudioNarrationContextType {
   stopSpeaking: () => void;
   clearAudioCache: () => void;
   currentMessageId: string | null;
+  voiceId: string;
 }
 
 // Create the context
@@ -34,16 +36,18 @@ export function useAudioNarrationContext() {
 // Provider component props
 interface AudioNarrationProviderProps {
   children: React.ReactNode;
-  voiceId?: string;
+  initialVoiceId?: string;
   apiKey?: string;
 }
 
 // Provider component
 export function AudioNarrationProvider({
   children,
-  voiceId,
+  initialVoiceId = DEFAULT_VOICE_ID,
   apiKey,
 }: AudioNarrationProviderProps) {
+  const [voiceId, setVoiceId] = useState<string>(initialVoiceId);
+
   const {
     isPlaying,
     autoPlay,
@@ -57,6 +61,42 @@ export function AudioNarrationProvider({
     apiKey,
   });
 
+  // Listen for voice change events
+  useEffect(() => {
+    const handleVoiceChange = (event: CustomEvent) => {
+      const newVoiceId = event.detail?.voiceId;
+      if (newVoiceId && newVoiceId !== voiceId) {
+        setVoiceId(newVoiceId);
+        // Stop any current playback when voice changes
+        if (isPlaying) {
+          stopSpeaking();
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener(
+      "voice-changed",
+      handleVoiceChange as EventListener
+    );
+
+    // Clean up
+    return () => {
+      window.removeEventListener(
+        "voice-changed",
+        handleVoiceChange as EventListener
+      );
+    };
+  }, [voiceId, isPlaying, stopSpeaking]);
+
+  // Initialize from localStorage if available
+  useEffect(() => {
+    const savedVoiceId = localStorage.getItem("selectedVoiceId");
+    if (savedVoiceId) {
+      setVoiceId(savedVoiceId);
+    }
+  }, []);
+
   return (
     <AudioNarrationContext.Provider
       value={{
@@ -67,6 +107,7 @@ export function AudioNarrationProvider({
         stopSpeaking,
         clearAudioCache,
         currentMessageId,
+        voiceId,
       }}
     >
       {children}
