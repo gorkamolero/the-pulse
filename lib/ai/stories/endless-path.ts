@@ -2,7 +2,7 @@ export const endlessPath = {
   id: "endless-path",
   title: "The Endless Path",
   description:
-    "A mysterious comet returns every 100 years, and it's not just a coincidence.",
+    "Every century, Taggart's Comet returns—and with it, a night where time fractures and you become both hunter and hunted.",
   storyGuide: `
     <story-guide>
 
