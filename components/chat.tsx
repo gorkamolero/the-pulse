@@ -3,12 +3,11 @@
 import type { Attachment, Message } from "ai";
 import { useChat } from "ai/react";
 import { useState, useCallback, useEffect, useMemo } from "react";
-import useSWR, { useSWRConfig } from "swr";
+import { useSWRConfig } from "swr";
 
 import { StoryDisplay } from "@/components/story-display";
 import { ChatHeader } from "@/components/chat-header";
-import type { Vote } from "@/lib/db/schema";
-import { fetcher, generateUUID } from "@/lib/utils";
+import { generateUUID } from "@/lib/utils";
 import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 
 import { Artifact } from "./artifact";
@@ -96,37 +95,10 @@ export function Chat({
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
-  const currentPulseImage = useMemo(() => {
+  const currentMessageId = useMemo(() => {
     // Start from the most recent message and work backwards
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i];
-      if (message.toolInvocations) {
-        // Check each tool invocation in this message
-        for (const invocation of message.toolInvocations) {
-          if (invocation.toolName === 'generatePulseImage' && invocation.state === 'result') {
-            console.log('Found pulse image invocation:', invocation);
-            
-            // First check if we have the Blob URL
-            if (invocation.result && invocation.result.imageUrl) {
-              return {
-                imageUrl: invocation.result.imageUrl,
-                prompt: invocation.result.prompt || 'Generated image'
-              };
-            }
-            // Fallback to base64 if it exists (for backward compatibility)
-            else if (invocation.result && invocation.result.imageBase64) {
-              return {
-                imageUrl: `data:image/png;base64,${invocation.result.imageBase64}`,
-                prompt: invocation.result.prompt || 'Generated image'
-              };
-            } else {
-              console.warn('Found pulse image invocation but no image data is available');
-            }
-          }
-        }
-      }
-    }
-    return null;
+    const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop()
+    return lastAssistantMessage?.id ?? null
   }, [messages]);
 
   return (
@@ -162,7 +134,7 @@ export function Chat({
 
           <ResizablePanel defaultSize={50}>
             <div className='flex flex-col items-center justify-center h-full'>
-              <StoryDisplay currentPulseImage={currentPulseImage} />
+              <StoryDisplay currentMessageId={currentMessageId} />
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
