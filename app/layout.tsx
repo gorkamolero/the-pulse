@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://the-pulse.vercel.ai"),
   title: "The Pulse",
   description: ".",
+  other: {
+    'permissions-policy': 'microphone=self'
+  }
 };
 
 export const viewport = {
@@ -55,6 +58,7 @@ export default async function RootLayout({
             __html: THEME_COLOR_SCRIPT,
           }}
         />
+        <meta httpEquiv="permissions-policy" content="microphone=self" />
       </head>
       <body className="antialiased">
         <ThemeProvider
