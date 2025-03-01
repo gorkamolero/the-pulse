@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Pause, Play, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -9,15 +9,26 @@ import { audioEnabledAtom, selectedVoiceAtom } from "@/lib/atoms";
 
 interface AudioPlayerProps {
   content: string;
+  autoplay?: boolean;
+  chatId: string;
 }
 
-export function AudioPlayer({ content }: AudioPlayerProps) {
+export function AudioPlayer({ content, autoplay = false, chatId }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioEnabled] = useAtom(audioEnabledAtom);
   const [selectedVoice] = useAtom(selectedVoiceAtom);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Add useEffect for autoplay
+  useEffect(() => {
+    if (autoplay && content && !isPlaying && !isLoading) {
+      playAudio();
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoplay, content]);
 
   // Generate a cache key based on content and voice settings
   const getCacheKey = () => {

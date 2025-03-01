@@ -7,7 +7,7 @@ import {
 
 import { auth } from "@/app/(auth)/auth";
 import { myProvider } from "@/lib/ai/models";
-import { systemPrompt, systemPromptSpanish } from "@/lib/ai/prompts/system";
+import { systemPrompt } from "@/lib/ai/prompts/system";
 import { getStoryById, DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import {
   deleteChatById,
@@ -22,9 +22,7 @@ import {
 } from "@/lib/utils";
 
 import { generateTitleFromUserMessage } from "../../actions";
-import { createDocument } from "@/lib/ai/tools/create-document";
-import { updateDocument } from "@/lib/ai/tools/update-document";
-import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
+import { generateImage } from "@/lib/ai/tools/generate-image";
 
 export const maxDuration = 60;
 
@@ -76,15 +74,10 @@ export async function POST(request: Request) {
   });
 
   // Select the appropriate system prompt based on the language
-  const getSystemPromptForLanguage = (language: string) => {
-    return language === "es"
-      ? systemPromptSpanish({
-          storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
-        })
-      : systemPrompt({
-          storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
-        });
-  };
+  const getSystemPromptForLanguage = (language: string) => systemPrompt({
+    storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
+    language: language === "es" ? "spanish" : "english",
+  })
 
   return createDataStreamResponse({
     execute: (dataStream) => {
@@ -93,19 +86,11 @@ export async function POST(request: Request) {
         system: getSystemPromptForLanguage(language),
         messages,
         maxSteps: 5,
-        experimental_activeTools:
-          selectedChatModel === "chat-model-reasoning"
-            ? []
-            : ["createDocument", "updateDocument", "requestSuggestions"],
+        experimental_activeTools: ["generatePulseImage"],
         experimental_transform: smoothStream({ chunking: "word" }),
         experimental_generateMessageId: generateUUID,
         tools: {
-          createDocument: createDocument({ session, dataStream }),
-          updateDocument: updateDocument({ session, dataStream }),
-          requestSuggestions: requestSuggestions({
-            session,
-            dataStream,
-          }),
+          generatePulseImage: generateImage({  storyId: selectedStoryId }),
         },
         onFinish: async ({ response, reasoning }) => {
           if (session.user?.id) {
@@ -127,7 +112,7 @@ export async function POST(request: Request) {
                 }),
               });
             } catch (error) {
-              console.error("Failed to save chat");
+              console.error("Failed to save chat", error);
             }
           }
         },
