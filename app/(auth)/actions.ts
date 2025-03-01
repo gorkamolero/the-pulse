@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 
+import { VALID_INVITE_CODES } from '@/lib/constants';
 import { createUser, getUser } from '@/lib/db/queries';
 
 import { signIn } from './auth';
@@ -9,6 +10,15 @@ import { signIn } from './auth';
 const authFormSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+});
+
+const registerFormSchema = authFormSchema.extend({
+  inviteCode: z.string().refine(
+    (code) => VALID_INVITE_CODES.includes(code),
+    {
+      message: 'Invalid invite code',
+    }
+  ),
 });
 
 export interface LoginActionState {
@@ -48,7 +58,8 @@ export interface RegisterActionState {
     | 'success'
     | 'failed'
     | 'user_exists'
-    | 'invalid_data';
+    | 'invalid_data'
+    | 'invalid_invite_code';
 }
 
 export const register = async (
@@ -56,9 +67,10 @@ export const register = async (
   formData: FormData,
 ): Promise<RegisterActionState> => {
   try {
-    const validatedData = authFormSchema.parse({
+    const validatedData = registerFormSchema.parse({
       email: formData.get('email'),
       password: formData.get('password'),
+      inviteCode: formData.get('inviteCode'),
     });
 
     const [user] = await getUser(validatedData.email);
@@ -76,6 +88,14 @@ export const register = async (
     return { status: 'success' };
   } catch (error) {
     if (error instanceof z.ZodError) {
+      const inviteCodeError = error.errors.find(
+        (err) => err.path.includes('inviteCode')
+      );
+      
+      if (inviteCodeError) {
+        return { status: 'invalid_invite_code' };
+      }
+      
       return { status: 'invalid_data' };
     }
 
