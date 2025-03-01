@@ -22,7 +22,7 @@ import {
 } from "@/lib/utils";
 
 import { generateTitleFromUserMessage } from "../../actions";
-import { generateImage } from "@/lib/ai/tools/generate-image";
+import { generatePulseImage } from "@/lib/ai/tools/generate-image";
 
 export const maxDuration = 60;
 
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   }
 
   await saveMessages({
-    messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
+    messages: [{ ...userMessage, createdAt: new Date(), chatId: id, imageUrl: null }],
   });
 
   // Select the appropriate system prompt based on the language
@@ -86,19 +86,27 @@ export async function POST(request: Request) {
         system: getSystemPromptForLanguage(language),
         messages,
         maxSteps: 5,
-        experimental_activeTools: ["generatePulseImage"],
         experimental_transform: smoothStream({ chunking: "word" }),
         experimental_generateMessageId: generateUUID,
-        tools: {
-          generatePulseImage: generateImage({  storyId: selectedStoryId }),
-        },
-        onFinish: async ({ response, reasoning }) => {
+        onFinish: async ({ response, reasoning, }) => {
           if (session.user?.id) {
             try {
               const sanitizedResponseMessages = sanitizeResponseMessages({
                 messages: response.messages,
                 reasoning,
               });
+
+              const lastAssistantMessage = sanitizedResponseMessages.filter(m => m.role === 'assistant').pop()
+
+              let imageResult = null
+
+              if (sanitizedResponseMessages[0].role === 'assistant') {
+                imageResult = await generatePulseImage({
+                  storyId: selectedStoryId,
+                  pulse: lastAssistantMessage?.content as string,
+                  messageId: lastAssistantMessage?.id!
+                });
+              }
 
               await saveMessages({
                 messages: sanitizedResponseMessages.map((message) => {
@@ -108,6 +116,7 @@ export async function POST(request: Request) {
                     role: message.role,
                     content: message.content,
                     createdAt: new Date(),
+                    imageUrl: imageResult?.url ?? null
                   };
                 }),
               });

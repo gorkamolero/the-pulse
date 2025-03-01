@@ -1,29 +1,23 @@
 "use client";
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useMessage } from '@/hooks/use-message';
 
-export function StoryDisplay({ currentPulseImage }: { currentPulseImage?: { imageUrl: string, prompt: string } | null }) {
-  const [imageError, setImageError] = useState(false);
+interface StoryDisplayProps {
+  currentMessageId: string | null
+}
 
-  if (!currentPulseImage) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">The story visualization will appear here...</p>
-      </div>
-    );
-  }
+export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
+  const { message, isLoading, isError } = useMessage(currentMessageId);
 
-  // Handle case where image URL is invalid (contains "undefined")
-  if (imageError || currentPulseImage.imageUrl.includes('base64,undefined')) {
+
+  // Handle case where image URL is invalid
+  if (isError || isLoading || !message?.imageUrl) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-4">
         <div className="text-center">
           <p className="text-muted-foreground mb-2">Image generation failed</p>
           <p className="text-sm text-muted-foreground">Unable to load the visualization for this story pulse.</p>
-          {currentPulseImage.prompt && (
-            <p className="mt-4 text-sm text-muted-foreground text-center">Prompt: {currentPulseImage.prompt}</p>
-          )}
         </div>
       </div>
     );
@@ -34,7 +28,7 @@ export function StoryDisplay({ currentPulseImage }: { currentPulseImage?: { imag
       {/* Blurred background image */}
       <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <Image 
-          src={currentPulseImage.imageUrl}
+          src={message?.imageUrl}
           alt="Background"
           className="w-full h-full object-cover blur-md opacity-20"
           fill
@@ -46,12 +40,11 @@ export function StoryDisplay({ currentPulseImage }: { currentPulseImage?: { imag
       {/* Main image */}
       <div className="max-w-[90%] max-h-[90%] relative z-10">
         <Image 
-          src={currentPulseImage.imageUrl}
+          src={message?.imageUrl}
           alt="Story visualization"
           className="rounded-lg shadow-lg object-contain"
           width={800}
           height={600}
-          onError={() => setImageError(true)}
         />
       </div>
     </div>

@@ -1,3 +1,9 @@
+declare module "ai" {
+  interface Message {
+    imageUrl?: string | null;
+  }
+}
+
 import type {
   CoreAssistantMessage,
   CoreToolMessage,
@@ -123,6 +129,7 @@ export function convertToUIMessages(
       content: textContent,
       reasoning,
       toolInvocations,
+      imageUrl: message.imageUrl,
     });
 
     return chatMessages;

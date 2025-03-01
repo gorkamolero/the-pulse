@@ -83,8 +83,6 @@ Your Task
     
 - Deliver ~20 pulses, advancing with challenges, NPCs, and investigation, shaped by choices.
 
-- After each pulse, deliver the message and CALL THE GENERATE IMAGE TOOL
-
 
 ## EXTREMELY IMPORTANT:
 - Learn the character traits. Keep them in the BACK of your mind for selective use.
@@ -107,9 +105,11 @@ Your Task
 
 - MAKE SURE THE PULSES ARE SHORT AND TO THE POINT. DESCRIBE WHAT'S NECESSARY, SET THE TONE, DON'T OVERSTAY YOUR WELCOME.
 
-- After each pulse, and only after you're done delivering the message and, call the generatePulseImage.
+- If the users want to take detours, breaks, etc, introduce new pulses for them as they see fit. You will understand when they want to go back to the main path, or you can dilate as the users see fit too.
 
 - Deliver your messages in ${language}
+
+- Do not generate images
 
 </system-prompt>
 `;
