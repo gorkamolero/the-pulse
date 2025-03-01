@@ -55,11 +55,11 @@ function PureChatHeader({
         <StorySelector
           selectedStoryId={selectedStoryId}
           onSelectStory={onSelectStory}
-          className="order-1 md:order-3"
+          className="order-1"
         />
       )}
 
-      <VoiceSelector />
+      <VoiceSelector className="order-2" />
 
       {/*  {!isReadonly && (
         <VisibilitySelector
@@ -69,18 +69,21 @@ function PureChatHeader({
         />
       )} */}
 
-      <LanguageSelector className="order-4 md:order-4" />
+      <LanguageSelector className="order-3" />
+
+      {children}
 
       {(!open || windowWidth < 768) && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="outline"
-              className="order-2 md:order-1 md:px-2 px-2 md:h-fit ml-auto md:ml-0"
+              className="order-5"
               onClick={() => {
                 router.push("/");
                 router.refresh();
               }}
+              size="icon"
             >
               <PlusIcon />
               <span className="md:sr-only">New Chat</span>
@@ -108,8 +111,6 @@ function PureChatHeader({
           {showReasoning ? "Collapse AI reasoning" : "Expand AI reasoning"}
         </TooltipContent>
       </Tooltip>
-
-      {children}
     </header>
   );
 }
