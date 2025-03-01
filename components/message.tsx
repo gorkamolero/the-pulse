@@ -5,8 +5,6 @@ import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useState } from "react";
 
-import type { Vote } from "@/lib/db/schema";
-
 import { DocumentToolCall, DocumentToolResult } from "./document";
 import { PencilEditIcon, SparklesIcon } from "./icons";
 import { Markdown } from "./markdown";
@@ -20,20 +18,18 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { MessageEditor } from "./message-editor";
 import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
-import { ALL_VOICES } from "@/lib/orate-service";
 
 const PurePreviewMessage = ({
   chatId,
   message,
-  vote,
   isLoading,
   setMessages,
   reload,
   isReadonly,
+  autoplay
 }: {
   chatId: string;
   message: Message;
-  vote: Vote | undefined;
   isLoading: boolean;
   setMessages: (
     messages: Message[] | ((messages: Message[]) => Message[])
@@ -42,6 +38,7 @@ const PurePreviewMessage = ({
     chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
+  autoplay?: boolean
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
 
@@ -162,6 +159,8 @@ const PurePreviewMessage = ({
                             result={result}
                             isReadonly={isReadonly}
                           />
+                        ) : toolName === "generatePulseImage" ? (
+                          null
                         ) : (
                           <pre>{JSON.stringify(result, null, 2)}</pre>
                         )}
@@ -203,8 +202,8 @@ const PurePreviewMessage = ({
                 key={`action-${message.id}`}
                 chatId={chatId}
                 message={message}
-                vote={vote}
                 isLoading={isLoading}
+                autoplay={autoplay}
               />
             )}
           </div>
@@ -228,7 +227,6 @@ export const PreviewMessage = memo(
       )
     )
       return false;
-    if (!equal(prevProps.vote, nextProps.vote)) return false;
 
     return true;
   }

@@ -62,8 +62,6 @@ export function VoiceSelector() {
     .find((group) => group.provider === provider)
     ?.voices.find((voice: Voice) => voice.id === voiceId);
 
-  console.log("Current voice found:", currentVoice);
-
   // Handle voice selection
   const handleSelect = useCallback(
     (value: string) => {
@@ -134,7 +132,7 @@ export function VoiceSelector() {
             className="w-full justify-between"
           >
             {currentVoice ? currentVoice.name : "Select voice..."}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-0">

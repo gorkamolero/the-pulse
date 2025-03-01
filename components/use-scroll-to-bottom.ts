@@ -12,8 +12,17 @@ export function useScrollToBottom<T extends HTMLElement>(): [
     const end = endRef.current;
 
     if (container && end) {
+      // Function to check if user is already near bottom
+      const isNearBottom = () => {
+        const threshold = 100; // pixels from bottom to trigger auto-scroll
+        return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+      };
+
       const observer = new MutationObserver(() => {
-        end.scrollIntoView({ behavior: 'instant', block: 'end' });
+        // Only scroll to bottom if user is already near bottom
+        if (isNearBottom()) {
+          end.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
       });
 
       observer.observe(container, {

@@ -19,7 +19,7 @@ const openRouter = createOpenRouter({
 export const myProvider = customProvider({
   languageModels: {
     "chat-model-small": openRouter.chat(
-      "anthropic/claude-3.7-sonnet:thinking"
+      "anthropic/claude-3.7-sonnet"
     ) as unknown as LanguageModelV1,
     "chat-model-large": openRouter.chat(
       "anthropic/claude-3.7-sonnet:thinking"
@@ -35,8 +35,8 @@ export const myProvider = customProvider({
     "artifact-model": openai("gpt-4o-mini"),
   },
   imageModels: {
-    "small-model": openai.image("dall-e-2"),
-    "large-model": openai.image("dall-e-3"),
+    "small-model": fireworks.image("accounts/fireworks/models/flux-1-dev"),
+    "large-model": fireworks.image("accounts/fireworks/models/flux-1-dev"),
   },
 });
 

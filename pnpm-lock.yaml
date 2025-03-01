@@ -17,6 +17,9 @@ importers:
       '@ai-sdk/openai':
         specifier: 1.1.9
         version: 1.1.9(zod@3.23.8)
+      '@ai-sdk/replicate':
+        specifier: ^0.1.11
+        version: 0.1.11(zod@3.23.8)
       '@codemirror/lang-javascript':
         specifier: ^6.2.2
         version: 6.2.2
@@ -346,6 +349,12 @@ packages:
         optional: true
       zod:
         optional: true
+
+  '@ai-sdk/replicate@0.1.11':
+    resolution: {integrity: sha512-/7eT7n5RgPCkJosavcMppjyxQvGX0UNfno6i2co3EaQWhRVVMudHKsgOAH67jeUtet8hJ0Rj9NeNgKVT+bRpHA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
 
   '@ai-sdk/ui-utils@1.1.15':
     resolution: {integrity: sha512-NsV/3CMmjc4m53snzRdtZM6teTQUXIKi8u0Kf7GBruSzaMSuZ4DWaAAlUshhR3p2FpZgtsogW+vYG1/rXsGu+Q==}
@@ -5342,6 +5351,12 @@ snapshots:
       throttleit: 2.1.0
     optionalDependencies:
       react: 19.0.0-rc-45804af1-20241021
+      zod: 3.23.8
+
+  '@ai-sdk/replicate@0.1.11(zod@3.23.8)':
+    dependencies:
+      '@ai-sdk/provider': 1.0.9
+      '@ai-sdk/provider-utils': 2.1.10(zod@3.23.8)
       zod: 3.23.8
 
   '@ai-sdk/ui-utils@1.1.15(zod@3.23.8)':

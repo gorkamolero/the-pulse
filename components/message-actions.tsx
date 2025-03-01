@@ -2,9 +2,7 @@ import type { Message } from "ai";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import type { Vote } from "@/lib/db/schema";
-
-import { CopyIcon, ClockRewind } from "./icons";
+import { CopyIcon, ClockRewind, ImageIcon } from "./icons";
 import { Button } from "./ui/button";
 import {
   Tooltip,
@@ -13,26 +11,24 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { memo } from "react";
-import equal from "fast-deep-equal";
 import { deleteTrailingMessages } from "@/app/(chat)/actions";
 import { AudioPlayer } from "./audio-player";
 
 export function PureMessageActions({
   chatId,
   message,
-  vote,
   isLoading,
+  autoplay
 }: {
   chatId: string;
   message: Message;
-  vote: Vote | undefined;
   isLoading: boolean;
+  autoplay?: boolean
 }) {
   const [_, copyToClipboard] = useCopyToClipboard();
 
   if (isLoading) return null;
 
-  // Different actions for user vs assistant messages
   if (message.role === "user") {
     return (
       <TooltipProvider delayDuration={0}>
@@ -53,7 +49,6 @@ export function PureMessageActions({
                     toast.promise(revert, {
                       loading: "Reverting to previous state...",
                       success: () => {
-                        // Refresh the page to show the updated state
                         window.location.reload();
                         return "Successfully reverted to previous state!";
                       },
@@ -78,8 +73,7 @@ export function PureMessageActions({
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex flex-row gap-2">
-        {/* Audio Player - Only show for assistant messages when audio is enabled */}
-        <AudioPlayer content={message.content as string} />
+        <AudioPlayer content={message.content as string} chatId={chatId} autoplay={autoplay} />
 
         <Tooltip>
           <TooltipTrigger asChild>
@@ -104,7 +98,6 @@ export function PureMessageActions({
 export const MessageActions = memo(
   PureMessageActions,
   (prevProps, nextProps) => {
-    if (!equal(prevProps.vote, nextProps.vote)) return false;
     if (prevProps.isLoading !== nextProps.isLoading) return false;
 
     return true;
