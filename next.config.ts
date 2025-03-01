@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
       {
         hostname: 'avatar.vercel.sh',
       },
+      {
+        hostname: 'dk8a54oensfymssl.public.blob.vercel-storage.com',
+        protocol: 'https',
+        pathname: '/**',
+      },
     ],
   },
   async headers() {

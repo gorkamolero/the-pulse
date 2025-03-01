@@ -67,13 +67,10 @@ export function PureMessageActions({
     );
   }
 
-  if (message.toolInvocations && message.toolInvocations.length > 0)
-    return null;
-
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex flex-row gap-2">
-        <AudioPlayer content={message.content as string} chatId={chatId} autoplay={autoplay} />
+        <AudioPlayer content={message.content as string} chatId={chatId} autoplay={autoplay} id={message.id} />
 
         <Tooltip>
           <TooltipTrigger asChild>
