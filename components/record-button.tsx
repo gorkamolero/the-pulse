@@ -132,7 +132,7 @@ export function RecordButton({
   
   return (
     <Button
-      className={`aspect-square h-full flex items-center justify-center rounded-xl ${
+      className={`aspect-square h-full max-h-24 flex items-center justify-center rounded-xl ${
         isRecording 
           ? "bg-red-500 hover:bg-red-600 text-white" 
           : "dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
@@ -140,7 +140,7 @@ export function RecordButton({
       onClick={toggleRecording}
       type="button"
       disabled={disabled}
-      variant={isRecording ? "default" : "ghost"}
+      variant={isRecording ? "default" : "outline"}
       aria-label={isRecording ? "Stop recording" : "Start recording"}
     >
       {isRecording ? (

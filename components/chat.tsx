@@ -105,15 +105,22 @@ export function Chat({
         for (const invocation of message.toolInvocations) {
           if (invocation.toolName === 'generatePulseImage' && invocation.state === 'result') {
             console.log('Found pulse image invocation:', invocation);
-            // Check if we have valid image data before returning
-            if (invocation.result && invocation.result.imageBase64) {
-              // Return the first (most recent) pulse image we find
+            
+            // First check if we have the Blob URL
+            if (invocation.result && invocation.result.imageUrl) {
+              return {
+                imageUrl: invocation.result.imageUrl,
+                prompt: invocation.result.prompt || 'Generated image'
+              };
+            }
+            // Fallback to base64 if it exists (for backward compatibility)
+            else if (invocation.result && invocation.result.imageBase64) {
               return {
                 imageUrl: `data:image/png;base64,${invocation.result.imageBase64}`,
                 prompt: invocation.result.prompt || 'Generated image'
               };
             } else {
-              console.warn('Found pulse image invocation but imageBase64 is missing');
+              console.warn('Found pulse image invocation but no image data is available');
             }
           }
         }
@@ -161,7 +168,7 @@ export function Chat({
         </ResizablePanelGroup>
 
         <form 
-          className="flex mx-auto px-4 bg-background p-4 md:p-6 gap-2 w-full md:max-w-3xl"
+          className="flex mx-auto bg-background p-4 md:p-6 gap-2 w-full md:max-w-3xl"
           onSubmit={(e) => {
             // Prevent default form submission
             e.preventDefault();

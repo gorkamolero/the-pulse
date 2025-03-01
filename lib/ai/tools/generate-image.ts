@@ -3,6 +3,8 @@ import { replicate } from "@ai-sdk/replicate";
 import { getStoryById } from "../stories";
 import { z } from "zod";
 import { myProvider } from "../models";
+import { put } from '@vercel/blob';
+import { generateUUID } from "@/lib/utils";
 
 export const generateImage = ({ storyId, context }: { storyId: string, context?: string }) => {
   const story = getStoryById(storyId);
@@ -48,22 +50,49 @@ Visual Prompt:`
         });
 
         console.log('Image generation result:', {
-          image,
-          base64: image?.base64,
+          image: image ? 'Image generated' : 'No image',
+          base64: image?.base64 ? 'Base64 data available' : 'No base64 data',
           prompt: imagePrompt
         });
 
-        // Check if image and base64 data exist before writing to dataStream
+        // Check if image and base64 data exist before proceeding
         if (!image || !image.base64) {
           console.error('Image generation failed: No base64 data received');
           return { success: false, error: 'No image data received' };
         }
 
-        return { 
-          success: true,
-          imageBase64: image.base64,
-          prompt: imagePrompt
-        };
+        // Upload the image to Vercel Blob
+        try {
+          // Generate a unique filename for the image
+          const imageId = generateUUID();
+          const filename = `pulse-image-${imageId}.png`;
+          
+          // Convert base64 to buffer
+          const buffer = Buffer.from(image.base64, 'base64');
+          
+          // Upload to Vercel Blob
+          const { url } = await put(filename, buffer, {
+            contentType: 'image/png',
+            access: 'public',
+          });
+          
+          return { 
+            success: true,
+            imageUrl: url,
+            prompt: imagePrompt,
+            // Don't include the base64 data in the response
+          };
+        } catch (uploadError) {
+          console.error('Error uploading image to Vercel Blob:', uploadError);
+          
+          // Fallback to returning base64 if upload fails
+          return { 
+            success: true,
+            imageBase64: image.base64,
+            prompt: imagePrompt,
+            error: 'Failed to upload to Blob storage, using base64 fallback'
+          };
+        }
       } catch (error) {
         console.error('Error generating pulse image:', error);
         console.error('Error details:', JSON.stringify(error, null, 2));
@@ -71,6 +100,4 @@ Visual Prompt:`
       }
     },
   })
-  
-  
 }

@@ -247,7 +247,7 @@ function PureMultimodalInput({
         </div>
       )}
 
-      <div className="flex flex-row gap-2 items-start">
+      <div className="flex flex-row gap-4 items-start">
         <RecordButton 
           onTranscriptionComplete={handleTranscriptionComplete}
           disabled={isLoading}

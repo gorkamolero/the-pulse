@@ -30,8 +30,21 @@ export function StoryDisplay({ currentPulseImage }: { currentPulseImage?: { imag
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-4">
-      <div className="max-w-[90%] max-h-[90%] relative">
+    <div className="flex flex-col items-center justify-center h-full p-4 relative">
+      {/* Blurred background image */}
+      <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <Image 
+          src={currentPulseImage.imageUrl}
+          alt="Background"
+          className="w-full h-full object-cover blur-md opacity-20"
+          fill
+          priority={false}
+          quality={30}
+        />
+      </div>
+      
+      {/* Main image */}
+      <div className="max-w-[90%] max-h-[90%] relative z-10">
         <Image 
           src={currentPulseImage.imageUrl}
           alt="Story visualization"

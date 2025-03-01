@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,33 @@ export function StorySelector({
   onSelectStory: (storyId: string) => void;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
+
+  // Load the story preference from cookies on component mount
+  useEffect(() => {
+    const storyCookie = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("selectedStory="));
+
+    if (storyCookie) {
+      const storyId = storyCookie.split("=")[1];
+      if (storyId !== selectedStoryId) {
+        onSelectStory(storyId);
+      }
+    }
+  }, [selectedStoryId, onSelectStory]);
+
+  // Save story selection to cookie
+  const handleSelectStory = useCallback((storyId: string) => {
+    // Set a cookie to remember the story preference
+    document.cookie = `selectedStory=${storyId}; path=/; max-age=31536000`; // 1 year
+    onSelectStory(storyId);
+    
+    // Find the selected story to display its title in the toast
+    const story = stories.find(s => s.id === storyId);
+    if (story) {
+      toast.success(`Story selected: "${story.title}"`);
+    }
+  }, [onSelectStory]);
 
   const selectedStory = useMemo(
     () => stories.find((story) => story.id === selectedStoryId),
@@ -52,7 +80,7 @@ export function StorySelector({
               key={id}
               onSelect={() => {
                 setOpen(false);
-                onSelectStory(id);
+                handleSelectStory(id);
               }}
               className="gap-4 group/item flex flex-row justify-between items-center"
               data-active={id === selectedStoryId}

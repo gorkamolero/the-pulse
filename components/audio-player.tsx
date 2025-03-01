@@ -11,9 +11,10 @@ interface AudioPlayerProps {
   content: string;
   autoplay?: boolean;
   chatId: string;
+  id: string;
 }
 
-export function AudioPlayer({ content, autoplay = false, chatId }: AudioPlayerProps) {
+export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -32,38 +33,33 @@ export function AudioPlayer({ content, autoplay = false, chatId }: AudioPlayerPr
 
   // Generate a cache key based on content and voice settings
   const getCacheKey = () => {
-    return `audio-${selectedVoice.provider}-${
-      selectedVoice.voiceId
-    }-${content.substring(0, 100)}`;
+    return `audio-${selectedVoice.provider}-${selectedVoice.voiceId}-${id}-${chatId}`;
   };
 
   // Check if audio is cached
-  const getFromCache = () => {
-    const cacheKey = getCacheKey();
-    const cachedItem = localStorage.getItem(cacheKey);
-    if (cachedItem) {
-      try {
-        return new Blob([Buffer.from(cachedItem, "base64")], {
-          type: "audio/mpeg",
-        });
-      } catch (e) {
-        console.error("Failed to retrieve from cache:", e);
-        return null;
+  const getFromCache = async () => {
+    try {
+      if ('caches' in window) {
+        const cache = await caches.open('audio-cache');
+        const cachedResponse = await cache.match(getCacheKey());
+        if (cachedResponse) {
+          return await cachedResponse.blob();
+        }
       }
+    } catch (e) {
+      console.error("Failed to retrieve from cache:", e);
     }
     return null;
   };
 
   // Save audio to cache
-  const saveToCache = (blob: Blob) => {
-    const cacheKey = getCacheKey();
+  const saveToCache = async (blob: Blob) => {
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = () => {
-        const base64data = (reader.result as string).split(",")[1];
-        localStorage.setItem(cacheKey, base64data);
-      };
+      if ('caches' in window) {
+        const cache = await caches.open('audio-cache');
+        const response = new Response(blob);
+        await cache.put(getCacheKey(), response);
+      }
     } catch (e) {
       console.error("Failed to save to cache:", e);
     }
@@ -80,7 +76,11 @@ export function AudioPlayer({ content, autoplay = false, chatId }: AudioPlayerPr
 
     try {
       // Check cache first
-      let blob = audioBlob || getFromCache();
+      let blob = audioBlob;
+      
+      if (!blob) {
+        blob = await getFromCache();
+      }
 
       if (!blob) {
         // Show loading state while fetching audio
@@ -105,7 +105,7 @@ export function AudioPlayer({ content, autoplay = false, chatId }: AudioPlayerPr
 
         blob = await response.blob();
         setAudioBlob(blob);
-        saveToCache(blob);
+        await saveToCache(blob);
 
         // Hide loading state after fetching
         setIsLoading(false);
