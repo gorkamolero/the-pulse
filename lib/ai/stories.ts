@@ -1,3 +1,4 @@
+import { endlessPath } from "./stories/endless-path";
 import { innsmouth } from "./stories/shadow-over-innsmouth";
 import { sirenOfTheRedDust } from "./stories/siren-of-the-red-dust";
 import { theHollowChoir } from "./stories/the-hollow-choir";
@@ -15,6 +16,7 @@ export const stories: Array<Story> = [
   theHollowChoir,
   whisperingPines,
   sirenOfTheRedDust,
+  endlessPath
 ];
 
 export const DEFAULT_STORY_ID = "shadow-over-innsmouth";
@@ -24,4 +26,4 @@ export function getStoryById(id: string): Story | undefined {
 }
 
 // Re-export the individual story objects for direct access
-export { innsmouth, theHollowChoir, whisperingPines, sirenOfTheRedDust };
+export { innsmouth, theHollowChoir, whisperingPines, sirenOfTheRedDust, endlessPath };
