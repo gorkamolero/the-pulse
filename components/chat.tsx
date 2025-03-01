@@ -10,6 +10,7 @@ import { ChatHeader } from "@/components/chat-header";
 import { generateUUID } from "@/lib/utils";
 import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 
+import { Overview } from "./overview";
 import { Artifact } from "./artifact";
 import { MultimodalInput } from "./multimodal-input";
 import { Messages } from "./messages";
@@ -22,7 +23,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
-
 
 export function Chat({
   id,
@@ -113,8 +113,8 @@ export function Chat({
           onSelectStory={handleStorySelection}
         />
 
-        <ResizablePanelGroup direction="horizontal" className=" h-full" >
-
+        
+      {messages.length === 0 ? <Overview /> : (<ResizablePanelGroup direction="horizontal" className=" h-full" >
           <ResizablePanel  defaultSize={50}>
             <div className="overflow-y-scroll h-full">
             <Messages
@@ -137,7 +137,9 @@ export function Chat({
               <StoryDisplay currentMessageId={currentMessageId} />
             </div>
           </ResizablePanel>
-        </ResizablePanelGroup>
+        </ResizablePanelGroup>)}
+
+        
 
         <form 
           className="flex mx-auto bg-background p-4 md:p-6 gap-2 w-full md:max-w-3xl"

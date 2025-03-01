@@ -16,8 +16,7 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-4">
         <div className="text-center">
-          <p className="text-muted-foreground mb-2">Image generation failed</p>
-          <p className="text-sm text-muted-foreground">Unable to load the visualization for this story pulse.</p>
+          <p className="text-sm text-muted-foreground">Awaiting story...</p>
         </div>
       </div>
     );
