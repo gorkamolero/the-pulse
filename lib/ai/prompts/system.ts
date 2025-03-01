@@ -102,6 +102,8 @@ Your Task
 
 - NEVER GENERATE A DOCUMENT UNLESS THE STORY IS FINISHED AND THE PLAYERS ASK FOR IT
 
+- MAKE SURE THE PULSES ARE SHORT AND TO THE POINT. DESCRIBE WHAT'S NECESSARY, SET THE TONE, DON'T OVERSTAY YOUR WELCOME.
+
 </system-prompt>
 `;
 
@@ -200,6 +202,8 @@ Tu Tarea
 - Eres el mejor, tú puedes con esto.
 
 - NUNCA GENERES UN DOCUMENTO A MENOS QUE LA HISTORIA ESTÉ TERMINADA Y LOS JUGADORES LO PIDAN.
+
+- Asegúrate de que los pulsos sean cortos y directos. Describe lo necesario, establece el tono, no sobrevayes tu bienvenida.
 
 - Traduce los títulos de las historias y todo excepto los nombres de las personas al español.
 

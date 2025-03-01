@@ -24,7 +24,7 @@ function PureSuggestedActions({
     id: story.id,
     title: story.title,
     label: story.description,
-    action: `Let's start the story "${story.title}". ${story.description}`,
+    action: `Let's start the story "${story.title}".`,
   }));
 
   return (
