@@ -160,7 +160,13 @@ export function Chat({
           </ResizablePanel>
         </ResizablePanelGroup>
 
-        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+        <form 
+          className="flex mx-auto px-4 bg-background p-4 md:p-6 gap-2 w-full md:max-w-3xl"
+          onSubmit={(e) => {
+            // Prevent default form submission
+            e.preventDefault();
+          }}
+        >
           {!isReadonly && (
             <MultimodalInput
               chatId={id}

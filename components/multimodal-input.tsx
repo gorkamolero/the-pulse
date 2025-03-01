@@ -28,6 +28,7 @@ import { PreviewAttachment } from "./preview-attachment";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { SuggestedActions } from "./suggested-actions";
+import { RecordButton } from "./record-button";
 
 function PureMultimodalInput({
   chatId,
@@ -196,6 +197,15 @@ function PureMultimodalInput({
     [setAttachments]
   );
 
+  // Handle transcription from RecordButton
+  const handleTranscriptionComplete = (text: string) => {
+    const newInput = input.length > 0 ? `${input} ${text}` : text;
+    setInput(newInput);
+    
+    // Adjust the textarea height after setting the input
+    setTimeout(adjustHeight, 0);
+  };
+
   return (
     <div className="relative w-full flex flex-col gap-4">
       {messages.length === 0 &&
@@ -237,44 +247,53 @@ function PureMultimodalInput({
         </div>
       )}
 
-      <Textarea
-        ref={textareaRef}
-        placeholder="Send a message..."
-        value={input}
-        onChange={handleInput}
-        className={cx(
-          "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700",
-          className
-        )}
-        rows={2}
-        autoFocus
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
+      <div className="flex flex-row gap-2 items-start">
+        <RecordButton 
+          onTranscriptionComplete={handleTranscriptionComplete}
+          disabled={isLoading}
+        />
+        
+        <div className="relative grow">
+          <Textarea
+            ref={textareaRef}
+            placeholder="Send a message..."
+            value={input}
+            onChange={handleInput}
+            className={cx(
+              "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700",
+              className
+            )}
+            rows={2}
+            autoFocus
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
 
-            if (isLoading) {
-              toast.error("Please wait for the model to finish its response!");
-            } else {
-              submitForm();
-            }
-          }
-        }}
-      />
-
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
-      </div>
-
-      <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {isLoading ? (
-          <StopButton stop={stop} setMessages={setMessages} />
-        ) : (
-          <SendButton
-            input={input}
-            submitForm={submitForm}
-            uploadQueue={uploadQueue}
+                if (isLoading) {
+                  toast.error("Please wait for the model to finish its response!");
+                } else {
+                  submitForm();
+                }
+              }
+            }}
           />
-        )}
+
+          <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+            <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
+          </div>
+
+          <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+            {isLoading ? (
+              <StopButton stop={stop} setMessages={setMessages} />
+            ) : (
+              <SendButton
+                input={input}
+                submitForm={submitForm}
+                uploadQueue={uploadQueue}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
