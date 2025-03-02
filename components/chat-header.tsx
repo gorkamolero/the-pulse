@@ -8,7 +8,7 @@ import { PlusIcon, BrainIcon } from "./icons";
 import { useSidebar } from "./ui/sidebar";
 import { memo } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import type { VisibilityType } from "./visibility-selector";
+import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
 import { StorySelector } from "@/components/story-selector";
 import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import { showReasoningAtom } from "../lib/atoms";
@@ -61,13 +61,13 @@ function PureChatHeader({
 
       <VoiceSelector />
 
-      {/*  {!isReadonly && (
+      {!isReadonly && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}
           className="order-1 md:order-4"
         />
-      )} */}
+      )}
 
       <LanguageSelector className="order-4 md:order-4" />
 
