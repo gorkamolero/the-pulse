@@ -3,6 +3,14 @@ import { openai } from "orate/openai";
 import { elevenlabs } from "orate/elevenlabs";
 import { NextRequest, NextResponse } from "next/server";
 
+// Define ElevenLabs error interface
+interface ElevenLabsError {
+  name: string;
+  statusCode: number;
+  message: string;
+  body: any;
+}
+
 // Provider types
 export type Provider = "openai" | "elevenlabs";
 
@@ -83,8 +91,32 @@ export async function POST(request: NextRequest) {
         }"`,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(`[Orate API] Error generating speech:`, error);
+    
+    // Enhanced error handling for ElevenLabs errors
+    if (
+      error && 
+      typeof error === 'object' && 
+      'name' in error && 
+      (error.name === 'ElevenLabsError' || error.name === 'UnprocessableEntityError')
+    ) {
+      const elevenLabsError = error as ElevenLabsError;
+      console.error(`[Orate API] ElevenLabs API error details:`, {
+        statusCode: elevenLabsError.statusCode,
+        message: elevenLabsError.message,
+        body: elevenLabsError.body
+      });
+      
+      return NextResponse.json(
+        { 
+          error: "Failed to generate speech with ElevenLabs", 
+          details: `Status code: ${elevenLabsError.statusCode}, Message: ${elevenLabsError.message}`
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
       { error: "Failed to generate speech" },
       { status: 500 }
