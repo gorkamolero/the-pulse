@@ -47,7 +47,7 @@ interface Voice {
   description: string;
 }
 
-export function VoiceSelector() {
+export function VoiceSelector({ className }: { className: string }) {
   const [open, setOpen] = useState(false);
   const [audioEnabled] = useAtom(audioEnabledAtom);
   const [selectedVoice, setSelectedVoice] = useAtom(selectedVoiceAtom);
@@ -122,7 +122,7 @@ export function VoiceSelector() {
   if (!audioEnabled) return null;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className={cn("flex items-center gap-1", className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
