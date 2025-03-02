@@ -20,6 +20,12 @@ export const ELEVENLABS_VOICES = [
     provider: "elevenlabs" as Provider,
   },
   {
+    id: "BL7YSL1bAkmW8U0JnU8o",
+    name: "Jen",
+    description: "Calm, somber, thoughtful, reflective, velvety",
+    provider: "elevenlabs" as Provider,
+  },
+  {
     id: "uVKHymY7OYMd6OailpG5",
     name: "Frederick",
     description: "Old Gnarly Narrator",
@@ -43,6 +49,12 @@ export const ELEVENLABS_VOICES = [
     description: "Wise elder voice",
     provider: "elevenlabs" as Provider,
   },
+  {
+    id: "03vEurziQfq3V8WZhQvn",
+    name: "Sassy Aerisita",
+    description: "Middle-aged, Southern African-American female",
+    provider: "elevenlabs" as Provider,
+  }
 ];
 
 // OpenAI voice options
