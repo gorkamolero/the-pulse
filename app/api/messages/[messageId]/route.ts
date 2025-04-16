@@ -4,8 +4,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { messageId: string } }
+  context: { params: { messageId: string } }
 ) {
+  const { params } = context;
   const session = await auth();
 
   if (!session || !session.user) {
@@ -21,12 +22,12 @@ export async function GET(
     }
 
     // Return the first message (getMessageById returns an array)
-    console.log('[MessageAPI]', 'Returning message:', {
+    console.log("[MessageAPI]", "Returning message:", {
       id: messages[0].id,
       hasImageUrl: !!messages[0].imageUrl,
-      imageUrl: messages[0].imageUrl
+      imageUrl: messages[0].imageUrl,
     });
-    
+
     return NextResponse.json(messages[0]);
   } catch (error) {
     console.error("[MessageAPI]", "Error fetching message:", error);
