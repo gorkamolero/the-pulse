@@ -14,10 +14,6 @@ interface ElevenLabsError {
 // Provider types
 export type Provider = "openai" | "elevenlabs";
 
-// Default voice IDs
-const DEFAULT_ELEVENLABS_VOICE_ID = "qNkzaJoHLLdpvgh5tISm"; // Carter
-const DEFAULT_OPENAI_VOICE_ID = "alloy";
-
 /**
  * POST handler for text-to-speech API
  * @param request The incoming request
@@ -93,30 +89,31 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error(`[Orate API] Error generating speech:`, error);
-    
+
     // Enhanced error handling for ElevenLabs errors
     if (
-      error && 
-      typeof error === 'object' && 
-      'name' in error && 
-      (error.name === 'ElevenLabsError' || error.name === 'UnprocessableEntityError')
+      error &&
+      typeof error === "object" &&
+      "name" in error &&
+      (error.name === "ElevenLabsError" ||
+        error.name === "UnprocessableEntityError")
     ) {
       const elevenLabsError = error as ElevenLabsError;
       console.error(`[Orate API] ElevenLabs API error details:`, {
         statusCode: elevenLabsError.statusCode,
         message: elevenLabsError.message,
-        body: elevenLabsError.body
+        body: elevenLabsError.body,
       });
-      
+
       return NextResponse.json(
-        { 
-          error: "Failed to generate speech with ElevenLabs", 
-          details: `Status code: ${elevenLabsError.statusCode}, Message: ${elevenLabsError.message}`
+        {
+          error: "Failed to generate speech with ElevenLabs",
+          details: `Status code: ${elevenLabsError.statusCode}, Message: ${elevenLabsError.message}`,
         },
         { status: 500 }
       );
     }
-    
+
     return NextResponse.json(
       { error: "Failed to generate speech" },
       { status: 500 }

@@ -14,7 +14,12 @@ interface AudioPlayerProps {
   id: string;
 }
 
-export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlayerProps) {
+export function AudioPlayer({
+  content,
+  autoplay = false,
+  chatId,
+  id,
+}: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -39,8 +44,8 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
   // Check if audio is cached
   const getFromCache = async () => {
     try {
-      if ('caches' in window) {
-        const cache = await caches.open('audio-cache');
+      if ("caches" in window) {
+        const cache = await caches.open("audio-cache");
         const cachedResponse = await cache.match(getCacheKey());
         if (cachedResponse) {
           return await cachedResponse.blob();
@@ -55,8 +60,8 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
   // Save audio to cache
   const saveToCache = async (blob: Blob) => {
     try {
-      if ('caches' in window) {
-        const cache = await caches.open('audio-cache');
+      if ("caches" in window) {
+        const cache = await caches.open("audio-cache");
         const response = new Response(blob);
         await cache.put(getCacheKey(), response);
       }
@@ -77,7 +82,7 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
     try {
       // Check cache first
       let blob = audioBlob;
-      
+
       if (!blob) {
         blob = await getFromCache();
       }
@@ -100,7 +105,7 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
         });
 
         if (!response.ok) {
-          throw new Error("Failed to generate audio");
+          throw new Error("Failed to generate audio, AUDIO-PLAYER");
         }
 
         blob = await response.blob();
