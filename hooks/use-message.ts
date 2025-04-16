@@ -19,7 +19,7 @@ export function useMessageSelector<Selected>(messageId: string, selector: Select
   const { data: localMessage } = useSWR<Message>(
     messageId ? `message-${messageId}` : null,
     async () => {
-      const response = await fetch(`/api/messages/${messageId}`);
+      const response = await fetch(`/api/messages?messageId=${messageId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch message');
       }
@@ -42,11 +42,16 @@ export function useMessage(messageId: string | null) {
   const { data: message, error, mutate: setMessage } = useSWR<Message>(
     messageId ? `message-${messageId}` : null,
     async () => {
-      const response = await fetch(`/api/messages/${messageId}`);
+      const response = await fetch(`/api/messages?messageId=${messageId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch message');
       }
       const data = await response.json();
+      console.log('[useMessage]', 'Message data received:', {
+        id: data.id,
+        hasImageUrl: !!data.imageUrl,
+        imageUrl: data.imageUrl
+      });
       return data;
     },
     {

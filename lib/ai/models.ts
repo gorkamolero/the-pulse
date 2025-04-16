@@ -22,16 +22,14 @@ export const myProvider = customProvider({
       "anthropic/claude-3.7-sonnet"
     ) as unknown as LanguageModelV1,
     "chat-model-large": openRouter.chat(
-      "anthropic/claude-3.7-sonnet:thinking"
+      "x-ai/grok-3-beta"
     ) as unknown as LanguageModelV1,
     "chat-model-search": openRouter.chat(
-      "anthropic/claude-3.7-sonnet:thinking"
+      "x-ai/grok-3-beta"
     ) as unknown as LanguageModelV1,
-    "chat-model-reasoning": wrapLanguageModel({
-      model: fireworks("accounts/fireworks/models/deepseek-r1"),
-      middleware: extractReasoningMiddleware({ tagName: "think" }),
-    }),
-    "title-model": openRouter.chat("anthropic/claude-3.5-haiku") as unknown as LanguageModelV1,
+    "title-model": openRouter.chat(
+      "anthropic/claude-3.5-haiku"
+    ) as unknown as LanguageModelV1,
     "artifact-model": openai("gpt-4o-mini"),
   },
   imageModels: {
