@@ -2,11 +2,12 @@ import { auth } from "@/app/(auth)/auth";
 import { getMessageById } from "@/lib/db/queries";
 import { NextResponse } from "next/server";
 
+import { type NextRequest } from "next/server";
+
 export async function GET(
-  request: Request,
-  context: { params: { messageId: string } }
+  request: NextRequest,
+  { params }: { params: { messageId: string } }
 ) {
-  const { params } = context;
   const session = await auth();
 
   if (!session || !session.user) {
