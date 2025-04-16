@@ -1,8 +1,8 @@
-import type { ChatRequestOptions, Message } from 'ai';
-import { PreviewMessage, ThinkingMessage } from './message';
-import { useScrollToBottom } from './use-scroll-to-bottom';
-import { memo } from 'react';
-import equal from 'fast-deep-equal';
+import type { ChatRequestOptions, Message } from "ai";
+import { PreviewMessage, ThinkingMessage } from "./message";
+import { useScrollToBottom } from "./use-scroll-to-bottom";
+import { memo } from "react";
+import equal from "fast-deep-equal";
 
 interface MessagesProps {
   chatId: string;
@@ -10,10 +10,10 @@ interface MessagesProps {
   storyId: string;
   messages: Array<Message>;
   setMessages: (
-    messages: Message[] | ((messages: Message[]) => Message[]),
+    messages: Message[] | ((messages: Message[]) => Message[])
   ) => void;
   reload: (
-    chatRequestOptions?: ChatRequestOptions,
+    chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
   isArtifactVisible: boolean;
@@ -31,17 +31,18 @@ function PureMessages({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
-  const lastAssistantMessage = messages.filter(m => m.role==='assistant').pop()
-  console.log('LAST ASSISTANT MESSAGE', lastAssistantMessage)
+  const lastAssistantMessage = messages
+    .filter((m) => m.role === "assistant")
+    .pop();
 
   return (
     <div
       ref={messagesContainerRef}
       className="flex flex-col min-w-0 gap-6  overflow-y-scroll pt-4 flex-1"
     >
-
       {messages.map((message, index) => {
-        const isLastAssistantMessage = message?.content === lastAssistantMessage?.content
+        const isLastAssistantMessage =
+          message?.content === lastAssistantMessage?.content;
         return (
           <PreviewMessage
             key={message.id}
@@ -53,12 +54,12 @@ function PureMessages({
             isReadonly={isReadonly}
             autoplay={isLastAssistantMessage}
           />
-        )
+        );
       })}
 
       {isLoading &&
         messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+        messages[messages.length - 1].role === "user" && <ThinkingMessage />}
 
       <div
         ref={messagesEndRef}
