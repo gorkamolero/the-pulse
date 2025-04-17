@@ -100,14 +100,41 @@ export async function POST(request: Request) {
 
               let imageResult = null
 
-              if (sanitizedResponseMessages[0].role === 'assistant') {
-                imageResult = await generatePulseImage({
-                  storyId: selectedStoryId,
-                  pulse: lastAssistantMessage?.content as string,
-                  messageId: lastAssistantMessage?.id!
-                });
+              if (lastAssistantMessage) {
+                try {
+                  // Extract the content for the image prompt
+                  let messageContent = '';
+                  
+                  if (typeof lastAssistantMessage.content === 'string') {
+                    // Direct string content
+                    messageContent = lastAssistantMessage.content;
+                  } else if (Array.isArray(lastAssistantMessage.content)) {
+                    // Array of content parts, extract text content
+                    messageContent = lastAssistantMessage.content
+                      .filter(part => part.type === 'text')
+                      .map(part => part.text)
+                      .join(' ');
+                  }
+                  
+                  if (messageContent) {
+                    imageResult = await generatePulseImage({
+                      storyId: selectedStoryId,
+                      pulse: messageContent,
+                      messageId: lastAssistantMessage.id
+                    });
+                    
+                    console.log("[ChatAPI]", "Image generation result:", imageResult);
+                  } else {
+                    console.log("[ChatAPI]", "No valid content for image generation");
+                  }
+                } catch (imageError) {
+                  console.error("[ChatAPI]", "Failed to generate image:", imageError);
+                }
               }
 
+              // Only use the image URL if generation was successful
+              const imageUrl = (imageResult && imageResult.success === true) ? imageResult.url : null;
+              
               await saveMessages({
                 messages: sanitizedResponseMessages.map((message) => {
                   return {
@@ -116,7 +143,7 @@ export async function POST(request: Request) {
                     role: message.role,
                     content: message.content,
                     createdAt: new Date(),
-                    imageUrl: imageResult?.url ?? null
+                    imageUrl: imageUrl
                   };
                 }),
               });

@@ -20,6 +20,19 @@ export const ELEVENLABS_VOICES = [
     provider: "elevenlabs" as Provider,
   },
   {
+    id: "vY7jMt4Cbubxeq9O5Qsj",
+    name: "Kitten Kaley Rose",
+    description: "Cool, passionate, confident, loving, and soothing.",
+    provider: "elevenlabs" as Provider,
+  },
+  {
+    id: "25bLwNw4T14AIILU3SLV",
+    name: "Kira",
+    description:
+      "Worldly, neutral accent. Engaging, personable, & slower paced.",
+    provider: "elevenlabs" as Provider,
+  },
+  {
     id: "BL7YSL1bAkmW8U0JnU8o",
     name: "Jen",
     description: "Calm, somber, thoughtful, reflective, velvety",
@@ -54,7 +67,7 @@ export const ELEVENLABS_VOICES = [
     name: "Sassy Aerisita",
     description: "Middle-aged, Southern African-American female",
     provider: "elevenlabs" as Provider,
-  }
+  },
 ];
 
 // OpenAI voice options

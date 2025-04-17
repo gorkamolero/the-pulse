@@ -1,7 +1,7 @@
 import { speak } from "orate";
 import { openai } from "orate/openai";
 import { elevenlabs } from "orate/elevenlabs";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 // Define ElevenLabs error interface
 interface ElevenLabsError {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       console.log(`[Orate API] Using ElevenLabs voice: ${voiceId}`);
 
       audioFile = await speak({
-        model: elevenlabs.tts("flash_v2_5", voiceId),
+        model: elevenlabs.tts("flash_v2", voiceId),
         prompt: text,
       });
     }

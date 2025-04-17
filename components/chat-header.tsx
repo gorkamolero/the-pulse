@@ -15,7 +15,6 @@ import { showReasoningAtom } from "../lib/atoms";
 import { XIcon } from "lucide-react";
 import { LanguageSelector } from "@/components/language-selector";
 import { VoiceSelector } from "./audio-narration";
-import { ModelSelector } from "./model-selector";
 
 function PureChatHeader({
   chatId,

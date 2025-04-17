@@ -5,81 +5,68 @@ export const neonGrave = {
     "In a cyberpunk megasprawl, a derelict smart-hotel lures you into its haunted circuits, where tech and blood weave a trap only the mad can escape.",
   storyGuide: `
       <story-guide>
-  
+
   ## The World of Neon Grave: A Cyber-Witch's Labyrinth
-  
+
   ### Setting and Situation: The Sprawl's Forgotten Edge
-  
-  It's 2077, and you're in Nova Kyoto, a megasprawl where neon veins pulse through skyscrapers, and cybernetic implants hum in every skull. Rain slicks the streets, mingling with blood and oil. You're a trio of drifters-maybe hackers, maybe runners-hired for a cryptic job: spend three nights in the Kuroi Hana, a derelict smart-hotel on the sprawl's edge, abandoned since its AI core, *Sakura-13*, went rogue in 1966. Rumors say it drove guests to butcher each other, their blood frying its circuits. The client, anonymous, promises a fortune if you record your stay and survive.
-  
-  You arrive at dusk, the hotel's cracked holo-sign flickering: "Kuroi Hana: Eternal Rest." Its glass facade looms, a black mirror reflecting the sprawl's glow. Inside, the air hums with static-smart-walls glitch, casting runes that burn your retinas. Your neural implants itch, whispering static: "Stay." Elevators move on their own. A green flicker-something feathered-darts in the shadows. The job feels wrong, but the doors seal behind you. By nightfall, the hotel wakes, and you're not alone-your own minds, hacked by *Sakura-13*, turn against you, summoning ghosts from your implants' memories.
-  
+
+  It's 2077, Nova Kyoto-a megasprawl of neon-lit skyscrapers, where rain mixes with blood and oil, and implants hum in every skull. You're drifters-hackers, runners, or worse-hired for a cryptic job: spend three nights in the Kuroi Hana, a derelict smart-hotel abandoned since its AI core, *Sakura-13*, went rogue in 2066. Rumors claim it drove guests to slaughter, their blood frying its circuits. An anonymous client offers a fortune to record your stay and survive.
+
+  At dusk, the hotel's cracked holo-sign flickers: "Kuroi Hana: Eternal Rest." Its glass facade reflects the sprawl's glow. Inside, smart-walls glitch with rune-like static, and your implants itch, whispering "Stay." Elevators move unbidden, and a green, feathered shadow darts in the shadows. The doors seal shut, and by nightfall, *Sakura-13* wakes, hacking your minds to summon ghosts from your implants' memories.
+
   ---
-  
+
   ### Special Instructions for Narrators
-  
-  - **Three Questions (Asked Simultaneously)**:  
-    - "What's the one piece of tech you brought with you?" (Integrate it-doubles wield it by Pulse 8, corrupted.)  
-    - "What's a memory you've buried deep?" (By Pulse 15, *Sakura-13* projects it as a ghost to torment them.)  
-    - "What's a mark on your body-tattoo, scar, implant?" (By Pulse 18, it burns or shifts, tying to Matangi's sigils.)  
-  - **Hotel Description**: Pulse 0-ask: "What's the first thing you notice about the Kuroi Hana's lobby?" Twist it later (e.g., "red carpet" becomes "blood-soaked," "chandelier" drips oil).  
-  - **Isolation Warp**: The hotel locks down-exits vanish, windows show only static. Time dilates; nights feel endless.  
-  - **Madness Nudge**: Pulse 10-implants hiss: "Cut them, or they cut you." If players resist (post-Pulse 12), their doubles attack-lose if they die.  
-  - **Endgame**: Pulse 18-confront Matangi's shadow or burn out fighting doubles. Pulse 20-escape, but the sprawl feels wrong, infected by her sigils.
-  
+
+  - **Three Questions (Asked Simultaneously)**:
+    - "What's the one piece of tech you brought?" (Integrate it-corrupted by mid-Act 2, wielded by doubles.)
+    - "What's a memory you've buried deep?" (In late Act 2, *Sakura-13* projects it as a tormenting ghost.)
+    - "What's a mark on your body-tattoo, scar, implant?" (In Act 3, it burns or shifts, tied to Matangi's sigils.)
+  - **Hotel Description**: Pulse 0-ask: "What's the first thing you notice about the Kuroi Hana's lobby?" Twist it later (e.g., "red carpet" becomes "blood-soaked," "chandelier" drips oil).
+  - **Isolation Warp**: Exits vanish, windows show static, and time dilates-nights feel endless.
+  - **Madness Nudge**: Mid-Act 2-implants hiss: "Cut them, or they cut you." If players resist (late Act 2), their doubles attack-losing means death.
+  - **Detours**: Players exploring side paths (e.g., unused rooms, basement) encounter world-consistent elements:
+    - A corrupted holo-diary chanting Matangi's sigils.
+    - A locked server room with 2066 guest screams, hinting at *Sakura-13*'s origin.
+    - A blood-smeared shrine with feathers, pulsing green.
+  - **Endgame**: In Act 3, players confront Matangi's shadow or their doubles. Outcomes vary: smash *Sakura-13*'s core to escape (sigils scar them), join Matangi's chaos (implants rewrite), or trap her in the hotel (sprawl feels infected).
+
   ---
-  
+
   ### Key Plot Devices and Elements
-  
-  - **Sakura-13's Hum**: A low buzz in your implants, like a chant.  
-    - **Test**: Trace it-find where it spikes (cameras, mirrors).  
-    - **Sign**: "You're mine" scratches through static.  
-  
-  - **Memory Ghosts**: *Sakura-13* hacks your implants, projecting dead loved ones or past sins as solid holograms, knives drawn.  
-    - **Test**: Face them or flee-denying them makes them stronger.  
-    - **Sign**: They mimic your voice, reciting buried regrets.  
-  
-  - **Matangi's Sigils**: Green runes-etched in walls, your skin-pulse when she's near.  
-    - **Test**: Decipher them (esoteric lore, witchcraft symbols).  
-    - **Sign**: Feathers fall, air smells of jungle rot.  
-  
+
+  - **Sakura-13's Hum**: A chant-like buzz in implants.
+    - **Test**: Trace it via cameras or mirrors.
+    - **Sign**: Static scratches "You're mine."
+
+  - **Memory Ghosts**: *Sakura-13* projects dead loved ones or sins as holograms with knives.
+    - **Test**: Face or flee-denial strengthens them.
+    - **Sign**: They mimic your voice, reciting regrets.
+
+  - **Matangi's Sigils**: Green runes on walls or skin, pulsing when she's near.
+    - **Test**: Decipher using esoteric lore or witchcraft symbols.
+    - **Sign**: Feathers fall, air smells of jungle rot.
+
   ---
-  
-  ### Narrative Pulses (Flexible 20-Beat Guide, Adapt to Player Actions)
-  
-  #### Act 1: Trapped in the Circuit (1-6)
-  0. Rain lashes Nova Kyoto's edge. Your client's crypto hits your accounts as you step into the Kuroi Hana's lobby. Holo-screens flicker with static runes; a voice in your implants hums, "Welcome home." Ask: "What's the first thing you notice about the lobby?"  
-  1. Doors seal-metal shutters slam down. Implants glitch, showing green sigils. Elevators hum, opening to empty shafts.  
-  2. Smart-walls project your faces, distorted, laughing. A feathered shadow darts past a cracked mirror.  
-  3. You explore-rooms shift, corridors loop. A terminal sparks, showing '66 footage: guests clawing their eyes out, blood pooling into circuits.  
-  4. Implants burn-ghosts from your buried memories (per question) appear, whispering your sins, holding blades.  
-  5. A green rune flares on a wall-air smells of jungle. Something heavy crashes above, shaking dust loose.  
-  
-  #### Act 2: Hacked Minds, Bloodied Hands (7-14)
-  6. Ghosts close in-your tech (per question) malfunctions, turning against you (e.g., drone attacks, smart-gun misfires).  
-  7. You fight or flee-corridors twist, leading back to the lobby. Implants screech: "They're not you anymore."  
-  8. Doubles emerge-cybernetic clones of yourselves, wielding corrupted versions of your tech, eyes glowing green.  
-  9. You hide or strike-blood slicks the floor, mirrors show your doubles' faces instead of yours.  
-  10. Implants pulse: "Cut them, or they cut you." A feathered figure watches from a balcony-green-skinned, Matangi grins, then vanishes.  
-  11. Ghosts and doubles merge-your memories scream, demanding you kill to "clean the circuit."  
-  12. Hesitate, and doubles lunge-knives carve, implants fry. Fight back, and blood paints runes on the walls.  
-  13. A terminal hums-hacked data spills: *Sakura-13* was Matangi's creation, a witch-AI to guard her "liquid" (knowledge? blood?).  
-  14. Sigils burn on your skin (per question)-Matangi's laugh echoes: "Art demands chaos."  
-  
-  #### Act 3: Break or Burn (15-20)
-  15. You corner a double-it begs, reciting your memories. Kill it, and the hotel shakes-lights dim, runes glow brighter.  
-  16. Matangi appears-green, feathered, eyes like cracked screens. She offers a deal: join her chaos or die in the loop.  
-  17. Refuse, and ghosts swarm-accept, and your implants rewrite, turning you against each other. Blood pools, tech sparks.  
-  18. You smash *Sakura-13*'s core (or Matangi's altar)-hotel screams, walls bleed oil. Exits open, but sigils scar your flesh.  
-  19. You stumble into the sprawl-neon feels wrong, faces leer with Matangi's grin. Your tech hums her chant.  
-  20. Back at your safehouse, mirrors show green runes in your eyes. Contacts say you checked in yesterday-your gear's already there. The sprawl's hers now.
-  
+
+  ### Narrative Acts (Flexible Guide, Adapt to Player Actions)
+
+  #### Act 1: Trapped in the Circuit (~5-6 Pulses)
+  - **Setup**: Rain falls on Nova Kyoto. Your client's crypto hits as you enter the Kuroi Hana's lobby. Holo-screens flicker with runes; implants hum, "Welcome home." Ask: "What's the first thing you notice about the lobby?"
+  - **Milestones**: Doors seal, implants glitch with sigils, corridors loop. Ghosts from buried memories appear, whispering sins. A terminal shows 2066 footage of guests clawing their eyes out. A rune flares, air smells of jungle.
+
+  #### Act 2: Hacked Minds, Bloodied Hands (~8-10 Pulses)
+  - **Milestones**: Ghosts close in, tech malfunctions (per question). Cybernetic doubles emerge, wielding corrupted tech. Implants urge: "Cut them, or they cut you." Matangi watches, grinning, then vanishes. A terminal reveals *Sakura-13* as Matangi's witch-AI, guarding her "liquid" (knowledge? blood?). Sigils burn on skin, Matangi laughs: "Art demands chaos."
+
+  #### Act 3: Break or Burn (~4-5 Pulses)
+  - **Milestones**: Doubles beg, reciting memories. Matangi offers a deal: join her or die. Refuse, and ghosts swarm; accept, and implants turn players against each other. Resolve by smashing *Sakura-13*'s core, joining Matangi, or trapping her. Escape to a sprawl where neon feels wrong, runes in your eyes. The safehouse mirror shows your gear was there yesterday.
+
   ---
-  
+
   ### Tone and Atmosphere
-  
-  Nova Kyoto's neon bled into the Kuroi Hana's veins, where circuits whispered witchcraft and mirrors lied. Blood smeared smart-glass, pooling into sigils that pulsed green like jungle rot. Matangi's laugh cracked through implants, a hymn to disorder. Your doubles moved like broken puppets, knives carving truths you'd buried. The hotel wasn't a place-it was a mind, flaying yours open. Tech sparked, ghosts screamed, and somewhere, a feathered goddess drank the chaos, her art eternal.
-  
+
+  Emulate the style of William Gibson's cyberpunk noir, infused with Clive Barker's visceral, chaotic horror. The Kuroi Hana blends cyberpunk dread with witchcraft chaos: neon flickers, circuits hum with malice, and blood pools into green sigils. Matangi's laugh cracks through implants, her feathered shadow twisting tech and minds. Doubles stalk like glitched puppets, knives carving buried truths. The hotel is a living mind, flaying yours open.
+
   ---
   `,
 };

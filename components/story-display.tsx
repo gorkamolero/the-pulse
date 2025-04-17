@@ -25,11 +25,11 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full p-4 relative">
       {/* Blurred background image */}
-      <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+      <div className="fixed inset-0 size-full overflow-hidden z-0 pointer-events-none">
         <Image 
           src={message?.imageUrl}
           alt="Background"
-          className="w-full h-full object-cover blur-md opacity-20"
+          className="size-full object-cover blur-md opacity-20"
           fill
           priority={false}
           quality={30}

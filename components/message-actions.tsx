@@ -2,7 +2,7 @@ import type { Message } from "ai";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import { CopyIcon, ClockRewind, ImageIcon } from "./icons";
+import { CopyIcon, ClockRewind, } from "./icons";
 import { Button } from "./ui/button";
 import {
   Tooltip,
