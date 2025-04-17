@@ -1,9 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { fireworks } from "@ai-sdk/fireworks";
-import {
-  customProvider,
-  type LanguageModelV1,
-} from "ai";
+import { customProvider, type LanguageModelV1 } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 export const DEFAULT_CHAT_MODEL: string = "chat-model-large";
@@ -17,13 +14,13 @@ const openRouter = createOpenRouter({
 export const myProvider = customProvider({
   languageModels: {
     "chat-model-small": openRouter.chat(
-      "anthropic/claude-3.7-sonnet"
+      "anthropic/claude-3.5-sonnet"
     ) as unknown as LanguageModelV1,
     "chat-model-large": openRouter.chat(
-      "anthropic/claude-3.7-sonnet"
+      "anthropic/claude-3.5-sonnet"
     ) as unknown as LanguageModelV1,
     "chat-model-search": openRouter.chat(
-      "anthropic/claude-3.7-sonnet"
+      "anthropic/claude-3.5-sonnet"
     ) as unknown as LanguageModelV1,
     "title-model": openRouter.chat(
       "anthropic/claude-3.5-haiku"
