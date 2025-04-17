@@ -143,7 +143,7 @@ export async function POST(request: Request) {
                     role: message.role,
                     content: message.content,
                     createdAt: new Date(),
-                    imageUrl: imageUrl
+                    imageUrl: imageUrl || null
                   };
                 }),
               });
