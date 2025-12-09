@@ -3,7 +3,7 @@
 import type { User } from 'next-auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { History, Plus, Sparkles } from 'lucide-react';
+import { History, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import { ModelSelector } from '@/components/model-selector';
@@ -42,11 +42,8 @@ export function ChatHeader({
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       {/* Left: Logo */}
-      <Link href="/" className="flex items-center gap-3 group">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 flex items-center justify-center shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/40 transition-shadow">
-          <Sparkles className="w-4 h-4 text-white" />
-        </div>
-        <span className="font-semibold text-lg hidden sm:block">The Pulse</span>
+      <Link href="/" className="flex items-center gap-2 group">
+        <span className="font-bold text-xl tracking-tight">The Pulse</span>
       </Link>
 
       {/* Center: Selectors */}

@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { Suspense } from 'react';
 
 import { Chat } from '@/components/chat';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
@@ -6,7 +7,7 @@ import { generateUUID } from '@/lib/utils';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { auth } from '@/app/(auth)/auth';
 
-export default async function Page() {
+async function ChatPage() {
   const session = await auth();
   const cookieStore = await cookies();
   const id = generateUUID();
@@ -43,5 +44,13 @@ export default async function Page() {
       />
       <DataStreamHandler id={id} />
     </>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+      <ChatPage />
+    </Suspense>
   );
 }
