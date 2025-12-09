@@ -36,3 +36,7 @@ yarn-error.log*
 .vercel
 .vscode
 .env*.local
+
+# test harness outputs
+test-harness-sessions/
+test-harness-checkpoints/

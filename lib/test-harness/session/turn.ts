@@ -10,7 +10,7 @@ import type { PlayerAgent } from '../agents/player';
 import type { Classification, OutputType } from './classifier';
 import type { PrivateMoment } from './private';
 
-export interface Message {
+export interface TestHarnessMessage {
   role: 'narrator' | 'spokesperson' | 'player';
   player?: string;
   content: string;
@@ -18,6 +18,9 @@ export interface Message {
   timestamp: number;
   classification?: OutputType;
 }
+
+// Alias for backwards compatibility
+export type Message = TestHarnessMessage;
 
 export interface TurnContext {
   turn: number;
