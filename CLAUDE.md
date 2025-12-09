@@ -2,7 +2,18 @@
 
 ## Project Overview
 
-This project is based on [Vercel's AI Chatbot](https://github.com/vercel/ai-chatbot) template, customized for "The Pulse" interactive stories application.
+**The Pulse** is an AI-powered interactive storytelling platform - immersive narrative fiction with text, AI-generated images, and audio narration.
+
+**Core concept:** 5 curated story experiences (~20 "pulses"/story beats per session, 30-60 min gameplay) where player choices shape narrative outcomes. Features character creation, multimodal storytelling (text/image/voice), sophisticated AI narrator with detailed story guides, and multiple LLM support.
+
+**Stories Available:**
+1. **Shadow Over Innsmouth** (default) - Lovecraftian mystery (`lib/ai/stories/shadow-over-innsmouth.ts`)
+2. **The Hollow Choir** - Flooded city with haunting song (`lib/ai/stories/the-hollow-choir.ts`)
+3. **Whispering Pines** - Psychological horror cabin (`lib/ai/stories/whispering-pines.ts`)
+4. **Siren of the Red Dust** - Mars colony sci-fi thriller (`lib/ai/stories/siren-of-the-red-dust.ts`)
+5. **Endless Path** - Additional narrative (`lib/ai/stories/endless-path.ts`)
+
+Based on [Vercel's AI Chatbot](https://github.com/vercel/ai-chatbot) template. Port 7272 (72 BPM, like a pulse).
 
 ## Next.js 16 - Important Changes
 
@@ -70,13 +81,57 @@ PORT=7272 pnpm dev
 
 ### Key Technologies
 
+#### Core Framework
 - **Next.js 16** (App Router with Turbopack)
-- **AI SDK** by Vercel
-- **Biome** (linting & formatting)
-- **Tailwind CSS v4**
-- **shadcn/ui** components
-- **Drizzle ORM** + Vercel Postgres
-- **NextAuth.js v5 beta**
+- **React 19 RC** (cutting-edge, note RC API differences)
+- **TypeScript 5.6**
+- **Biome** (linting & formatting, no ESLint)
+
+#### UI & Styling
+- **Tailwind CSS v4** with PostCSS
+- **shadcn/ui** + Radix UI primitives
+- **Framer Motion** (animations)
+- **Geist** font
+- **next-themes** (dark mode)
+
+#### AI & LLM Integration
+- **Vercel AI SDK 5.0.108**
+- **OpenRouter** (primary model routing)
+  - Claude 3.7 Sonnet (chat-model-small)
+  - Claude 3.7 Sonnet Thinking (chat-model-large, default)
+  - Claude 3.5 Haiku (title generation)
+- **Fireworks AI**
+  - DeepSeek R1 (reasoning model)
+  - Flux-1-dev (image generation)
+- **OpenAI** (GPT-4o-mini for artifacts)
+
+#### Audio/Voice
+- **Orate** (unified TTS interface)
+- **@11labs/react** (ElevenLabs integration)
+- ElevenLabs API + OpenAI TTS support
+
+#### Data & State
+- **Drizzle ORM 0.34** + Vercel Postgres
+- **Jotai** (atomic state management)
+- **SWR** (data fetching/caching)
+- **Vercel Blob** (file storage)
+
+#### Rich Text & Code Editing
+- **ProseMirror** (rich text editor)
+- **CodeMirror 6** (code editing with JS/Python support)
+- **react-markdown** + remark-gfm
+
+#### Auth & Security
+- **NextAuth.js v5 beta** (credentials provider)
+- **bcrypt-ts** (password hashing)
+- Invite code system: "ACYBORG", "CYBERYOGIN", "RTT"
+
+#### Other Key Dependencies
+- **Pyodide** (Python in browser, loaded in chat layout)
+- **nanoid** (ID generation)
+- **date-fns** (date utilities)
+- **Sonner** (toast notifications)
+- **react-resizable-panels** (split view layout)
 
 ## Linting Standards
 
