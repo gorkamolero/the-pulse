@@ -1,0 +1,33 @@
+{
+  "name": "@the-pulse/test-harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Automated playtesting system for The Pulse with AI player agents",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test:run": "tsx src/cli/run.ts",
+    "test:replay": "tsx src/cli/replay.ts",
+    "lint": "biome lint --write --unsafe",
+    "format": "biome format --write"
+  },
+  "dependencies": {
+    "@ai-sdk/fireworks": "^1.0.29",
+    "@ai-sdk/openai": "2.0.80",
+    "@openrouter/ai-sdk-provider": "^1.4.1",
+    "ai": "5.0.108",
+    "nanoid": "^5.0.8",
+    "dotenv": "^16.4.5",
+    "zod": "^4.1.13",
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^22.8.6",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}
