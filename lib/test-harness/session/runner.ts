@@ -20,6 +20,7 @@ import { createCheckpoint } from '../checkpoint/schema';
 import { saveCheckpoint } from '../checkpoint/save';
 import { PrivateMomentTracker } from './private';
 import { CostTracker, type CostBreakdown } from './cost';
+import { TangentTracker, type TangentAnalysis, type TangentMoment } from './tangent';
 
 export type SessionOutcome = 'completed' | 'timeout' | 'failed';
 
@@ -32,7 +33,8 @@ export interface SessionResult {
   duration: number;
   detectedPulses: number[];
   privateMoments: any[];
-  tangents: any[];
+  tangents: TangentMoment[];
+  tangentAnalysis?: TangentAnalysis;
   costBreakdown?: CostBreakdown;
   error?: string;
 }
@@ -365,6 +367,10 @@ export async function resumeSessionFromCheckpoint(
       privateMomentTracker.add(pm);
     }
 
+    const tangentTracker = new TangentTracker();
+    // Note: Tangent tracker state is not restored from checkpoint
+    // It will start fresh for the remainder of the session
+
     // Initialize cost tracker
     const costTracker = new CostTracker(
       NARRATOR_MODEL_MAP[sessionConfig.narratorConfig.model] || '',
@@ -373,7 +379,6 @@ export async function resumeSessionFromCheckpoint(
 
     const conversationHistory = [...checkpoint.conversationHistory];
     const detectedPulses = [...checkpoint.detectedPulses];
-    const tangents = [...checkpoint.detectedTangents];
     let outcome: SessionOutcome = 'timeout';
 
     // Continue from next turn
@@ -413,6 +418,11 @@ export async function resumeSessionFromCheckpoint(
         if (classification.type === 'pulse') {
           detectedPulses.push(turn);
           console.log(`💓 Pulse ${detectedPulses.length}/~20`);
+        }
+
+        // Track tangent if detected
+        if (classification.type === 'tangent-response') {
+          console.log(`🌀 Tangent detected`);
         }
 
         // Add narrator message
@@ -507,6 +517,14 @@ export async function resumeSessionFromCheckpoint(
             turn,
             timestamp: Date.now(),
           });
+
+          // Record tangent tracking with player responses
+          tangentTracker.recordTangent(
+            turn,
+            playerResponses.map((r) => r.response),
+            narratorOutput,
+            classification,
+          );
         }
 
         // Save checkpoint
@@ -518,7 +536,7 @@ export async function resumeSessionFromCheckpoint(
           spokesperson,
           sessionConfig,
           detectedPulses,
-          tangents,
+          tangentTracker.getAnalysis().moments,
           privateMomentTracker.getAll(),
           {
             parentCheckpoint: checkpoint.metadata.parentCheckpoint,
@@ -550,6 +568,10 @@ export async function resumeSessionFromCheckpoint(
 
     const duration = Date.now() - startTime;
 
+    // Finalize tangent tracking
+    tangentTracker.finalize();
+    const tangentAnalysis = tangentTracker.getAnalysis();
+
     return {
       sessionId: checkpoint.sessionId,
       config: sessionConfig,
@@ -559,7 +581,8 @@ export async function resumeSessionFromCheckpoint(
       duration,
       detectedPulses,
       privateMoments: privateMomentTracker.getAll(),
-      tangents,
+      tangents: tangentAnalysis.moments,
+      tangentAnalysis,
       costBreakdown: costTracker.getBreakdown(),
     };
   } catch (error) {
@@ -624,8 +647,8 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
 
     // 6. Initialize tracking
     const privateMomentTracker = new PrivateMomentTracker();
+    const tangentTracker = new TangentTracker();
     const detectedPulses: number[] = [];
-    const tangents: any[] = [];
     let outcome: SessionOutcome = 'timeout';
 
     // 7. Main session loop
@@ -660,6 +683,11 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
         if (classification.type === 'pulse') {
           detectedPulses.push(turn);
           console.log(`💓 Pulse ${detectedPulses.length}/~20`);
+        }
+
+        // Track tangent if detected
+        if (classification.type === 'tangent-response') {
+          console.log(`🌀 Tangent detected`);
         }
 
         // Add narrator message
@@ -754,6 +782,14 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
             turn,
             timestamp: Date.now(),
           });
+
+          // Record tangent tracking with player responses
+          tangentTracker.recordTangent(
+            turn,
+            playerResponses.map((r) => r.response),
+            narratorOutput,
+            classification,
+          );
         }
 
         // Save checkpoint
@@ -765,7 +801,7 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
           spokesperson,
           sessionConfig,
           detectedPulses,
-          tangents,
+          tangentTracker.getAnalysis().moments,
           privateMomentTracker.getAll(),
         );
 
@@ -793,6 +829,10 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
 
     const duration = Date.now() - startTime;
 
+    // Finalize tangent tracking
+    tangentTracker.finalize();
+    const tangentAnalysis = tangentTracker.getAnalysis();
+
     return {
       sessionId,
       config: sessionConfig,
@@ -802,7 +842,8 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
       duration,
       detectedPulses,
       privateMoments: privateMomentTracker.getAll(),
-      tangents,
+      tangents: tangentAnalysis.moments,
+      tangentAnalysis,
       costBreakdown: costTracker.getBreakdown(),
     };
   } catch (error) {

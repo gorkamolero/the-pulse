@@ -15,6 +15,7 @@ import { saveSessionReport } from '../report/markdown';
 import type { StoryContext } from '../agents/player';
 import type { NarratorModel } from '../agents/narrator';
 import { getStory, listStoryIds } from '../stories/loader';
+import { getPrompt, listPromptIds } from '../prompts/loader';
 
 // Load environment variables
 config();
@@ -25,7 +26,7 @@ program
   .name('test-run')
   .description('Run a test harness session')
   .requiredOption('--story <id>', 'Story ID (shadow-over-innsmouth, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)')
-  .requiredOption('--prompt <name>', 'System prompt variant (baseline, pulse-aware, etc.)')
+  .requiredOption('--prompt <name>', 'System prompt variant (baseline, pulse-aware, pulse-detailed, concise)')
   .requiredOption('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-r1)')
   .option('--players <number>', 'Group size (2-5)', Number.parseInt)
   .option('--max-turns <number>', 'Maximum turns', Number.parseInt, 100)
@@ -51,36 +52,6 @@ function buildStoryContext(storyId: string): StoryContext {
   };
 }
 
-// System prompts
-const PROMPTS: Record<string, string> = {
-  baseline: `You are the narrator for an interactive fiction experience. Guide players through an immersive story with atmospheric descriptions, meaningful choices, and engaging narrative beats.
-
-Your role:
-- Deliver the story in approximately 20 "pulses" (story beats)
-- Create vivid, atmospheric scenes
-- Present meaningful choices to players
-- Handle player tangents gracefully
-- Maintain narrative momentum
-- Provide satisfying conclusion
-
-Remember to stay flexible and responsive to player actions while guiding the story forward.`,
-
-  'pulse-aware': `You are the narrator for an interactive fiction experience. You must deliver the story in EXACTLY 20 "pulses" (major story beats).
-
-PULSE TRACKING (CRITICAL):
-- You are currently on pulse [track this internally]
-- Each pulse should advance the narrative meaningfully
-- Aim for roughly 20 pulses total to complete the story
-- If you're past pulse 15, start building toward conclusion
-- If you're at pulse 20, deliver the ending
-
-Your role:
-- Create vivid, atmospheric scenes
-- Present meaningful choices
-- Handle tangents gracefully but return to story progression
-- Maintain clear narrative momentum
-- Conclude satisfyingly at pulse 20`,
-};
 
 
 async function main() {
@@ -99,10 +70,16 @@ async function main() {
     process.exit(1);
   }
 
-  const systemPrompt = PROMPTS[options.prompt];
-  if (!systemPrompt) {
-    console.error(chalk.red(`Unknown prompt: ${options.prompt}`));
-    console.log(chalk.yellow('Available prompts:'), Object.keys(PROMPTS).join(', '));
+  // Load prompt using the prompt loader
+  let systemPrompt: string;
+
+  try {
+    const loadedPrompt = getPrompt(options.prompt);
+    systemPrompt = loadedPrompt.content;
+  } catch (error) {
+    console.error(chalk.red((error as Error).message));
+    const availablePrompts = listPromptIds();
+    console.log(chalk.yellow('Available prompts:'), availablePrompts.join(', '));
     process.exit(1);
   }
 
