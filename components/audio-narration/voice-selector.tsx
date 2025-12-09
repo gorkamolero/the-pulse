@@ -21,7 +21,7 @@ import {
 import {
   ELEVENLABS_VOICES,
   OPENAI_VOICES,
-  Provider,
+  type Provider,
 } from "@/lib/orate-service";
 import { useAtom } from "jotai";
 import { audioEnabledAtom, selectedVoiceAtom } from "@/lib/atoms";

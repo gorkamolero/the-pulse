@@ -16,7 +16,6 @@ import {
   message,
   vote,
 } from './schema';
-import type { ArtifactKind } from '@/components/artifact';
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -176,7 +175,7 @@ export async function saveDocument({
 }: {
   id: string;
   title: string;
-  kind: ArtifactKind;
+  kind: 'text' | 'code' | 'image' | 'sheet';
   content: string;
   userId: string;
 }) {

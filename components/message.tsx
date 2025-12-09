@@ -1,11 +1,11 @@
 "use client";
 
-import type { ChatRequestOptions, Message } from "ai";
+import type { UIMessage } from "ai";
 import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useState } from "react";
+import { memo, useState, useMemo } from "react";
+import { convertUIMessageToLegacyFormat } from "@/lib/utils";
 
-import { DocumentToolCall, DocumentToolResult } from "./document";
 import { PencilEditIcon, SparklesIcon } from "./icons";
 import { Markdown } from "./markdown";
 import { MessageActions } from "./message-actions";
@@ -16,12 +16,15 @@ import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { MessageEditor } from "./message-editor";
-import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
+
+type ChatRequestOptions = {
+  experimental_attachments?: Array<any>;
+};
 
 const PurePreviewMessage = ({
   chatId,
-  message,
+  message: uiMessage,
   isLoading,
   setMessages,
   reload,
@@ -29,10 +32,10 @@ const PurePreviewMessage = ({
   autoplay
 }: {
   chatId: string;
-  message: Message;
+  message: UIMessage;
   isLoading: boolean;
   setMessages: (
-    messages: Message[] | ((messages: Message[]) => Message[])
+    messages: UIMessage[] | ((messages: UIMessage[]) => UIMessage[])
   ) => void;
   reload: (
     chatRequestOptions?: ChatRequestOptions
@@ -41,6 +44,9 @@ const PurePreviewMessage = ({
   autoplay?: boolean
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
+
+  // Convert UIMessage to legacy format for compatibility
+  const message = useMemo(() => convertUIMessageToLegacyFormat(uiMessage), [uiMessage]);
 
   return (
     <AnimatePresence>
@@ -143,23 +149,6 @@ const PurePreviewMessage = ({
                       <div key={toolCallId}>
                         {toolName === "getWeather" ? (
                           <Weather weatherAtLocation={result} />
-                        ) : toolName === "createDocument" ? (
-                          <DocumentPreview
-                            isReadonly={isReadonly}
-                            result={result}
-                          />
-                        ) : toolName === "updateDocument" ? (
-                          <DocumentToolResult
-                            type="update"
-                            result={result}
-                            isReadonly={isReadonly}
-                          />
-                        ) : toolName === "requestSuggestions" ? (
-                          <DocumentToolResult
-                            type="request-suggestions"
-                            result={result}
-                            isReadonly={isReadonly}
-                          />
                         ) : toolName === "generatePulseImage" ? (
                           null
                         ) : (
@@ -177,20 +166,6 @@ const PurePreviewMessage = ({
                     >
                       {toolName === "getWeather" ? (
                         <Weather />
-                      ) : toolName === "createDocument" ? (
-                        <DocumentPreview isReadonly={isReadonly} args={args} />
-                      ) : toolName === "updateDocument" ? (
-                        <DocumentToolCall
-                          type="update"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === "requestSuggestions" ? (
-                        <DocumentToolCall
-                          type="request-suggestions"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
                       ) : null}
                     </div>
                   );

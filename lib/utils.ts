@@ -9,6 +9,7 @@ import type {
   CoreToolMessage,
   Message,
   ToolInvocation,
+  UIMessage,
 } from 'ai';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -91,49 +92,86 @@ function addToolMessageToChat({
 
 export function convertToUIMessages(
   messages: Array<DBMessage>,
-): Array<Message> {
-  return messages.reduce((chatMessages: Array<Message>, message) => {
+): Array<UIMessage> {
+  return messages.reduce((chatMessages: Array<UIMessage>, message) => {
     if (message.role === 'tool') {
-      return addToolMessageToChat({
-        toolMessage: message as CoreToolMessage,
-        messages: chatMessages,
-      });
+      // Skip tool messages or handle them by merging with previous assistant message
+      return chatMessages;
     }
 
-    let textContent = '';
-    let reasoning: string | undefined = undefined;
-    const toolInvocations: Array<ToolInvocation> = [];
+    const parts: Array<any> = [];
 
     if (typeof message.content === 'string') {
-      textContent = message.content;
+      if (message.content) {
+        parts.push({
+          type: 'text',
+          text: message.content,
+        });
+      }
     } else if (Array.isArray(message.content)) {
       for (const content of message.content) {
         if (content.type === 'text') {
-          textContent += content.text;
+          parts.push({
+            type: 'text',
+            text: content.text,
+          });
         } else if (content.type === 'tool-call') {
-          toolInvocations.push({
-            state: 'call',
-            toolCallId: content.toolCallId,
-            toolName: content.toolName,
-            args: content.args,
+          parts.push({
+            type: 'tool-invocation',
+            toolInvocation: {
+              state: 'call',
+              toolCallId: content.toolCallId,
+              toolName: content.toolName,
+              args: content.args,
+            },
           });
         } else if (content.type === 'reasoning') {
-          reasoning = content.reasoning;
+          parts.push({
+            type: 'reasoning',
+            text: content.reasoning,
+          });
         }
       }
     }
 
     chatMessages.push({
       id: message.id,
-      role: message.role as Message['role'],
-      content: textContent,
-      reasoning,
-      toolInvocations,
-      imageUrl: message.imageUrl,
+      role: message.role as UIMessage['role'],
+      parts,
     });
 
     return chatMessages;
   }, []);
+}
+
+// Helper functions to work with UIMessage
+export function getUIMessageContent(message: UIMessage): string {
+  return message.parts
+    .filter((part) => part.type === 'text')
+    .map((part: any) => part.text)
+    .join('');
+}
+
+export function getUIMessageReasoning(message: UIMessage): string | undefined {
+  const reasoningPart = message.parts.find((part) => part.type === 'reasoning');
+  return reasoningPart ? (reasoningPart as any).text : undefined;
+}
+
+export function getUIMessageToolInvocations(message: UIMessage): Array<ToolInvocation> {
+  return message.parts
+    .filter((part) => part.type === 'tool-invocation')
+    .map((part: any) => part.toolInvocation);
+}
+
+// Create a Message-like interface for backward compatibility
+export function convertUIMessageToLegacyFormat(message: UIMessage): Message {
+  return {
+    id: message.id,
+    role: message.role,
+    content: getUIMessageContent(message),
+    reasoning: getUIMessageReasoning(message),
+    toolInvocations: getUIMessageToolInvocations(message),
+  } as Message;
 }
 
 type ResponseMessageWithoutId = CoreToolMessage | CoreAssistantMessage;

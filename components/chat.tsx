@@ -1,22 +1,25 @@
 "use client";
 
-import type { Attachment, Message } from "ai";
-import { useChat } from "ai/react";
+import type { UIMessage } from "ai";
+import { useChat } from "@ai-sdk/react";
+
+type Attachment = {
+  url: string;
+  name?: string;
+  contentType?: string;
+};
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useSWRConfig } from "swr";
 
 import { StoryDisplay } from "@/components/story-display";
 import { ChatHeader } from "@/components/chat-header";
-import { generateUUID } from "@/lib/utils";
+import { getUIMessageContent } from "@/lib/utils";
 import { DEFAULT_STORY_ID } from "@/lib/ai/stories";
 
 import { Overview } from "./overview";
-import { Artifact } from "./artifact";
 import { MultimodalInput } from "./multimodal-input";
 import { Messages } from "./messages";
 import type { VisibilityType } from "./visibility-selector";
-import { useArtifactSelector } from "@/hooks/use-artifact";
-import { toast } from "sonner";
 
 import {
   ResizableHandle,
@@ -32,7 +35,7 @@ export function Chat({
   isReadonly,
 }: {
   id: string;
-  initialMessages: Array<Message>;
+  initialMessages: Array<UIMessage>;
   selectedChatModel: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
@@ -53,29 +56,20 @@ export function Chat({
     }
   }, []);
 
+  const [input, setInput] = useState("");
+  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+
   const {
     messages,
     setMessages,
-    handleSubmit,
-    input,
-    setInput,
-    append,
-    isLoading,
+    sendMessage,
+    status,
     stop,
-    reload,
+    regenerate,
   } = useChat({
     id,
-    body: { id, selectedChatModel, selectedStoryId, language },
-    initialMessages,
+    messages: initialMessages,
     experimental_throttle: 100,
-    sendExtraMessageFields: true,
-    generateId: generateUUID,
-    onFinish: () => {
-      mutate("/api/history");
-    },
-    onError: (error) => {
-      toast.error(`An error occured, please try again! ${error}`);
-    },
   });
 
   const handleStorySelection = useCallback(
@@ -92,8 +86,45 @@ export function Chat({
     [messages.length, mutate]
   );
 
-  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+  // Create wrapper functions to match the old API
+  const handleSubmit = useCallback(
+    (event?: { preventDefault?: () => void }, chatRequestOptions?: { experimental_attachments?: Array<Attachment> }) => {
+      event?.preventDefault?.();
+      if (!input.trim() && !attachments.length) return;
+
+      // Convert attachments to files format if needed
+      // For now, sending just text - file handling needs to be implemented
+      sendMessage({
+        text: input,
+      });
+
+      setInput("");
+      setAttachments([]);
+      mutate("/api/history");
+    },
+    [input, attachments, sendMessage, mutate]
+  );
+
+  const append = useCallback(
+    async (message: UIMessage, chatRequestOptions?: { experimental_attachments?: Array<Attachment> }) => {
+      const textContent = getUIMessageContent(message);
+      await sendMessage({
+        text: textContent,
+      });
+      return null;
+    },
+    [sendMessage]
+  );
+
+  const reload = useCallback(
+    async (chatRequestOptions?: { experimental_attachments?: Array<Attachment> }) => {
+      await regenerate();
+      return null;
+    },
+    [regenerate]
+  );
+
+  const isLoading = status === 'streaming';
 
   const currentMessageId = useMemo(() => {
     // Start from the most recent message and work backwards
@@ -124,7 +155,6 @@ export function Chat({
               setMessages={setMessages}
               reload={reload}
               isReadonly={isReadonly}
-              isArtifactVisible={isArtifactVisible}
               storyId={selectedStoryId}
             />
             </div>
@@ -166,22 +196,6 @@ export function Chat({
           )}
         </form>
       </div>
-
-      <Artifact
-        chatId={id}
-        input={input}
-        setInput={setInput}
-        handleSubmit={handleSubmit}
-        isLoading={isLoading}
-        stop={stop}
-        attachments={attachments}
-        setAttachments={setAttachments}
-        append={append}
-        messages={messages}
-        setMessages={setMessages}
-        reload={reload}
-        isReadonly={isReadonly}
-      />
     </>
   );
 }

@@ -1,22 +1,25 @@
-import type { ChatRequestOptions, Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { PreviewMessage, ThinkingMessage } from './message';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { memo } from 'react';
 import equal from 'fast-deep-equal';
 
+type ChatRequestOptions = {
+  experimental_attachments?: Array<any>;
+};
+
 interface MessagesProps {
   chatId: string;
   isLoading: boolean;
   storyId: string;
-  messages: Array<Message>;
+  messages: Array<UIMessage>;
   setMessages: (
-    messages: Message[] | ((messages: Message[]) => Message[]),
+    messages: UIMessage[] | ((messages: UIMessage[]) => UIMessage[]),
   ) => void;
   reload: (
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
-  isArtifactVisible: boolean;
 }
 
 function PureMessages({
@@ -69,8 +72,6 @@ function PureMessages({
 }
 
 export const Messages = memo(PureMessages, (prevProps, nextProps) => {
-  if (prevProps.isArtifactVisible && nextProps.isArtifactVisible) return true;
-
   if (prevProps.isLoading !== nextProps.isLoading) return false;
   if (prevProps.isLoading && nextProps.isLoading) return false;
   if (prevProps.messages.length !== nextProps.messages.length) return false;

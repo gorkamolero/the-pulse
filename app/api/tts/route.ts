@@ -1,7 +1,7 @@
 import { speak } from "orate";
 import { openai } from "orate/openai";
 import { elevenlabs } from "orate/elevenlabs";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 // Provider types
 export type Provider = "openai" | "elevenlabs";

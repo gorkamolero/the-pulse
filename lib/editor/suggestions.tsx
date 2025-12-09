@@ -9,7 +9,8 @@ import { createRoot } from 'react-dom/client';
 
 import { Suggestion as PreviewSuggestion } from '@/components/suggestion';
 import type { Suggestion } from '@/lib/db/schema';
-import type { ArtifactKind } from '@/components/artifact';
+
+type EditorType = 'text' | 'code';
 
 export interface UISuggestion extends Suggestion {
   selectionStart: number;
@@ -70,7 +71,7 @@ export function projectWithPositions(
 export function createSuggestionWidget(
   suggestion: UISuggestion,
   view: EditorView,
-  artifactKind: ArtifactKind = 'text',
+  editorType: EditorType = 'text',
 ): { dom: HTMLElement; destroy: () => void } {
   const dom = document.createElement('span');
   const root = createRoot(dom);
@@ -117,7 +118,7 @@ export function createSuggestionWidget(
     <PreviewSuggestion
       suggestion={suggestion}
       onApply={onApply}
-      artifactKind={artifactKind}
+      editorType={editorType}
     />,
   );
 

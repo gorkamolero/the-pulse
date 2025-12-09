@@ -1,11 +1,16 @@
 "use client";
 
-import type {
-  Attachment,
-  ChatRequestOptions,
-  CreateMessage,
-  Message,
-} from "ai";
+import type { UIMessage } from "ai";
+
+type Attachment = {
+  url: string;
+  name?: string;
+  contentType?: string;
+};
+
+type ChatRequestOptions = {
+  experimental_attachments?: Array<Attachment>;
+};
 import cx from "classnames";
 import type React from "react";
 import {
@@ -52,10 +57,10 @@ function PureMultimodalInput({
   stop: () => void;
   attachments: Array<Attachment>;
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
-  messages: Array<Message>;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
+  messages: Array<UIMessage>;
+  setMessages: Dispatch<SetStateAction<Array<UIMessage>>>;
   append: (
-    message: Message | CreateMessage,
+    message: UIMessage,
     chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
   handleSubmit: (

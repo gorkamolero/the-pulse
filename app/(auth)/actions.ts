@@ -88,14 +88,14 @@ export const register = async (
     return { status: 'success' };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const inviteCodeError = error.errors.find(
+      const inviteCodeError = error.issues.find(
         (err) => err.path.includes('inviteCode')
       );
-      
+
       if (inviteCodeError) {
         return { status: 'invalid_invite_code' };
       }
-      
+
       return { status: 'invalid_data' };
     }
 

@@ -1,7 +1,5 @@
 import {
   type Message,
-  createDataStreamResponse,
-  smoothStream,
   streamText,
 } from "ai";
 
@@ -16,7 +14,6 @@ import {
   saveMessages,
 } from "@/lib/db/queries";
 import {
-  generateUUID,
   getMostRecentUserMessage,
   sanitizeResponseMessages,
 } from "@/lib/utils";
@@ -70,7 +67,12 @@ export async function POST(request: Request) {
   }
 
   await saveMessages({
-    messages: [{ ...userMessage, createdAt: new Date(), chatId: id, imageUrl: null }],
+    messages: [{
+      ...(userMessage as any),
+      createdAt: new Date(),
+      chatId: id,
+      imageUrl: null
+    }],
   });
 
   // Select the appropriate system prompt based on the language
@@ -79,69 +81,54 @@ export async function POST(request: Request) {
     language: language === "es" ? "spanish" : "english",
   })
 
-  return createDataStreamResponse({
-    execute: (dataStream) => {
-      const result = streamText({
-        model: myProvider.languageModel(selectedChatModel),
-        system: getSystemPromptForLanguage(language),
-        messages,
-        maxSteps: 5,
-        experimental_transform: smoothStream({ chunking: "word" }),
-        experimental_generateMessageId: generateUUID,
-        onFinish: async ({ response, reasoning, }) => {
-          if (session.user?.id) {
-            try {
-              const sanitizedResponseMessages = sanitizeResponseMessages({
-                messages: response.messages,
-                reasoning,
-              });
+  const result = streamText({
+    model: myProvider.languageModel(selectedChatModel),
+    system: getSystemPromptForLanguage(language),
+    messages: messages as any,
+    onFinish: async ({ response, reasoning, }) => {
+      if (session.user?.id) {
+        try {
+          const sanitizedResponseMessages = sanitizeResponseMessages({
+            messages: response.messages as any,
+            reasoning: reasoning as any,
+          });
 
-              const lastAssistantMessage = sanitizedResponseMessages.filter(m => m.role === 'assistant').pop()
+          const lastAssistantMessage = sanitizedResponseMessages.filter(m => m.role === 'assistant').pop()
 
-              let imageResult = null
+          let imageResult = null
 
-              if (sanitizedResponseMessages[0].role === 'assistant') {
-                imageResult = await generatePulseImage({
-                  storyId: selectedStoryId,
-                  pulse: lastAssistantMessage?.content as string,
-                  messageId: lastAssistantMessage?.id!
-                });
-              }
-
-              await saveMessages({
-                messages: sanitizedResponseMessages.map((message) => {
-                  return {
-                    id: message.id,
-                    chatId: id,
-                    role: message.role,
-                    content: message.content,
-                    createdAt: new Date(),
-                    imageUrl: imageResult?.url ?? null
-                  };
-                }),
-              });
-            } catch (error) {
-              console.error("Failed to save chat", error);
-            }
+          if (sanitizedResponseMessages[0].role === 'assistant' && lastAssistantMessage?.id) {
+            imageResult = await generatePulseImage({
+              storyId: selectedStoryId,
+              pulse: lastAssistantMessage.content as string,
+              messageId: lastAssistantMessage.id
+            });
           }
-        },
-        experimental_telemetry: {
-          isEnabled: true,
-          functionId: "stream-text",
-        },
-      });
 
-      result.consumeStream();
-
-      result.mergeIntoDataStream(dataStream, {
-        sendReasoning: true,
-      });
+          await saveMessages({
+            messages: sanitizedResponseMessages.map((message) => {
+              return {
+                id: message.id,
+                chatId: id,
+                role: message.role,
+                content: message.content,
+                createdAt: new Date(),
+                imageUrl: imageResult?.url ?? null
+              };
+            }),
+          });
+        } catch (error) {
+          console.error("Failed to save chat", error);
+        }
+      }
     },
-    onError: (error: unknown) => {
-      console.error("Error in streamText", error);
-      return "Oops, an error occured!";
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: "stream-text",
     },
   });
+
+  return result.toTextStreamResponse();
 }
 
 export async function DELETE(request: Request) {
