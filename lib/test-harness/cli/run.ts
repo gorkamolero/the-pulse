@@ -14,6 +14,7 @@ import { runSession } from '../session/runner';
 import { saveSessionReport } from '../report/markdown';
 import type { StoryContext } from '../agents/player';
 import type { NarratorModel } from '../agents/narrator';
+import { getStory, listStoryIds } from '../stories/loader';
 
 // Load environment variables
 config();
@@ -23,7 +24,7 @@ const program = new Command();
 program
   .name('test-run')
   .description('Run a test harness session')
-  .requiredOption('--story <id>', 'Story ID (innsmouth, hollow-choir, etc.)')
+  .requiredOption('--story <id>', 'Story ID (shadow-over-innsmouth, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)')
   .requiredOption('--prompt <name>', 'System prompt variant (baseline, pulse-aware, etc.)')
   .requiredOption('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-r1)')
   .option('--players <number>', 'Group size (2-5)', Number.parseInt)
@@ -34,33 +35,21 @@ program
 
 const options = program.opts();
 
-// Story configurations
-const STORIES: Record<string, StoryContext> = {
-  innsmouth: {
-    storyId: 'shadow-over-innsmouth',
-    storyTitle: 'Shadow Over Innsmouth',
-    storySetting: 'Coastal town of Innsmouth, 1920s New England',
-    storyGenre: 'Lovecraftian horror',
-  },
-  'hollow-choir': {
-    storyId: 'the-hollow-choir',
-    storyTitle: 'The Hollow Choir',
-    storySetting: 'Flooded city with haunting song',
-    storyGenre: 'Gothic horror',
-  },
-  'whispering-pines': {
-    storyId: 'whispering-pines',
-    storyTitle: 'Whispering Pines',
-    storySetting: 'Isolated cabin in the woods',
-    storyGenre: 'Psychological horror',
-  },
-  'red-dust': {
-    storyId: 'siren-of-the-red-dust',
-    storyTitle: 'Siren of the Red Dust',
-    storySetting: 'Mars colony',
-    storyGenre: 'Sci-fi thriller',
-  },
-};
+// StoryContext builder helper
+function buildStoryContext(storyId: string): StoryContext {
+  const loadedStory = getStory(storyId);
+
+  // Extract setting and genre from description or use defaults
+  const setting = loadedStory.description || 'Unknown setting';
+  const genre = 'Interactive fiction';
+
+  return {
+    storyId: loadedStory.id,
+    storyTitle: loadedStory.title,
+    storySetting: setting,
+    storyGenre: genre,
+  };
+}
 
 // System prompts
 const PROMPTS: Record<string, string> = {
@@ -93,30 +82,20 @@ Your role:
 - Conclude satisfyingly at pulse 20`,
 };
 
-// Story guides (placeholder - would load from files)
-const STORY_GUIDES: Record<string, string> = {
-  'shadow-over-innsmouth': `Setting: Coastal town of Innsmouth, 1920s New England
-Atmosphere: Decaying architecture, fish smell, suspicious locals, cult activity
-Key Locations: Town square, old church, docks, Marsh mansion
-NPCs: Zadok Allen (drunk old sailor), Obed Marsh (cult leader), innkeeper
-Story Arc: Arrival → Investigation → Discovery → Confrontation → Escape/Revelation
-Pulses: ~20 beats building tension toward cosmic horror revelation`,
-  'the-hollow-choir': `Setting: Flooded city ruins, haunting choir song in distance
-Atmosphere: Gothic, melancholic, mysterious
-Story Arc: ~20 beats exploring the flooded city and uncovering the choir's origin`,
-  'whispering-pines': `Setting: Isolated cabin in dark woods
-Atmosphere: Psychological horror, paranoia, isolation
-Story Arc: ~20 beats of mounting dread and revelation`,
-  'siren-of-the-red-dust': `Setting: Mars colony, red dust storms
-Atmosphere: Sci-fi thriller, corporate conspiracy
-Story Arc: ~20 beats of investigation and survival`,
-};
 
 async function main() {
-  const story = STORIES[options.story];
-  if (!story) {
-    console.error(chalk.red(`Unknown story: ${options.story}`));
-    console.log(chalk.yellow('Available stories:'), Object.keys(STORIES).join(', '));
+  // Load story using the story loader
+  let story: StoryContext;
+  let storyGuide: string;
+
+  try {
+    story = buildStoryContext(options.story);
+    const loadedStory = getStory(options.story);
+    storyGuide = loadedStory.storyGuide;
+  } catch (error) {
+    console.error(chalk.red((error as Error).message));
+    const availableStories = listStoryIds();
+    console.log(chalk.yellow('Available stories:'), availableStories.join(', '));
     process.exit(1);
   }
 
@@ -126,8 +105,6 @@ async function main() {
     console.log(chalk.yellow('Available prompts:'), Object.keys(PROMPTS).join(', '));
     process.exit(1);
   }
-
-  const storyGuide = STORY_GUIDES[story.storyId] || 'Story guide not found';
 
   const config = {
     story,
