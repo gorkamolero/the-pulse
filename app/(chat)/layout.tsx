@@ -1,9 +1,4 @@
 import Script from 'next/script';
-import { Suspense } from 'react';
-
-import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { auth } from '../(auth)/auth';
 
 export default function Layout({
   children,
@@ -16,20 +11,9 @@ export default function Layout({
         src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"
         strategy="beforeInteractive"
       />
-      <Suspense fallback={<div className="flex h-dvh" />}>
-        <SidebarWrapper>{children}</SidebarWrapper>
-      </Suspense>
+      <div className="flex h-screen w-screen flex-col overflow-hidden bg-background">
+        {children}
+      </div>
     </>
-  );
-}
-
-async function SidebarWrapper({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-
-  return (
-    <SidebarProvider defaultOpen={false}>
-      <AppSidebar user={session?.user} />
-      <SidebarInset>{children}</SidebarInset>
-    </SidebarProvider>
   );
 }

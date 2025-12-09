@@ -33,12 +33,18 @@ export function Chat({
   selectedChatModel,
   selectedVisibilityType,
   isReadonly,
+  user,
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
   selectedChatModel: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
+  user?: {
+    email?: string | null;
+    name?: string | null;
+    image?: string | null;
+  };
 }) {
   const { mutate } = useSWRConfig();
   const [selectedStoryId, setSelectedStoryId] = useState(DEFAULT_STORY_ID);
@@ -136,6 +142,7 @@ export function Chat({
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader
+          user={user}
           chatId={id}
           selectedModelId={selectedChatModel}
           selectedVisibilityType={selectedVisibilityType}
