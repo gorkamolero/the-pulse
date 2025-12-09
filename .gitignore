@@ -40,3 +40,4 @@ yarn-error.log*
 # test harness outputs
 test-harness-sessions/
 test-harness-checkpoints/
+test-harness-reports/

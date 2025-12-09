@@ -9,6 +9,7 @@ import type { SessionResult } from '../session/runner';
 import type { Message } from '../session/turn';
 import { detectAllIssues } from './issues';
 import { generateTimeline, formatTimelineMarkdown, getTimelineSummary } from './timeline';
+import { saveHTMLReport } from './html';
 
 export interface SessionReport {
   config: {
@@ -125,6 +126,13 @@ export async function saveSessionReport(
   const filepath = filename || `sessions/${result.sessionId}/report.md`;
 
   await writeFile(filepath, report, 'utf-8');
+
+  // Also generate HTML report
+  try {
+    await saveHTMLReport(result);
+  } catch (error) {
+    console.warn('Failed to generate HTML report:', error);
+  }
 
   return filepath;
 }
