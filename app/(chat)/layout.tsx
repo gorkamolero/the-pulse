@@ -26,7 +26,7 @@ export default function Layout({
 
 async function SidebarWrapper({ children }: { children: React.ReactNode }) {
   const [session, cookieStore] = await Promise.all([auth(), cookies()]);
-  const isCollapsed = (await cookieStore).get('sidebar_state')?.value !== 'true';
+  const isCollapsed = cookieStore.get('sidebar_state')?.value !== 'true';
 
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
