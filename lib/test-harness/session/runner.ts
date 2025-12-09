@@ -434,6 +434,12 @@ export async function resumeSessionFromCheckpoint(
           classification: classification.type,
         });
 
+        // Check for private moment payoffs
+        const payoffs = await privateMomentTracker.checkPayoff(turn, narratorOutput);
+        if (payoffs.length > 0) {
+          console.log(`💎 Payoffs detected: ${payoffs.map((p) => p.target).join(', ')}`);
+        }
+
         // Check for private moment
         const { routePrivateMoment } = await import('./private');
         const privateRouting = routePrivateMoment(narratorOutput, playerAgents);
@@ -698,6 +704,12 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
           timestamp: Date.now(),
           classification: classification.type,
         });
+
+        // Check for private moment payoffs
+        const payoffs = await privateMomentTracker.checkPayoff(turn, narratorOutput);
+        if (payoffs.length > 0) {
+          console.log(`💎 Payoffs detected: ${payoffs.map((p) => p.target).join(', ')}`);
+        }
 
         // Check for private moment
         const { routePrivateMoment } = await import('./private');
