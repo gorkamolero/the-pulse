@@ -25,10 +25,10 @@ program
   .description('Run a test harness session')
   .requiredOption('--story <id>', 'Story ID (innsmouth, hollow-choir, etc.)')
   .requiredOption('--prompt <name>', 'System prompt variant (baseline, pulse-aware, etc.)')
-  .requiredOption('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-r2)')
-  .option('--players <number>', 'Group size (2-5)', parseInt)
-  .option('--max-turns <number>', 'Maximum turns', parseInt, 100)
-  .option('--temperature <number>', 'Temperature', parseFloat, 0.7)
+  .requiredOption('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-r1)')
+  .option('--players <number>', 'Group size (2-5)', Number.parseInt)
+  .option('--max-turns <number>', 'Maximum turns', Number.parseInt, 100)
+  .option('--temperature <number>', 'Temperature', Number.parseFloat, 0.7)
   .option('--dry-run', 'Show config without executing')
   .parse();
 

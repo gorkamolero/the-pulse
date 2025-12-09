@@ -2,11 +2,12 @@
  * Output Classification
  *
  * Classifies narrator output into types: pulse, tangent-response, private-moment,
- * clarification, recap. Uses cheap model (GPT-4o-mini) for classification.
+ * clarification, recap. Uses Gemini 2.0 Flash Lite via OpenRouter for classification.
  */
 
-import { openai } from '@ai-sdk/openai';
-import { generateText } from 'ai';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
+import { generateObject, type LanguageModelUsage } from 'ai';
+import { z } from 'zod';
 
 export type OutputType =
   | 'pulse'
@@ -21,7 +22,16 @@ export interface Classification {
   reasoning: string;
   pulseNumber?: number;
   privateTarget?: string;
+  usage?: LanguageModelUsage;
 }
+
+const classificationSchema = z.object({
+  type: z.enum(['pulse', 'tangent-response', 'private-moment', 'clarification', 'recap']),
+  confidence: z.number().min(0).max(1),
+  reasoning: z.string(),
+  pulseNumber: z.number().optional(),
+  privateTarget: z.string().optional(),
+});
 
 const CLASSIFICATION_PROMPT = `You are analyzing narrator output from an interactive fiction game to classify its type.
 
@@ -56,14 +66,7 @@ OUTPUT TYPES:
 - "So far you have..."
 - Reminding players of earlier information
 
-Analyze the narrator's output and classify it. Return ONLY a JSON object with this structure:
-{
-  "type": "pulse" | "tangent-response" | "private-moment" | "clarification" | "recap",
-  "confidence": 0.0-1.0,
-  "reasoning": "brief explanation",
-  "pulseNumber": optional number if type is pulse,
-  "privateTarget": "player name" if type is private-moment
-}`;
+Analyze the narrator's output and classify it.`;
 
 /**
  * Classify narrator output using LLM
@@ -76,8 +79,13 @@ export async function classifyOutput(
   },
 ): Promise<Classification> {
   try {
-    const { text } = await generateText({
-      model: openai('gpt-4o-mini'),
+    const openrouter = createOpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+
+    const result = await generateObject({
+      model: openrouter('google/gemini-2.0-flash-lite'),
+      schema: classificationSchema,
       messages: [
         {
           role: 'system',
@@ -89,18 +97,11 @@ export async function classifyOutput(
         },
       ],
       temperature: 0.3,
-      maxTokens: 200,
     });
 
-    // Parse the JSON response
-    const parsed = JSON.parse(text.trim());
-
     return {
-      type: parsed.type,
-      confidence: parsed.confidence,
-      reasoning: parsed.reasoning,
-      pulseNumber: parsed.pulseNumber,
-      privateTarget: parsed.privateTarget,
+      ...result.object,
+      usage: result.usage,
     };
   } catch (error) {
     console.error('Classification error:', error);

@@ -61,8 +61,8 @@ Remember: You're translating group consensus into a clear message for the narrat
 /**
  * Synthesize multiple player responses into a single spokesperson relay
  *
- * This is a simple template-based version. In full implementation, this would
- * use an LLM call with the spokesperson's prompt to generate the synthesis.
+ * This is a simple template-based version for fallback.
+ * The actual implementation uses an LLM call in session/runner.ts
  */
 export function synthesizeResponses(
   responses: PlayerResponse[],
@@ -93,24 +93,4 @@ export function synthesizeResponses(
 
   // Simple synthesis for now
   return `The group discussed:\n${responseTexts}\n\nWe're ready to proceed based on that.`;
-}
-
-/**
- * Template for full LLM-based synthesis (to be implemented)
- */
-export interface SynthesisConfig {
-  responses: PlayerResponse[];
-  spokesperson: PlayerAgent;
-  narratorLastMessage: string;
-  groupSize: number;
-}
-
-/**
- * Placeholder for LLM-based synthesis
- * This will be implemented when we add the session runner
- */
-export async function synthesizeWithLLM(config: SynthesisConfig): Promise<string> {
-  // TODO: Implement LLM call using AI SDK
-  // For now, use template-based synthesis
-  return synthesizeResponses(config.responses, config.spokesperson);
 }

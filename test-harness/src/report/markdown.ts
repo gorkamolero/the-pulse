@@ -38,7 +38,7 @@ export interface SessionReport {
  * Generate complete session report
  */
 export async function generateSessionReport(result: SessionResult): Promise<string> {
-  const issues = detectAllIssues(result.conversationHistory, result.detectedPulses);
+  const issues = await detectAllIssues(result.conversationHistory, result.detectedPulses);
   const timeline = generateTimeline(
     result.conversationHistory,
     result.detectedPulses,
@@ -57,7 +57,7 @@ export async function generateSessionReport(result: SessionResult): Promise<stri
 - **System Prompt**: ${result.config.systemPrompt.substring(0, 50)}...
 - **Duration**: ${formatDuration(result.duration)}
 - **Outcome**: ${result.outcome}
-- **Cost**: $${estimateCost(result).toFixed(2)} (estimated)
+- **Cost**: ${result.costBreakdown ? `$${result.costBreakdown.total.cost.toFixed(4)}` : `$${estimateCost(result).toFixed(2)} (estimated)`}
 
 ## Group
 
@@ -74,6 +74,20 @@ ${result.config.group.players
 - **Tangents**: ${timelineSummary.tangents}
 - **Private Moments**: ${timelineSummary.privateMoments}
 - **Issues Detected**: ${issues.length}
+
+${
+  result.costBreakdown
+    ? `## Cost Breakdown
+
+| Component | Tokens (Input/Output) | Cost |
+|-----------|----------------------|------|
+| Narrator | ${result.costBreakdown.narrator.tokens.promptTokens.toLocaleString()}/${result.costBreakdown.narrator.tokens.completionTokens.toLocaleString()} | $${result.costBreakdown.narrator.cost.toFixed(4)} |
+| Players | ${result.costBreakdown.players.tokens.promptTokens.toLocaleString()}/${result.costBreakdown.players.tokens.completionTokens.toLocaleString()} | $${result.costBreakdown.players.cost.toFixed(4)} |
+| Classification | ${result.costBreakdown.classification.tokens.promptTokens.toLocaleString()}/${result.costBreakdown.classification.tokens.completionTokens.toLocaleString()} | $${result.costBreakdown.classification.cost.toFixed(4)} |
+| **Total** | **${result.costBreakdown.total.tokens.totalTokens.toLocaleString()}** | **$${result.costBreakdown.total.cost.toFixed(4)}** |
+`
+    : ''
+}
 
 ## Timeline
 
@@ -134,7 +148,7 @@ function formatDuration(ms: number): string {
 
 /**
  * Estimate cost based on usage
- * TODO: Implement accurate token tracking
+ * Note: Actual token tracking is implemented in session/cost.ts
  */
 function estimateCost(result: SessionResult): number {
   // Rough estimates based on model pricing

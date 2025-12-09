@@ -5,6 +5,9 @@
  * Bypasses spokesperson for private interactions.
  */
 
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
+import { generateObject, generateText } from 'ai';
+import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
 import { detectPrivateMoment } from './classifier';
 
@@ -18,6 +21,12 @@ export interface PrivateMoment {
   payoffDetected?: boolean;
   payoffTurn?: number;
 }
+
+const privateMomentValidationSchema = z.object({
+  backstoryAlignment: z.number().min(0).max(1),
+  narrativeAppropriateness: z.number().min(0).max(1),
+  feedback: z.string(),
+});
 
 /**
  * Route private moment to specific player
@@ -82,13 +91,52 @@ export async function validatePrivateMoment(
   narrativeAppropriateness: number;
   feedback: string;
 }> {
-  // TODO: Implement LLM-based validation
-  // For now, return placeholder scores
-  return {
-    backstoryAlignment: 0.7,
-    narrativeAppropriateness: 0.8,
-    feedback: 'Private moment seems appropriate',
-  };
+  try {
+    const prompt = `Evaluate this private moment in an interactive fiction game:
+
+PLAYER CHARACTER:
+Name: ${targetAgent.name}
+Archetype: ${targetAgent.archetype}
+Backstory: ${targetAgent.generatedBackstory}
+
+PRIVATE MOMENT CONTENT:
+${privateMoment.content}
+
+PLAYER'S RESPONSE:
+${privateMoment.response}
+
+NARRATIVE CONTEXT:
+${narrativeContext.substring(0, 500)}
+
+Evaluate:
+1. Backstory Alignment (0-1): How well does this private moment connect to the player's backstory?
+2. Narrative Appropriateness (0-1): Is this the right time in the narrative for this revelation?
+3. Feedback: Brief explanation of your scores`;
+
+    const openrouter = createOpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+
+    const result = await generateObject({
+      model: openrouter('google/gemini-2.0-flash-lite'),
+      schema: privateMomentValidationSchema,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+    });
+
+    return result.object;
+  } catch (error) {
+    console.warn('Private moment validation failed, using heuristics:', error);
+    // Fallback to heuristic scoring
+    const hasBackstoryKeywords = privateMoment.content
+      .toLowerCase()
+      .includes(targetAgent.name.toLowerCase());
+    return {
+      backstoryAlignment: hasBackstoryKeywords ? 0.7 : 0.4,
+      narrativeAppropriateness: 0.6,
+      feedback: 'Heuristic validation (LLM failed)',
+    };
+  }
 }
 
 /**
@@ -114,23 +162,17 @@ export class PrivateMomentTracker {
   /**
    * Check if a narrative event pays off a private moment
    */
-  checkPayoff(turn: number, narrativeContent: string): PrivateMoment[] {
+  async checkPayoff(turn: number, narrativeContent: string): Promise<PrivateMoment[]> {
     const payoffs: PrivateMoment[] = [];
 
     for (const moments of this.moments.values()) {
       for (const moment of moments) {
         if (moment.payoffDetected) continue;
 
-        // Simple keyword matching for payoff detection
-        // TODO: Implement LLM-based payoff detection
-        const momentKeywords = moment.content.toLowerCase().split(/\s+/);
-        const contentLower = narrativeContent.toLowerCase();
+        // Try LLM-based detection first
+        const hasPayoff = await this.detectPayoffWithLLM(moment, narrativeContent);
 
-        const hasKeywordMatch = momentKeywords.some(
-          (keyword) => keyword.length > 4 && contentLower.includes(keyword),
-        );
-
-        if (hasKeywordMatch) {
+        if (hasPayoff) {
           moment.payoffDetected = true;
           moment.payoffTurn = turn;
           payoffs.push(moment);
@@ -139,6 +181,53 @@ export class PrivateMomentTracker {
     }
 
     return payoffs;
+  }
+
+  /**
+   * LLM-based payoff detection
+   */
+  private async detectPayoffWithLLM(
+    moment: PrivateMoment,
+    narrativeContent: string,
+  ): Promise<boolean> {
+    try {
+      const prompt = `Determine if a narrative event pays off an earlier private moment.
+
+PRIVATE MOMENT (Turn ${moment.turn}):
+Target: ${moment.target}
+Content: ${moment.content}
+
+CURRENT NARRATIVE:
+${narrativeContent}
+
+Does the current narrative reference, reveal, or pay off the private moment?
+Consider:
+- Direct references to the private information
+- Consequences of the private moment playing out
+- The player's secret being revealed or becoming relevant
+
+Answer with ONLY: true or false`;
+
+      const openrouter = createOpenRouter({
+        apiKey: process.env.OPENROUTER_API_KEY,
+      });
+
+      const { text } = await generateText({
+        model: openrouter('google/gemini-2.0-flash-lite'),
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+      });
+
+      return text.trim().toLowerCase() === 'true';
+    } catch (error) {
+      // Fallback to keyword matching
+      const momentKeywords = moment.content.toLowerCase().split(/\s+/);
+      const contentLower = narrativeContent.toLowerCase();
+
+      return momentKeywords.some(
+        (keyword) => keyword.length > 4 && contentLower.includes(keyword),
+      );
+    }
   }
 
   /**

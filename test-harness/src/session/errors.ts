@@ -8,7 +8,7 @@ export class TestHarnessError extends Error {
   constructor(
     message: string,
     public code: string,
-    public retryable: boolean = false,
+    public retryable = false,
   ) {
     super(message);
     this.name = 'TestHarnessError';
@@ -55,7 +55,7 @@ export async function retry<T>(
     factor = 2,
   } = options;
 
-  let lastError: Error;
+  let lastError: Error | null = null;
   let delay = initialDelay;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -76,7 +76,7 @@ export async function retry<T>(
     }
   }
 
-  throw lastError!;
+  throw lastError || new Error('All retry attempts failed');
 }
 
 /**
@@ -131,8 +131,8 @@ export class RateLimiter {
   private processing = false;
 
   constructor(
-    private maxConcurrent: number = 5,
-    private delayMs: number = 100,
+    private maxConcurrent = 5,
+    private delayMs = 100,
   ) {}
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {

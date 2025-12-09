@@ -6,7 +6,8 @@
  */
 
 import type { ArchetypeId, PlayerModel } from '../archetypes/types';
-import { ARCHETYPE_BY_ID, ARCHETYPE_MODEL_MAP } from '../archetypes/definitions';
+import { ARCHETYPE_BY_ID } from '../archetypes/definitions';
+import { ARCHETYPE_MODEL_MAP } from '../archetypes/types';
 
 export interface PlayerAgent {
   archetype: ArchetypeId;
@@ -28,7 +29,7 @@ export interface StoryContext {
 /**
  * Generate a character name appropriate to the story setting
  */
-export function generateName(storyContext: StoryContext): string {
+export function generateName(): string {
   // Pool of names that work across most story settings
   // In a full implementation, this could be LLM-generated or setting-specific
   const firstNames = [
@@ -95,7 +96,6 @@ function generateStoryConnection(storyContext: StoryContext): string {
  * Generate character description for the specific story
  */
 export function generateCharacter(
-  archetypeId: ArchetypeId,
   name: string,
   backstory: string,
   storyContext: StoryContext,
@@ -157,9 +157,9 @@ export function createPlayerAgent(
     throw new Error(`Unknown archetype: ${archetypeId}`);
   }
 
-  const name = generateName(storyContext);
+  const name = generateName();
   const backstory = generateBackstory(archetypeId, name, storyContext);
-  const character = generateCharacter(archetypeId, name, backstory, storyContext);
+  const character = generateCharacter(name, backstory, storyContext);
   const systemPrompt = composeSystemPrompt(archetypeId, name, character, storyContext);
 
   return {

@@ -15,7 +15,6 @@ import {
   applyReplayConfig,
   type ReplayConfig,
 } from '../checkpoint/load';
-import { saveSessionReport } from '../report/markdown';
 import type { NarratorModel } from '../agents/narrator';
 
 // Load environment variables
@@ -28,9 +27,9 @@ program
   .description('Replay session from checkpoint with config changes')
   .requiredOption('--checkpoint <path>', 'Path to checkpoint file')
   .option('--prompt <name>', 'New system prompt variant')
-  .option('--narrator <model>', 'New narrator model (opus-4.5, grok-4, deepseek-r2)')
-  .option('--temperature <number>', 'New temperature', parseFloat)
-  .option('--max-tokens <number>', 'New max tokens', parseInt)
+  .option('--narrator <model>', 'New narrator model (opus-4.5, grok-4, deepseek-r1)')
+  .option('--temperature <number>', 'New temperature', Number.parseFloat)
+  .option('--max-tokens <number>', 'New max tokens', Number.parseInt)
   .parse();
 
 const options = program.opts();
@@ -125,15 +124,40 @@ async function main() {
       console.log(chalk.yellow('\n⚠️  No config changes specified, continuing with original config'));
     }
 
-    // TODO: Resume session from checkpoint
-    // This would require integration with session runner to continue from a specific turn
-    console.log(chalk.yellow('\n⚠️  Session replay not yet implemented'));
-    console.log(
-      chalk.gray('  Checkpoint loaded and config applied successfully, but session runner'),
-    );
-    console.log(chalk.gray('  integration for replay is pending.'));
+    console.log('\n');
 
-    console.log(chalk.cyan('\n✨ Replay preparation complete!\n'));
+    // Resume session from checkpoint
+    const { resumeSessionFromCheckpoint } = await import('../session/runner');
+    const runSpinner = ora('Resuming session from checkpoint...').start();
+
+    try {
+      const result = await resumeSessionFromCheckpoint(updatedCheckpoint);
+
+      runSpinner.succeed(chalk.green('Session completed!'));
+
+      console.log(chalk.cyan('\n📊 Session Results:\n'));
+      console.log(chalk.white(`Session ID: ${chalk.bold(result.sessionId)}`));
+      console.log(chalk.white(`Outcome: ${chalk.bold(result.outcome)}`));
+      console.log(chalk.white(`Turns: ${chalk.bold(result.finalTurn)}`));
+      console.log(
+        chalk.white(`Pulses: ${chalk.bold(`${result.detectedPulses.length}/~20`)}`),
+      );
+      console.log(
+        chalk.white(`Duration: ${chalk.bold(`${Math.round(result.duration / 1000)}s`)}`),
+      );
+
+      // Generate report
+      const { saveSessionReport } = await import('../report/markdown');
+      const reportSpinner = ora('Generating report...').start();
+      const reportPath = await saveSessionReport(result);
+      reportSpinner.succeed(chalk.green(`Report saved: ${reportPath}`));
+
+      console.log(chalk.cyan('\n✨ Replay complete!\n'));
+    } catch (error) {
+      runSpinner.fail(chalk.red('Session replay failed'));
+      console.error(chalk.red('\nError:'), error);
+      process.exit(1);
+    }
   } catch (error) {
     loadSpinner.fail(chalk.red('Failed to load checkpoint'));
     console.error(chalk.red('\nError:'), error);

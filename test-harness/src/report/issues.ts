@@ -4,6 +4,9 @@
  * Detect contradictions, loops, forced segues, stuck moments.
  */
 
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
+import { generateObject } from 'ai';
+import { z } from 'zod';
 import type { Message } from '../session/turn';
 
 export type IssueType = 'contradiction' | 'loop' | 'forced-segue' | 'stuck' | 'confusion';
@@ -17,6 +20,13 @@ export interface Issue {
   severity: IssueSeverity;
   relatedContent?: string;
 }
+
+const contradictionSchema = z.object({
+  turn: z.number(),
+  description: z.string(),
+});
+
+const contradictionsArraySchema = z.array(contradictionSchema);
 
 /**
  * Detect loops (repeated content)
@@ -118,23 +128,34 @@ export function detectStuckMoments(messages: Message[], pulses: number[]): Issue
 }
 
 /**
- * Detect contradictions (simple heuristic)
+ * Detect contradictions using LLM
  */
-export function detectContradictions(messages: Message[]): Issue[] {
+export async function detectContradictions(messages: Message[]): Promise<Issue[]> {
   const issues: Issue[] = [];
-  // TODO: Implement LLM-based contradiction detection
-  // This would require semantic understanding
-
-  // For now, detect obvious contradictions with simple patterns
   const narratorMessages = messages.filter((m) => m.role === 'narrator');
 
+  // First do heuristic detection for door states
+  issues.push(...detectDoorContradictions(narratorMessages));
+
+  // Then do LLM-based semantic contradiction detection
+  if (narratorMessages.length > 5) {
+    const llmIssues = await detectSemanticContradictions(narratorMessages);
+    issues.push(...llmIssues);
+  }
+
+  return issues;
+}
+
+/**
+ * Heuristic door state contradiction detection
+ */
+function detectDoorContradictions(narratorMessages: Message[]): Issue[] {
+  const issues: Issue[] = [];
   const stateTracker = {
     doorStates: new Map<string, 'open' | 'closed' | 'locked'>(),
-    locations: new Map<string, string>(),
   };
 
   for (const message of narratorMessages) {
-    // Track door states
     const doorOpenMatch = message.content.match(/the (\w+) door (?:is |stands )?open/i);
     const doorClosedMatch = message.content.match(/the (\w+) door (?:is |stands )?closed/i);
     const doorLockedMatch = message.content.match(/the (\w+) door (?:is |stands )?locked/i);
@@ -147,7 +168,7 @@ export function detectContradictions(messages: Message[]): Issue[] {
         issues.push({
           turn: message.turn,
           type: 'contradiction',
-          description: `Door "${doorName}" was ${previousState}, now described as open without transition`,
+          description: `Door "${doorName}" was ${previousState}, now open without transition`,
           severity: 'error',
         });
       }
@@ -170,15 +191,73 @@ export function detectContradictions(messages: Message[]): Issue[] {
 }
 
 /**
+ * LLM-based semantic contradiction detection
+ */
+async function detectSemanticContradictions(narratorMessages: Message[]): Promise<Issue[]> {
+  const issues: Issue[] = [];
+
+  try {
+    // Sample every 5th message to keep context manageable
+    const sampledMessages = narratorMessages.filter((_, i) => i % 5 === 0 || i === narratorMessages.length - 1);
+
+    const transcript = sampledMessages
+      .map((m) => `Turn ${m.turn}: ${m.content.substring(0, 300)}`)
+      .join('\n\n');
+
+    const prompt = `Analyze this narrative transcript for contradictions. Look for:
+- Character descriptions that change (hair color, age, etc.)
+- Location inconsistencies (indoors then suddenly outdoors without transition)
+- Object state changes without explanation
+- Factual contradictions about events
+
+TRANSCRIPT:
+${transcript}
+
+List any contradictions found. For each, provide:
+- Turn number where contradiction appears
+- Brief description of the contradiction
+
+If no contradictions found, return an empty array.`;
+
+    const openrouter = createOpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+
+    const result = await generateObject({
+      model: openrouter('google/gemini-2.0-flash-lite'),
+      schema: contradictionsArraySchema,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.2,
+    });
+
+    for (const c of result.object) {
+      issues.push({
+        turn: c.turn,
+        type: 'contradiction',
+        description: c.description,
+        severity: 'error',
+      });
+    }
+  } catch (error) {
+    console.warn('LLM contradiction detection failed:', error);
+    // Fallback to heuristics only
+  }
+
+  return issues;
+}
+
+/**
  * Detect all issues in a session
  */
-export function detectAllIssues(messages: Message[], pulses: number[]): Issue[] {
-  return [
-    ...detectLoops(messages),
-    ...detectForcedSegues(messages),
-    ...detectStuckMoments(messages, pulses),
-    ...detectContradictions(messages),
-  ].sort((a, b) => a.turn - b.turn);
+export async function detectAllIssues(messages: Message[], pulses: number[]): Promise<Issue[]> {
+  const [loops, segues, stuck, contradictions] = await Promise.all([
+    Promise.resolve(detectLoops(messages)),
+    Promise.resolve(detectForcedSegues(messages)),
+    Promise.resolve(detectStuckMoments(messages, pulses)),
+    detectContradictions(messages),
+  ]);
+
+  return [...loops, ...segues, ...stuck, ...contradictions].sort((a, b) => a.turn - b.turn);
 }
 
 /**

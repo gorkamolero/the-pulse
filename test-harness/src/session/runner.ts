@@ -6,21 +6,20 @@
  */
 
 import { nanoid } from 'nanoid';
-import { anthropic } from '@ai-sdk/anthropic';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { generateText, streamText } from 'ai';
+import { generateText, type LanguageModelUsage } from 'ai';
 import type { ArchetypeId } from '../archetypes/types';
-import { ARCHETYPES, ARCHETYPE_MODEL_MAP } from '../archetypes/definitions';
+import { ARCHETYPES } from '../archetypes/definitions';
 import type { PlayerAgent, StoryContext } from '../agents/player';
 import { createPlayerAgent } from '../agents/player';
 import type { NarratorConfig } from '../agents/narrator';
-import { NARRATOR_MODEL_MAP, getNarratorProvider } from '../agents/narrator';
+import { NARRATOR_MODEL_MAP } from '../agents/narrator';
 import type { Message } from './turn';
-import { executeTurn, buildTurnContext } from './turn';
 import type { SessionConfig, Checkpoint } from '../checkpoint/schema';
 import { createCheckpoint } from '../checkpoint/schema';
 import { saveCheckpoint } from '../checkpoint/save';
 import { PrivateMomentTracker } from './private';
+import { CostTracker, type CostBreakdown } from './cost';
 
 export type SessionOutcome = 'completed' | 'timeout' | 'failed';
 
@@ -34,6 +33,7 @@ export interface SessionResult {
   detectedPulses: number[];
   privateMoments: any[];
   tangents: any[];
+  costBreakdown?: CostBreakdown;
   error?: string;
 }
 
@@ -127,8 +127,7 @@ async function generateNarratorResponse(
   conversationHistory: Message[],
   narratorConfig: NarratorConfig,
   playerNames: string[],
-): Promise<string> {
-  const provider = getNarratorProvider(narratorConfig.model);
+): Promise<{ text: string; usage: LanguageModelUsage }> {
   const modelId = NARRATOR_MODEL_MAP[narratorConfig.model];
 
   if (!modelId) {
@@ -151,35 +150,21 @@ async function generateNarratorResponse(
           : m.content,
   }));
 
-  try {
-    if (provider === 'anthropic') {
-      const { text } = await generateText({
-        model: anthropic(modelId),
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages,
-        ] as any,
-        temperature: narratorConfig.temperature,
-        maxTokens: narratorConfig.maxTokens,
-      });
-      return text;
-    } else {
-      // OpenRouter
-      const openrouter = createOpenRouter({
-        apiKey: process.env.OPENROUTER_API_KEY,
-      });
+  // All narrator models use OpenRouter
+  const openrouter = createOpenRouter({
+    apiKey: process.env.OPENROUTER_API_KEY,
+  });
 
-      const { text } = await generateText({
-        model: openrouter(modelId),
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages,
-        ] as any,
-        temperature: narratorConfig.temperature,
-        maxTokens: narratorConfig.maxTokens,
-      });
-      return text;
-    }
+  try {
+    const result = await generateText({
+      model: openrouter(modelId),
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages,
+      ] as any,
+      temperature: narratorConfig.temperature,
+    });
+    return { text: result.text, usage: result.usage };
   } catch (error) {
     console.error('Narrator generation error:', error);
     throw error;
@@ -193,7 +178,7 @@ async function generatePlayerResponse(
   agent: PlayerAgent,
   narratorOutput: string,
   conversationHistory: Message[],
-): Promise<string> {
+): Promise<{ text: string; usage: LanguageModelUsage }> {
   const openrouter = createOpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY,
   });
@@ -214,17 +199,19 @@ async function generatePlayerResponse(
   ];
 
   try {
-    const { text } = await generateText({
+    const result = await generateText({
       model: openrouter(agent.modelId),
       messages: messages as any,
       temperature: 0.8,
-      maxTokens: 150,
     });
 
-    return text;
+    return { text: result.text, usage: result.usage };
   } catch (error) {
     console.error(`Player response error for ${agent.name}:`, error);
-    return `[${agent.name} is thinking...]`;
+    return {
+      text: `[${agent.name} is thinking...]`,
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+    };
   }
 }
 
@@ -235,7 +222,7 @@ async function generateSpokespersonSynthesis(
   spokesperson: PlayerAgent,
   playerResponses: Array<{ agent: PlayerAgent; response: string }>,
   narratorOutput: string,
-): Promise<string> {
+): Promise<{ text: string; usage: LanguageModelUsage }> {
   const openrouter = createOpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY,
   });
@@ -253,21 +240,23 @@ ${responsesText}
 As ${spokesperson.name}, synthesize these responses into a single coherent message to relay back to the narrator. Keep it concise and preserve important details.`;
 
   try {
-    const { text } = await generateText({
+    const result = await generateText({
       model: openrouter(spokesperson.modelId),
       messages: [
         { role: 'system', content: spokesperson.systemPrompt },
         { role: 'user', content: synthesisPrompt },
       ] as any,
       temperature: 0.7,
-      maxTokens: 200,
     });
 
-    return text;
+    return { text: result.text, usage: result.usage };
   } catch (error) {
     console.error('Spokesperson synthesis error:', error);
     // Fallback to simple concatenation
-    return playerResponses.map((r) => r.response).join(' ');
+    return {
+      text: playerResponses.map((r) => r.response).join(' '),
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+    };
   }
 }
 
@@ -277,17 +266,19 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
 async function runCharacterCreation(
   narratorConfig: NarratorConfig,
   playerAgents: PlayerAgent[],
-  storyContext: StoryContext,
+  costTracker: CostTracker,
 ): Promise<Message[]> {
   const messages: Message[] = [];
   const timestamp = Date.now();
 
   // Narrator introduces and asks for characters
-  const intro = await generateNarratorResponse(
+  const { text: intro, usage } = await generateNarratorResponse(
     [],
     narratorConfig,
     playerAgents.map((a) => a.name),
   );
+
+  costTracker.recordNarratorUsage(usage);
 
   messages.push({
     role: 'narrator',
@@ -346,6 +337,249 @@ function shouldEndSession(
 }
 
 /**
+ * Resume session from checkpoint
+ */
+export async function resumeSessionFromCheckpoint(
+  checkpoint: Checkpoint,
+): Promise<SessionResult> {
+  const startTime = Date.now();
+
+  try {
+    console.log(`\n🔄 Resuming session from turn ${checkpoint.turn}`);
+    console.log(`📖 Story: ${checkpoint.sessionConfig.story.storyTitle}`);
+    console.log(`🤖 Narrator: ${checkpoint.sessionConfig.narratorConfig.model}\n`);
+
+    const sessionConfig = checkpoint.sessionConfig;
+    const playerAgents = checkpoint.playerAgents;
+    const spokesperson = playerAgents.find(
+      (a) => a.archetype === checkpoint.spokespersonId,
+    );
+
+    if (!spokesperson) {
+      throw new Error('Spokesperson not found in checkpoint');
+    }
+
+    // Restore tracking state
+    const privateMomentTracker = new PrivateMomentTracker();
+    for (const pm of checkpoint.privateMoments) {
+      privateMomentTracker.add(pm);
+    }
+
+    // Initialize cost tracker
+    const costTracker = new CostTracker(
+      NARRATOR_MODEL_MAP[sessionConfig.narratorConfig.model] || '',
+      playerAgents.map((a) => a.modelId),
+    );
+
+    const conversationHistory = [...checkpoint.conversationHistory];
+    const detectedPulses = [...checkpoint.detectedPulses];
+    const tangents = [...checkpoint.detectedTangents];
+    let outcome: SessionOutcome = 'timeout';
+
+    // Continue from next turn
+    const startTurn = checkpoint.turn + 1;
+
+    console.log(`Starting from turn ${startTurn}\n`);
+
+    // Main session loop (same as runSession)
+    for (let turn = startTurn; turn <= sessionConfig.maxTurns; turn++) {
+      console.log(`\n--- Turn ${turn} ---`);
+
+      try {
+        // Generate narrator output
+        const { text: narratorOutput, usage: narratorUsage } = await generateNarratorResponse(
+          conversationHistory,
+          sessionConfig.narratorConfig,
+          playerAgents.map((a) => a.name),
+        );
+
+        costTracker.recordNarratorUsage(narratorUsage);
+
+        console.log(`\n📖 Narrator: ${narratorOutput.substring(0, 200)}...`);
+
+        // Classify output
+        const { classifyOutput } = await import('./classifier');
+        const classification = await classifyOutput(narratorOutput, {
+          previousPulseCount: detectedPulses.length,
+          playerNames: playerAgents.map((a) => a.name),
+        });
+
+        if (classification.usage) {
+          costTracker.recordClassificationUsage(classification.usage);
+        }
+
+        console.log(`🏷️  Classified as: ${classification.type}`);
+
+        if (classification.type === 'pulse') {
+          detectedPulses.push(turn);
+          console.log(`💓 Pulse ${detectedPulses.length}/~20`);
+        }
+
+        // Add narrator message
+        conversationHistory.push({
+          role: 'narrator',
+          content: narratorOutput,
+          turn,
+          timestamp: Date.now(),
+          classification: classification.type,
+        });
+
+        // Check for private moment
+        const { routePrivateMoment } = await import('./private');
+        const privateRouting = routePrivateMoment(narratorOutput, playerAgents);
+
+        if (privateRouting.isPrivate && privateRouting.targetAgent) {
+          // Private moment
+          console.log(`🔒 Private moment for ${privateRouting.targetAgent.name}`);
+
+          const { text: response, usage: playerUsage } = await generatePlayerResponse(
+            privateRouting.targetAgent,
+            narratorOutput,
+            conversationHistory,
+          );
+
+          costTracker.recordPlayerUsage(playerUsage);
+
+          conversationHistory.push({
+            role: 'player',
+            player: privateRouting.targetAgent.name,
+            content: response,
+            turn,
+            timestamp: Date.now(),
+          });
+
+          privateMomentTracker.add({
+            turn,
+            target: privateRouting.targetAgent.name,
+            content: narratorOutput,
+            response,
+          });
+        } else {
+          // Group interaction
+          const playerResponsesWithUsage = await Promise.all(
+            playerAgents.map(async (agent) => {
+              const result = await generatePlayerResponse(agent, narratorOutput, conversationHistory);
+              return { agent, text: result.text, usage: result.usage };
+            }),
+          );
+
+          // Record all player usage
+          for (const { usage } of playerResponsesWithUsage) {
+            costTracker.recordPlayerUsage(usage);
+          }
+
+          // Convert to old format for compatibility
+          const playerResponses = playerResponsesWithUsage.map((r) => ({
+            agent: r.agent,
+            response: r.text,
+          }));
+
+          console.log(
+            `👥 Player responses:\n${playerResponses.map((r) => `  ${r.agent.name}: ${r.response.substring(0, 80)}...`).join('\n')}`,
+          );
+
+          // Spokesperson synthesis
+          const { text: synthesis, usage: spokespersonUsage } = await generateSpokespersonSynthesis(
+            spokesperson,
+            playerResponses,
+            narratorOutput,
+          );
+
+          costTracker.recordPlayerUsage(spokespersonUsage);
+
+          console.log(`🎙️  Spokesperson: ${synthesis.substring(0, 100)}...`);
+
+          // Add to history
+          for (const { agent, response } of playerResponses) {
+            conversationHistory.push({
+              role: 'player',
+              player: agent.name,
+              content: response,
+              turn,
+              timestamp: Date.now(),
+            });
+          }
+
+          conversationHistory.push({
+            role: 'spokesperson',
+            player: spokesperson.name,
+            content: synthesis,
+            turn,
+            timestamp: Date.now(),
+          });
+        }
+
+        // Save checkpoint
+        const newCheckpoint = createCheckpoint(
+          checkpoint.sessionId,
+          turn,
+          conversationHistory,
+          playerAgents,
+          spokesperson,
+          sessionConfig,
+          detectedPulses,
+          tangents,
+          privateMomentTracker.getAll(),
+          {
+            parentCheckpoint: checkpoint.metadata.parentCheckpoint,
+            branchReason: checkpoint.metadata.branchReason,
+          },
+        );
+
+        await saveCheckpoint(newCheckpoint);
+
+        // Check if session should end
+        const endCheck = shouldEndSession(
+          narratorOutput,
+          turn,
+          sessionConfig.maxTurns,
+          detectedPulses.length,
+        );
+
+        if (endCheck.shouldEnd) {
+          outcome = endCheck.reason === 'timeout' ? 'timeout' : 'completed';
+          console.log(`\n✅ Session ended: ${outcome}`);
+          break;
+        }
+      } catch (turnError) {
+        console.error(`Error in turn ${turn}:`, turnError);
+        outcome = 'failed';
+        break;
+      }
+    }
+
+    const duration = Date.now() - startTime;
+
+    return {
+      sessionId: checkpoint.sessionId,
+      config: sessionConfig,
+      conversationHistory,
+      outcome,
+      finalTurn: conversationHistory[conversationHistory.length - 1]?.turn || checkpoint.turn,
+      duration,
+      detectedPulses,
+      privateMoments: privateMomentTracker.getAll(),
+      tangents,
+      costBreakdown: costTracker.getBreakdown(),
+    };
+  } catch (error) {
+    console.error('Session replay error:', error);
+    return {
+      sessionId: checkpoint.sessionId,
+      config: checkpoint.sessionConfig,
+      conversationHistory: checkpoint.conversationHistory,
+      outcome: 'failed',
+      finalTurn: checkpoint.turn,
+      duration: Date.now() - startTime,
+      detectedPulses: checkpoint.detectedPulses,
+      privateMoments: checkpoint.privateMoments,
+      tangents: checkpoint.detectedTangents,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+/**
  * Run a complete session
  */
 export async function runSession(config: SessionRunnerConfig): Promise<SessionResult> {
@@ -375,30 +609,38 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
     console.log(`🎙️  Spokesperson: ${spokesperson.name}`);
     console.log(`🤖 Narrator: ${config.narratorModel}\n`);
 
-    // 4. Character creation phase
-    let conversationHistory = await runCharacterCreation(
-      sessionConfig.narratorConfig,
-      playerAgents,
-      config.story,
+    // 4. Initialize cost tracker
+    const costTracker = new CostTracker(
+      NARRATOR_MODEL_MAP[config.narratorModel] || '',
+      playerAgents.map((a) => a.modelId),
     );
 
-    // 5. Initialize tracking
+    // 5. Character creation phase
+    const conversationHistory = await runCharacterCreation(
+      sessionConfig.narratorConfig,
+      playerAgents,
+      costTracker,
+    );
+
+    // 6. Initialize tracking
     const privateMomentTracker = new PrivateMomentTracker();
     const detectedPulses: number[] = [];
     const tangents: any[] = [];
     let outcome: SessionOutcome = 'timeout';
 
-    // 6. Main session loop
+    // 7. Main session loop
     for (let turn = 1; turn <= sessionConfig.maxTurns; turn++) {
       console.log(`\n--- Turn ${turn} ---`);
 
       try {
         // Generate narrator output
-        const narratorOutput = await generateNarratorResponse(
+        const { text: narratorOutput, usage: narratorUsage } = await generateNarratorResponse(
           conversationHistory,
           sessionConfig.narratorConfig,
           playerAgents.map((a) => a.name),
         );
+
+        costTracker.recordNarratorUsage(narratorUsage);
 
         console.log(`\n📖 Narrator: ${narratorOutput.substring(0, 200)}...`);
 
@@ -408,6 +650,10 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
           previousPulseCount: detectedPulses.length,
           playerNames: playerAgents.map((a) => a.name),
         });
+
+        if (classification.usage) {
+          costTracker.recordClassificationUsage(classification.usage);
+        }
 
         console.log(`🏷️  Classified as: ${classification.type}`);
 
@@ -433,11 +679,13 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
           // Private moment
           console.log(`🔒 Private moment for ${privateRouting.targetAgent.name}`);
 
-          const response = await generatePlayerResponse(
+          const { text: response, usage: playerUsage } = await generatePlayerResponse(
             privateRouting.targetAgent,
             narratorOutput,
             conversationHistory,
           );
+
+          costTracker.recordPlayerUsage(playerUsage);
 
           conversationHistory.push({
             role: 'player',
@@ -455,23 +703,36 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
           });
         } else {
           // Group interaction
-          const playerResponses = await Promise.all(
-            playerAgents.map(async (agent) => ({
-              agent,
-              response: await generatePlayerResponse(agent, narratorOutput, conversationHistory),
-            })),
+          const playerResponsesWithUsage = await Promise.all(
+            playerAgents.map(async (agent) => {
+              const result = await generatePlayerResponse(agent, narratorOutput, conversationHistory);
+              return { agent, text: result.text, usage: result.usage };
+            }),
           );
+
+          // Record all player usage
+          for (const { usage } of playerResponsesWithUsage) {
+            costTracker.recordPlayerUsage(usage);
+          }
+
+          // Convert to old format for compatibility
+          const playerResponses = playerResponsesWithUsage.map((r) => ({
+            agent: r.agent,
+            response: r.text,
+          }));
 
           console.log(
             `👥 Player responses:\n${playerResponses.map((r) => `  ${r.agent.name}: ${r.response.substring(0, 80)}...`).join('\n')}`,
           );
 
           // Spokesperson synthesis
-          const synthesis = await generateSpokespersonSynthesis(
+          const { text: synthesis, usage: spokespersonUsage } = await generateSpokespersonSynthesis(
             spokesperson,
             playerResponses,
             narratorOutput,
           );
+
+          costTracker.recordPlayerUsage(spokespersonUsage);
 
           console.log(`🎙️  Spokesperson: ${synthesis.substring(0, 100)}...`);
 
@@ -542,6 +803,7 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
       detectedPulses,
       privateMoments: privateMomentTracker.getAll(),
       tangents,
+      costBreakdown: costTracker.getBreakdown(),
     };
   } catch (error) {
     console.error('Session error:', error);

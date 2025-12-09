@@ -2,10 +2,10 @@
  * Narrator Wrapper
  *
  * Wraps narrator model configuration and provides interface for generating
- * story content.
+ * story content. All models are accessed through OpenRouter.
  */
 
-export type NarratorModel = 'opus-4.5' | 'grok-4' | 'deepseek-r2';
+export type NarratorModel = 'opus-4.5' | 'grok-4' | 'deepseek-r1';
 
 export interface NarratorConfig {
   model: NarratorModel;
@@ -15,17 +15,21 @@ export interface NarratorConfig {
   maxTokens?: number;
 }
 
+/**
+ * OpenRouter model identifiers
+ * All narrator models use OpenRouter for unified access
+ */
 export const NARRATOR_MODEL_MAP: Record<NarratorModel, string> = {
-  'opus-4.5': 'claude-opus-4.5-20250514',
-  'grok-4': 'x-ai/grok-2-1212',
-  'deepseek-r2': 'deepseek/deepseek-chat',
+  'opus-4.5': 'anthropic/claude-opus-4.5',
+  'grok-4': 'x-ai/grok-4',
+  'deepseek-r1': 'deepseek/deepseek-r1',
 };
 
 /**
- * Get model provider for narrator model
+ * All narrator models use OpenRouter
  */
-export function getNarratorProvider(model: NarratorModel): 'anthropic' | 'openrouter' {
-  return model === 'opus-4.5' ? 'anthropic' : 'openrouter';
+export function getNarratorProvider(_model: NarratorModel): 'openrouter' {
+  return 'openrouter';
 }
 
 /**

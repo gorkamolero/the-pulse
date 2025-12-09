@@ -5,7 +5,7 @@
  */
 
 import { readFile, readdir } from 'node:fs/promises';
-import type { Checkpoint, SessionConfig } from './schema';
+import type { Checkpoint, } from './schema';
 import { deserializeCheckpoint, getCheckpointFilename } from './schema';
 import type { NarratorConfig } from '../agents/narrator';
 
