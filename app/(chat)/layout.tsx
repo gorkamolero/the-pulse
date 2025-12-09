@@ -1,8 +1,7 @@
-import { cookies } from 'next/headers';
+
 import Script from 'next/script';
 
 import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { auth } from '../(auth)/auth';
 
 export default async function Layout({
@@ -10,8 +9,7 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
-  const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
+  const session = await auth();
 
   return (
     <>
@@ -20,14 +18,13 @@ export default async function Layout({
         strategy="beforeInteractive"
       />
       <div className="flex h-screen w-screen overflow-hidden bg-zinc-950">
-        <SidebarProvider defaultOpen={!isCollapsed}>
-          <AppSidebar user={session?.user} />
-          <SidebarInset className="flex-1 flex flex-col min-w-0">
-            <div className="flex-1 overflow-auto">
-              {children}
-            </div>
-          </SidebarInset>
-        </SidebarProvider>
+        {/* Sidebar - fixed width, takes up space in flex */}
+        <AppSidebar user={session?.user} />
+
+        {/* Main content - flex-1 takes remaining space */}
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {children}
+        </main>
       </div>
     </>
   );
