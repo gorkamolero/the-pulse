@@ -6,9 +6,13 @@
  */
 
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import type { GroupContext, PlayerIdentity, ArchetypeId } from '../archetypes/types';
 import { ARCHETYPE_BY_ID } from '../archetypes/definitions';
+
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
 
 /**
  * Story context for character generation
@@ -64,7 +68,7 @@ Output ONLY valid JSON matching this exact schema:
 Be creative. Make them feel like actual friends with history.`;
 
   const result = await generateText({
-    model: openai('gpt-4o-mini'),
+    model: openrouter('openai/gpt-4o-mini'),
     prompt,
     temperature: 0.8,
   });
@@ -146,7 +150,7 @@ Output ONLY valid JSON matching this exact schema:
 Be creative and natural. Make them feel real.`;
 
   const result = await generateText({
-    model: openai('gpt-4o-mini'),
+    model: openrouter('openai/gpt-4o-mini'),
     prompt,
     temperature: 0.8,
   });
