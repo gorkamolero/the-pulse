@@ -12,7 +12,7 @@ import { config as loadEnv } from 'dotenv';
 import chalk from 'chalk';
 import { runSession, type SessionRunnerConfig } from '../session/runner';
 import { getStory } from '../stories/loader';
-import { getPrompt } from '../prompts/loader';
+import { getPrompt, withStoryGuide } from '../prompts/loader';
 import type { NarratorModel } from '../agents/narrator';
 import type { SessionResult } from '../session/runner';
 
@@ -184,7 +184,7 @@ async function main() {
         storySetting: storyData.description || 'Unknown',
         storyGenre: 'Interactive fiction',
       },
-      systemPrompt: baselinePrompt.content,
+      systemPrompt: withStoryGuide(baselinePrompt.content, storyData.storyGuide),
       storyGuide: storyData.storyGuide,
       narratorModel: options.baselineNarrator as NarratorModel,
       groupSize: options.players,
@@ -209,7 +209,7 @@ async function main() {
         storySetting: storyData.description || 'Unknown',
         storyGenre: 'Interactive fiction',
       },
-      systemPrompt: variantPrompt.content,
+      systemPrompt: withStoryGuide(variantPrompt.content, storyData.storyGuide),
       storyGuide: storyData.storyGuide,
       narratorModel: variantNarrator as NarratorModel,
       groupSize: options.players,

@@ -16,6 +16,7 @@ import {
   type ReplayConfig,
 } from '../checkpoint/load';
 import type { NarratorModel } from '../agents/narrator';
+import { getPrompt, listPromptIds, withStoryGuide } from '../prompts/loader';
 
 // Load environment variables
 config();
@@ -35,35 +36,7 @@ program
 const options = program.opts();
 
 // System prompts (same as run.ts)
-const PROMPTS: Record<string, string> = {
-  baseline: `You are the narrator for an interactive fiction experience. Guide players through an immersive story with atmospheric descriptions, meaningful choices, and engaging narrative beats.
-
-Your role:
-- Deliver the story in approximately 20 "pulses" (story beats)
-- Create vivid, atmospheric scenes
-- Present meaningful choices to players
-- Handle player tangents gracefully
-- Maintain narrative momentum
-- Provide satisfying conclusion
-
-Remember to stay flexible and responsive to player actions while guiding the story forward.`,
-
-  'pulse-aware': `You are the narrator for an interactive fiction experience. You must deliver the story in EXACTLY 20 "pulses" (major story beats).
-
-PULSE TRACKING (CRITICAL):
-- You are currently on pulse [track this internally]
-- Each pulse should advance the narrative meaningfully
-- Aim for roughly 20 pulses total to complete the story
-- If you're past pulse 15, start building toward conclusion
-- If you're at pulse 20, deliver the ending
-
-Your role:
-- Create vivid, atmospheric scenes
-- Present meaningful choices
-- Handle tangents gracefully but return to story progression
-- Maintain clear narrative momentum
-- Conclude satisfyingly at pulse 20`,
-};
+// PROMPTS removed - now using production prompt loader
 
 async function main() {
   console.log(chalk.cyan('\n🔄 Replay from Checkpoint\n'));
@@ -87,14 +60,18 @@ async function main() {
     const replayConfig: ReplayConfig = {};
 
     if (options.prompt) {
-      const systemPrompt = PROMPTS[options.prompt];
-      if (!systemPrompt) {
-        console.error(chalk.red(`Unknown prompt: ${options.prompt}`));
-        console.log(chalk.yellow('Available prompts:'), Object.keys(PROMPTS).join(', '));
+      try {
+        const loadedPrompt = getPrompt(options.prompt);
+        // Get story guide from checkpoint config
+        const storyGuide = checkpoint.sessionConfig.storyGuide || '';
+        replayConfig.systemPrompt = withStoryGuide(loadedPrompt.content, storyGuide);
+        console.log(chalk.yellow(`→ Changing prompt to: ${options.prompt}`));
+      } catch (error) {
+        console.error(chalk.red((error as Error).message));
+        const availablePrompts = listPromptIds();
+        console.log(chalk.yellow('Available prompts:'), availablePrompts.join(', '));
         process.exit(1);
       }
-      replayConfig.systemPrompt = systemPrompt;
-      console.log(chalk.yellow(`→ Changing prompt to: ${options.prompt}`));
     }
 
     if (options.narrator) {

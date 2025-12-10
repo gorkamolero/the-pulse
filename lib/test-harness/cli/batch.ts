@@ -14,7 +14,7 @@ import chalk from 'chalk';
 import { runSession, type SessionRunnerConfig } from '../session/runner';
 import { saveSessionReport } from '../report/markdown';
 import { getStory, listStoryIds } from '../stories/loader';
-import { getPrompt, listPromptIds } from '../prompts/loader';
+import { getPrompt, listPromptIds, withStoryGuide } from '../prompts/loader';
 import type { NarratorModel } from '../agents/narrator';
 import type { SessionResult } from '../session/runner';
 
@@ -96,7 +96,7 @@ async function main() {
       storySetting: storyData.description || 'Unknown setting',
       storyGenre: 'Interactive fiction',
     },
-    systemPrompt: promptData.content,
+    systemPrompt: withStoryGuide(promptData.content, storyData.storyGuide),
     storyGuide: storyData.storyGuide,
     narratorModel: options.narrator as NarratorModel,
     groupSize: options.players,

@@ -15,7 +15,7 @@ import { saveSessionReport } from '../report/markdown';
 import type { StoryContext } from '../agents/player';
 import type { NarratorModel } from '../agents/narrator';
 import { getStory, listStoryIds } from '../stories/loader';
-import { getPrompt, listPromptIds } from '../prompts/loader';
+import { getPrompt, listPromptIds, withStoryGuide } from '../prompts/loader';
 
 // Load environment variables
 config();
@@ -75,7 +75,8 @@ async function main() {
 
   try {
     const loadedPrompt = getPrompt(options.prompt);
-    systemPrompt = loadedPrompt.content;
+    // Replace {{STORY_GUIDE}} placeholder with actual story guide
+    systemPrompt = withStoryGuide(loadedPrompt.content, storyGuide);
   } catch (error) {
     console.error(chalk.red((error as Error).message));
     const availablePrompts = listPromptIds();
