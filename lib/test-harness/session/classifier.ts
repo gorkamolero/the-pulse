@@ -35,36 +35,52 @@ const classificationSchema = z.object({
 
 const CLASSIFICATION_PROMPT = `You are analyzing narrator output from an interactive fiction game to classify its type.
 
+CRITICAL DISTINCTION - Pulse vs Non-Pulse:
+
+A **PULSE** is a story beat that ADVANCES the narrative:
+- New revelation, challenge, location change, or plot development
+- Introduces new information that moves the story forward
+- Changes the situation or escalates stakes
+- Examples: discovering a clue, entering a new room with danger, NPC reveals plot-critical info
+
+NOT pulses (these are responses, not story beats):
+- Engaging with player jokes, digressions, banter
+- Answering questions about the world that don't advance plot
+- Atmospheric moments that don't change anything
+- Clarifications about current scene
+- Recaps of what already happened
+
 OUTPUT TYPES:
 
-**pulse** - A story beat that advances the narrative
-- New scene or location
-- Plot revelation
-- Character confrontation
-- Challenge presented
-- Major decision point
+**pulse** - Story beat that advances narrative
+- New scene/location that changes situation
+- Plot-critical revelation or discovery
+- New challenge or obstacle presented
+- Significant character moment that moves story
+- Ask: "Did the story situation change because of this?"
 
-**tangent-response** - Handling player distraction/off-topic behavior
-- Responding to jokes or off-topic remarks
-- Addressing player confusion that isn't about the story
-- Handling meta-commentary
+**tangent-response** - Engaging with player off-topic behavior
+- Responding to jokes, banter, or digressions
+- Playing along with tangents
+- Acknowledging player comments that don't affect story
+- NOT forced transitions like "anyway, back to..."
 
-**private-moment** - Addressing an individual player privately
-- Personal revelation matching their backstory
-- Visions or dreams for one player
-- NPC singling them out
+**private-moment** - Individual player addressed privately
+- "[To X only]" or "X, you alone notice..."
+- Personal revelation matching backstory
+- Visions/dreams for one player
 - Secrets that would spoil group experience
-- Look for phrases like "[To X only]" or "X, you alone notice..."
 
-**clarification** - Answering player questions about the current situation
-- Describing what they see in more detail
-- Answering "can I..." type questions
-- Clarifying confusion about current scene
+**clarification** - Answering questions about current scene
+- "You see..." describing details already present
+- "Yes, you can..." answering capability questions
+- Explaining current situation without advancing it
 
-**recap** - Summarizing or recapping previous events
-- "As you recall..."
-- "So far you have..."
+**recap** - Summarizing previous events
+- "As you recall...", "So far you have..."
 - Reminding players of earlier information
+
+RULE: When in doubt between pulse and something else, ask "Did this advance the story or just respond to players?" If it advanced, it's a pulse. If it responded without advancing, it's not.
 
 Analyze the narrator's output and classify it.`;
 
@@ -146,19 +162,9 @@ function heuristicClassification(
     };
   }
 
-  // Check for tangent response indicators
-  if (
-    lower.includes('anyway') ||
-    lower.includes('back to') ||
-    lower.includes('but returning to') ||
-    lower.includes('getting back')
-  ) {
-    return {
-      type: 'tangent-response',
-      confidence: 0.6,
-      reasoning: 'Contains tangent recovery language',
-    };
-  }
+  // Note: We DON'T classify forced segues ("anyway", "back to") as tangent-response
+  // Those are RED FLAGS that should be caught by issue detection
+  // Tangent responses should be natural engagement, not forced returns
 
   // Check for clarification indicators
   if (lower.includes('you see') || lower.includes('you can') || lower.includes('yes, you')) {

@@ -14,7 +14,7 @@ import chalk from 'chalk';
 import { runSession, type SessionRunnerConfig } from '../session/runner';
 import { saveSessionReport } from '../report/markdown';
 import { getStory, listStoryIds } from '../stories/loader';
-import { getPrompt, listPromptIds, withStoryGuide } from '../prompts/loader';
+import { getSystemPrompt } from '../prompts/loader';
 import type { NarratorModel } from '../agents/narrator';
 import type { SessionResult } from '../session/runner';
 
@@ -43,7 +43,6 @@ program
   .description('Run multiple test sessions for batch analysis')
   .requiredOption('--sessions <number>', 'Number of sessions to run per configuration', Number.parseInt)
   .option('--story <id>', `Story ID (${listStoryIds().join(', ')})`)
-  .option('--prompt <name>', `Prompt variant (${listPromptIds().join(', ')})`)
   .option('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-r1)')
   .option('--max-parallel <number>', 'Maximum parallel sessions', Number.parseInt, 3)
   .option('--players <number>', 'Group size (2-5)', Number.parseInt)
@@ -70,20 +69,17 @@ async function runBatchSession(
 }
 
 async function main() {
-  if (!options.story || !options.prompt || !options.narrator) {
-    console.error(chalk.red('Error: --story, --prompt, and --narrator are required'));
+  if (!options.story || !options.narrator) {
+    console.error(chalk.red('Error: --story and --narrator are required'));
     console.log(chalk.yellow('Available stories:'), listStoryIds().join(', '));
-    console.log(chalk.yellow('Available prompts:'), listPromptIds().join(', '));
     process.exit(1);
   }
 
-  // Load story and prompt
+  // Load story
   let storyData: ReturnType<typeof getStory>;
-  let promptData: ReturnType<typeof getPrompt>;
 
   try {
     storyData = getStory(options.story);
-    promptData = getPrompt(options.prompt);
   } catch (error) {
     console.error(chalk.red((error as Error).message));
     process.exit(1);
@@ -96,7 +92,7 @@ async function main() {
       storySetting: storyData.description || 'Unknown setting',
       storyGenre: 'Interactive fiction',
     },
-    systemPrompt: withStoryGuide(promptData.content, storyData.storyGuide),
+    systemPrompt: getSystemPrompt(storyData.storyGuide),
     storyGuide: storyData.storyGuide,
     narratorModel: options.narrator as NarratorModel,
     groupSize: options.players,
@@ -105,7 +101,6 @@ async function main() {
 
   console.log(chalk.cyan('\n📊 Batch Analysis Configuration:\n'));
   console.log(chalk.white(`Story: ${chalk.bold(storyData.title)}`));
-  console.log(chalk.white(`Prompt: ${chalk.bold(options.prompt)}`));
   console.log(chalk.white(`Narrator: ${chalk.bold(options.narrator)}`));
   console.log(chalk.white(`Sessions: ${chalk.bold(options.sessions)}`));
   console.log(chalk.white(`Max Parallel: ${chalk.bold(options.maxParallel)}`));

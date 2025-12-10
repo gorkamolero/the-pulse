@@ -18,8 +18,7 @@
     "db:up": "drizzle-kit up",
     "test:run": "tsx lib/test-harness/cli/run.ts",
     "test:replay": "tsx lib/test-harness/cli/replay.ts",
-    "test:batch": "tsx lib/test-harness/cli/batch.ts",
-    "test:compare": "tsx lib/test-harness/cli/compare.ts"
+    "test:batch": "tsx lib/test-harness/cli/batch.ts"
   },
   "dependencies": {
     "@11labs/react": "^0.0.7",

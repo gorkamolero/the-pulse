@@ -15,7 +15,7 @@ import { saveSessionReport } from '../report/markdown';
 import type { StoryContext } from '../agents/player';
 import type { NarratorModel } from '../agents/narrator';
 import { getStory, listStoryIds } from '../stories/loader';
-import { getPrompt, listPromptIds, withStoryGuide } from '../prompts/loader';
+import { getSystemPrompt } from '../prompts/loader';
 
 // Load environment variables
 config();
@@ -26,7 +26,6 @@ program
   .name('test-run')
   .description('Run a test harness session')
   .requiredOption('--story <id>', 'Story ID (shadow-over-innsmouth, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)')
-  .requiredOption('--prompt <name>', 'System prompt variant (baseline, pulse-aware, pulse-detailed, concise)')
   .requiredOption('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-r1)')
   .option('--players <number>', 'Group size (2-5)', Number.parseInt)
   .option('--max-turns <number>', 'Maximum turns', Number.parseInt, 100)
@@ -70,19 +69,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Load prompt using the prompt loader
-  let systemPrompt: string;
-
-  try {
-    const loadedPrompt = getPrompt(options.prompt);
-    // Replace {{STORY_GUIDE}} placeholder with actual story guide
-    systemPrompt = withStoryGuide(loadedPrompt.content, storyGuide);
-  } catch (error) {
-    console.error(chalk.red((error as Error).message));
-    const availablePrompts = listPromptIds();
-    console.log(chalk.yellow('Available prompts:'), availablePrompts.join(', '));
-    process.exit(1);
-  }
+  // Get production system prompt
+  const systemPrompt = getSystemPrompt(storyGuide);
 
   const config = {
     story,
@@ -96,7 +84,6 @@ async function main() {
 
   console.log(chalk.cyan('\n📋 Session Configuration:\n'));
   console.log(chalk.white(`Story: ${chalk.bold(story.storyTitle)}`));
-  console.log(chalk.white(`Prompt: ${chalk.bold(options.prompt)}`));
   console.log(chalk.white(`Narrator: ${chalk.bold(options.narrator)}`));
   console.log(chalk.white(`Group Size: ${chalk.bold(options.players || 'random')}`));
   console.log(chalk.white(`Max Turns: ${chalk.bold(options.maxTurns)}`));

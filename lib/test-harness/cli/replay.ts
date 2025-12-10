@@ -16,7 +16,7 @@ import {
   type ReplayConfig,
 } from '../checkpoint/load';
 import type { NarratorModel } from '../agents/narrator';
-import { getPrompt, listPromptIds, withStoryGuide } from '../prompts/loader';
+import { getSystemPrompt } from '../prompts/loader';
 
 // Load environment variables
 config();
@@ -25,12 +25,10 @@ const program = new Command();
 
 program
   .name('test-replay')
-  .description('Replay session from checkpoint with config changes')
+  .description('Replay session from checkpoint (uses current production prompt)')
   .requiredOption('--checkpoint <path>', 'Path to checkpoint file')
-  .option('--prompt <name>', 'New system prompt variant')
-  .option('--narrator <model>', 'New narrator model (opus-4.5, grok-4, deepseek-r1)')
-  .option('--temperature <number>', 'New temperature', Number.parseFloat)
-  .option('--max-tokens <number>', 'New max tokens', Number.parseInt)
+  .option('--narrator <model>', 'Override narrator model (opus-4.5, grok-4, deepseek-r1)')
+  .option('--temperature <number>', 'Override temperature', Number.parseFloat)
   .parse();
 
 const options = program.opts();
@@ -56,23 +54,13 @@ async function main() {
       ),
     );
 
-    // Build replay config
+    // Build replay config - always use current production prompt
     const replayConfig: ReplayConfig = {};
 
-    if (options.prompt) {
-      try {
-        const loadedPrompt = getPrompt(options.prompt);
-        // Get story guide from checkpoint config
-        const storyGuide = checkpoint.sessionConfig.storyGuide || '';
-        replayConfig.systemPrompt = withStoryGuide(loadedPrompt.content, storyGuide);
-        console.log(chalk.yellow(`→ Changing prompt to: ${options.prompt}`));
-      } catch (error) {
-        console.error(chalk.red((error as Error).message));
-        const availablePrompts = listPromptIds();
-        console.log(chalk.yellow('Available prompts:'), availablePrompts.join(', '));
-        process.exit(1);
-      }
-    }
+    // Get story guide from checkpoint and use current production prompt
+    const storyGuide = checkpoint.sessionConfig.storyGuide || '';
+    replayConfig.systemPrompt = getSystemPrompt(storyGuide);
+    console.log(chalk.yellow('→ Using current production prompt'));
 
     if (options.narrator) {
       replayConfig.narratorModel = options.narrator as NarratorModel;

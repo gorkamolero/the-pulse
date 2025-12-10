@@ -70,8 +70,8 @@ ${result.config.group.players
 
 ## Summary
 
-- **Turns**: ${result.finalTurn}
-- **Pulses Detected**: ${result.detectedPulses.length}/~20
+- **Turns**: ${result.finalTurn} (total exchanges)
+- **Pulses**: ${result.detectedPulses.length}/~20 (story beats that advanced narrative)
 - **Tangents**: ${timelineSummary.tangents}
 - **Private Moments**: ${timelineSummary.privateMoments}
 - **Issues Detected**: ${issues.length}
