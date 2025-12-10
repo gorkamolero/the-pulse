@@ -38,14 +38,19 @@ export interface CostBreakdown {
 const MODEL_PRICING = {
   // Narrator models
   'anthropic/claude-opus-4.5': { input: 15.0, output: 75.0 },
-  'x-ai/grok-4.1-fast': { input: 2.0, output: 10.0 },
-  'deepseek/deepseek-v3.2': { input: 0.27, output: 1.1 },
 
   // Player models
   'qwen/qwen-2.5-72b-instruct': { input: 0.35, output: 0.4 },
   'moonshotai/kimi-k2': { input: 0.08, output: 0.08 },
 
-  // Classification and validation model
+  // Shared models (can be used as narrator or player)
+  'x-ai/grok-4.1-fast': { input: 2.0, output: 10.0 },
+  'deepseek/deepseek-v3.2': { input: 0.27, output: 1.1 },
+
+  // Character generation
+  'x-ai/grok-4': { input: 5.0, output: 15.0 },
+
+  // Classification and validation
   'google/gemini-2.0-flash-lite': { input: 0.075, output: 0.3 },
 };
 
