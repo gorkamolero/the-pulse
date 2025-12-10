@@ -41,3 +41,6 @@ yarn-error.log*
 test-harness-sessions/
 test-harness-checkpoints/
 test-harness-reports/
+
+# beads
+.beads/
