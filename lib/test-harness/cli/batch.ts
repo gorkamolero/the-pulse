@@ -153,7 +153,7 @@ async function main() {
     console.log(chalk.white(`Average Duration: ${chalk.bold((avgDuration / 1000).toFixed(1))}s`));
 
     if (results[0]?.costBreakdown) {
-      const avgCost = results.reduce((sum, r) => sum + (r.costBreakdown?.total || 0), 0) / results.length;
+      const avgCost = results.reduce((sum, r) => sum + (r.costBreakdown?.total.cost || 0), 0) / results.length;
       console.log(chalk.white(`Average Cost: ${chalk.bold(`$${avgCost.toFixed(4)}`)}`));
     }
 

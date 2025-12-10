@@ -244,27 +244,25 @@ export async function generateHTMLReport(result: SessionResult): Promise<string>
         <div class="cost-item">
           <div class="cost-label">Narrator: $${result.costBreakdown.narrator.cost.toFixed(4)}</div>
           <div class="cost-details">
-            ${result.costBreakdown.narrator.totalTokens.toLocaleString()} tokens<br>
-            Model: ${result.costBreakdown.narrator.model}
+            ${result.costBreakdown.narrator.tokens.totalTokens.toLocaleString()} tokens
           </div>
         </div>
         <div class="cost-item">
           <div class="cost-label">Players: $${result.costBreakdown.players.cost.toFixed(4)}</div>
           <div class="cost-details">
-            ${result.costBreakdown.players.totalTokens.toLocaleString()} tokens<br>
-            ${result.costBreakdown.players.models.length} agents
+            ${result.costBreakdown.players.tokens.totalTokens.toLocaleString()} tokens
           </div>
         </div>
         <div class="cost-item">
           <div class="cost-label">Classification: $${result.costBreakdown.classification.cost.toFixed(4)}</div>
           <div class="cost-details">
-            ${result.costBreakdown.classification.totalTokens.toLocaleString()} tokens
+            ${result.costBreakdown.classification.tokens.totalTokens.toLocaleString()} tokens
           </div>
         </div>
         <div class="cost-item" style="border-left-color: #11998e;">
-          <div class="cost-label">Total: $${result.costBreakdown.total.toFixed(4)}</div>
+          <div class="cost-label">Total: $${result.costBreakdown.total.cost.toFixed(4)}</div>
           <div class="cost-details">
-            ${result.costBreakdown.totalTokens.toLocaleString()} total tokens
+            ${result.costBreakdown.total.tokens.totalTokens.toLocaleString()} total tokens
           </div>
         </div>
       </div>

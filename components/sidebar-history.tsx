@@ -77,6 +77,7 @@ const PureChatItem = ({
       <DropdownMenu modal={true}>
         <DropdownMenuTrigger asChild>
           <button
+            type="button"
             className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent-foreground/10 rounded"
           >
             <MoreHorizontalIcon />

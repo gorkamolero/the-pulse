@@ -50,7 +50,7 @@ export interface PerformanceMetrics {
   /** Quality indicators */
   qualityMetrics: {
     tangentRate: number; // tangents / totalTurns
-    privateM omentRate: number; // privateMoments / totalTurns
+    privateMomentRate: number; // privateMoments / totalTurns
     payoffRate: number; // paidOffMoments / totalPrivateMoments
   };
 
@@ -160,9 +160,9 @@ export class PerformanceTracker {
       },
 
       costMetrics: {
-        totalCost: costBreakdown.total,
-        costPerTurn: totalTurns > 0 ? costBreakdown.total / totalTurns : 0,
-        costPerPulse: totalPulses > 0 ? costBreakdown.total / totalPulses : 0,
+        totalCost: costBreakdown.total.cost,
+        costPerTurn: totalTurns > 0 ? costBreakdown.total.cost / totalTurns : 0,
+        costPerPulse: totalPulses > 0 ? costBreakdown.total.cost / totalPulses : 0,
       },
     };
   }

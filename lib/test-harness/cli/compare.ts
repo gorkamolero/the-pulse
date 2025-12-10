@@ -51,7 +51,7 @@ function calculateStats(results: SessionResult[]): ComparisonStats {
   const avgPulses = results.reduce((sum, r) => sum + r.detectedPulses.length, 0) / results.length;
   const avgTurns = results.reduce((sum, r) => sum + r.finalTurn, 0) / results.length;
   const avgDuration = results.reduce((sum, r) => sum + r.duration, 0) / results.length;
-  const avgCost = results.reduce((sum, r) => sum + (r.costBreakdown?.total || 0), 0) / results.length;
+  const avgCost = results.reduce((sum, r) => sum + (r.costBreakdown?.total.cost || 0), 0) / results.length;
 
   const tangents = results.reduce((sum, r) => sum + (r.tangentAnalysis?.totalTangents || 0), 0);
   const totalTurns = results.reduce((sum, r) => sum + r.finalTurn, 0);
