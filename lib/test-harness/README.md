@@ -6,24 +6,6 @@ Automated playtesting system for The Pulse that simulates group sessions with AI
 
 Surface narrator weaknesses, validate prompt changes, and ensure story quality before human players encounter issues. Run hundreds of randomized playthroughs with AI agents representing different player archetypes.
 
-## Setup
-
-1. **Install dependencies:**
-   ```bash
-   pnpm install
-   ```
-
-2. **Configure environment:**
-   ```bash
-   cp .env.example .env
-   # Add your API keys to .env
-   ```
-
-3. **Required API Keys:**
-   - `ANTHROPIC_API_KEY` - Claude Opus 4.5 (narrator)
-   - `OPENROUTER_API_KEY` - Grok, DeepSeek, Qwen, Kimi (player agents & narrator alternatives)
-   - `OPENAI_API_KEY` - GPT-4o-mini (output classification)
-
 ## Usage
 
 ### Run a Session
