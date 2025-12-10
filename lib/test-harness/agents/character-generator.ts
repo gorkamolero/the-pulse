@@ -68,7 +68,7 @@ Output ONLY valid JSON matching this exact schema:
 Be creative. Make them feel like actual friends with history.`;
 
   const result = await generateText({
-    model: openrouter('x-ai/grok-beta'),
+    model: openrouter('x-ai/grok-4'),
     prompt,
     temperature: 0.8,
   });
@@ -150,7 +150,7 @@ Output ONLY valid JSON matching this exact schema:
 Be creative and natural. Make them feel real.`;
 
   const result = await generateText({
-    model: openrouter('x-ai/grok-beta'),
+    model: openrouter('x-ai/grok-4'),
     prompt,
     temperature: 0.8,
   });
