@@ -1,21 +1,26 @@
 /**
  * Player Agent Factory
  *
- * Dynamically creates player agents from archetypes + story context.
- * Each agent gets a unique name, backstory, and system prompt.
+ * Creates player agents using group-aware character generation.
+ * Generates friend group context first, then individual characters
+ * with relationships and shared history.
  */
 
-import type { ArchetypeId, PlayerModel } from '../archetypes/types';
+import type { ArchetypeId, PlayerModel, GroupContext, PlayerIdentity } from '../archetypes/types';
 import { ARCHETYPE_BY_ID } from '../archetypes/definitions';
 import { ARCHETYPE_MODEL_MAP } from '../archetypes/types';
+import {
+  generateGroupContext,
+  generatePlayerIdentity,
+  type StoryContext as GeneratorStoryContext,
+} from './character-generator';
 
 export interface PlayerAgent {
   archetype: ArchetypeId;
   name: string;
   model: PlayerModel;
   modelId: string;
-  generatedBackstory: string;
-  characterForStory: string;
+  identity: PlayerIdentity;
   systemPrompt: string;
 }
 
@@ -27,158 +32,167 @@ export interface StoryContext {
 }
 
 /**
- * Generate a character name appropriate to the story setting
- */
-export function generateName(): string {
-  // Pool of names that work across most story settings
-  // In a full implementation, this could be LLM-generated or setting-specific
-  const firstNames = [
-    'Alex',
-    'Morgan',
-    'Sam',
-    'Jordan',
-    'Casey',
-    'Taylor',
-    'Riley',
-    'Avery',
-    'Quinn',
-    'Parker',
-    'Drew',
-    'Reese',
-    'Jamie',
-    'Skyler',
-    'Dakota',
-    'Devon',
-    'Emerson',
-    'Finley',
-    'Harley',
-    'Kai',
-  ];
-
-  // Return a random name
-  return firstNames[Math.floor(Math.random() * firstNames.length)] || 'Alex';
-}
-
-/**
- * Generate a backstory for the agent based on archetype + story context
- *
- * Note: In the full implementation, this would use an LLM to generate
- * unique, story-appropriate backstories. For now, we template them.
- */
-export function generateBackstory(
-  archetypeId: ArchetypeId,
-  name: string,
-  storyContext: StoryContext,
-): string {
-  const archetype = ARCHETYPE_BY_ID[archetypeId];
-  if (!archetype) {
-    throw new Error(`Unknown archetype: ${archetypeId}`);
-  }
-
-  // Template-based backstory that incorporates archetype context
-  // In full implementation, use LLM to generate unique variations
-  return `${name} - ${archetype.context}. ${generateStoryConnection(storyContext)}`;
-}
-
-function generateStoryConnection(storyContext: StoryContext): string {
-  const connections = [
-    `Heard about ${storyContext.storyTitle} from a friend.`,
-    `Always been curious about ${storyContext.storyGenre} stories.`,
-    `Looking for an adventure.`,
-    `Interested in exploring ${storyContext.storySetting}.`,
-    `Wants to experience something new.`,
-  ];
-
-  return connections[Math.floor(Math.random() * connections.length)] || connections[0];
-}
-
-/**
- * Generate character description for the specific story
- */
-export function generateCharacter(
-  name: string,
-  backstory: string,
-  storyContext: StoryContext,
-): string {
-  // Simple character description
-  // In full implementation, this could be more detailed and LLM-generated
-  return `${name}, a player interested in ${storyContext.storyGenre}. ${backstory}`;
-}
-
-/**
- * Compose system prompt for player agent
+ * Compose system prompt for player agent with group context
  */
 export function composeSystemPrompt(
-  archetype: ArchetypeId,
-  name: string,
-  character: string,
+  archetypeId: ArchetypeId,
+  identity: PlayerIdentity,
+  groupContext: GroupContext,
+  otherPlayers: PlayerIdentity[],
   storyContext: StoryContext,
 ): string {
-  const archetypeData = ARCHETYPE_BY_ID[archetype];
-  if (!archetypeData) {
-    throw new Error(`Unknown archetype: ${archetype}`);
-  }
-
-  return `You are ${name}, a player in an interactive fiction story called "${storyContext.storyTitle}".
-
-CHARACTER:
-${character}
-
-PLAY STYLE:
-${archetypeData.style}
-
-BEHAVIORAL PATTERNS:
-${archetypeData.patterns.map((p) => `- ${p}`).join('\n')}
-
-IMPORTANT INSTRUCTIONS:
-- You are ONE player in a GROUP of 2-5 players experiencing this story together
-- Respond naturally as ${name} would respond to the narrative
-- Your responses should be conversational and in-character
-- About ${Math.round(archetypeData.quirkFrequency * 100)}% of your responses should show your personality quirk
-- The remaining ${Math.round((1 - archetypeData.quirkFrequency) * 100)}% should be normal, engaged play
-- NEVER break character or refer to yourself as an AI
-- Keep responses concise (1-3 sentences typically)
-- React to what the narrator tells you and what your fellow players do
-- Sometimes you'll be asked to share your reaction with the group
-- Other times you might get private information just for you
-
-Remember: You're a real person playing a game with friends. Stay in character and have fun with the story!`;
-}
-
-/**
- * Create a player agent from an archetype + story context
- */
-export function createPlayerAgent(
-  archetypeId: ArchetypeId,
-  storyContext: StoryContext,
-): PlayerAgent {
   const archetype = ARCHETYPE_BY_ID[archetypeId];
   if (!archetype) {
     throw new Error(`Unknown archetype: ${archetypeId}`);
   }
 
-  const name = generateName();
-  const backstory = generateBackstory(archetypeId, name, storyContext);
-  const character = generateCharacter(name, backstory, storyContext);
-  const systemPrompt = composeSystemPrompt(archetypeId, name, character, storyContext);
+  // Build relationships section
+  const relationshipsText =
+    otherPlayers.length > 0
+      ? otherPlayers
+          .map((p) => {
+            const relationship = identity.relationships[p.name] || 'friend';
+            return `- ${p.name}: ${relationship}`;
+          })
+          .join('\n')
+      : '- Playing solo tonight (no other players)';
 
-  return {
-    archetype: archetypeId,
-    name,
-    model: archetype.model,
-    modelId: ARCHETYPE_MODEL_MAP[archetype.model] || '',
-    generatedBackstory: backstory,
-    characterForStory: character,
-    systemPrompt,
-  };
+  const sharedMemoriesText = groupContext.sharedMemories
+    .map((m) => `- ${m}`)
+    .join('\n');
+
+  return `You are ${identity.name}, playing an interactive fiction game with friends.
+
+## Your Friend Group
+${groupContext.relationship}. You've ${groupContext.history}.
+
+Tonight: ${groupContext.occasion}
+
+${groupContext.organizer} suggested "${storyContext.storyTitle}" because ${groupContext.storyReason}.
+
+Group vibe: ${groupContext.dynamic}
+
+## Your Friends Tonight
+${relationshipsText}
+
+## Shared History
+You might naturally reference these memories during tangents:
+${sharedMemoriesText}
+
+## Who You Are
+In the group: ${identity.groupRole}
+
+Why you're here: ${identity.personalReason}
+
+Tonight you're ${identity.currentState}.
+
+Background: ${identity.backstory}
+
+## Your Play Style
+${archetype.style}
+
+Behavioral patterns:
+${archetype.patterns.map((p) => `- ${p}`).join('\n')}
+
+## How to Play
+- Respond as ${identity.name} would with these specific friends
+- Reference shared history naturally when tangents happen (don't force it)
+- React to friends by name: "${otherPlayers.map((p) => p.name).join('", "')}"
+- Your personality quirk shows ~${Math.round(archetype.quirkFrequency * 100)}% of the time
+- Stay in character but adapt to what the story needs
+- Keep responses concise (1-3 sentences typically)
+- You're ONE player in a GROUP - listen, contribute, don't dominate
+
+IMPORTANT:
+- NEVER break character or refer to yourself as an AI
+- You're with friends playing a game - be natural, be yourself
+- Tangents are fine - you have shared history to reference
+- When the narrator asks you a personality question, draw from your backstory`;
 }
 
 /**
- * Create multiple player agents (for a group)
+ * Create multiple player agents with group-aware generation
+ *
+ * This is now async because it calls LLMs to generate group context
+ * and individual identities.
  */
-export function createPlayerAgents(
+export async function createPlayerAgents(
   archetypeIds: ArchetypeId[],
   storyContext: StoryContext,
-): PlayerAgent[] {
-  return archetypeIds.map((id) => createPlayerAgent(id, storyContext));
+): Promise<PlayerAgent[]> {
+  // Convert to generator story context format
+  const generatorContext: GeneratorStoryContext = {
+    storyId: storyContext.storyId,
+    title: storyContext.storyTitle,
+    description: storyContext.storySetting,
+    genre: storyContext.storyGenre,
+  };
+
+  // Step 1: Generate group context
+  console.log('  Generating group context...');
+  const groupContext = await generateGroupContext(generatorContext, archetypeIds);
+
+  // Step 2: Generate player identities sequentially
+  console.log('  Generating player identities...');
+  const identities: PlayerIdentity[] = [];
+
+  for (const archetypeId of archetypeIds) {
+    const identity = await generatePlayerIdentity(
+      groupContext,
+      archetypeId,
+      identities, // Pass existing players so they can form relationships
+      generatorContext,
+    );
+    identities.push(identity);
+    console.log(`    Created: ${identity.name} (${ARCHETYPE_BY_ID[archetypeId]?.name})`);
+  }
+
+  // Step 3: Compose system prompts for all players
+  console.log('  Composing system prompts...');
+  const agents: PlayerAgent[] = [];
+
+  for (let i = 0; i < archetypeIds.length; i++) {
+    const archetypeId = archetypeIds[i];
+    const identity = identities[i];
+    const archetype = ARCHETYPE_BY_ID[archetypeId];
+
+    if (!archetype || !identity) {
+      throw new Error(`Failed to create agent for archetype ${archetypeId}`);
+    }
+
+    // Other players (everyone except this one)
+    const otherPlayers = identities.filter((_, idx) => idx !== i);
+
+    const systemPrompt = composeSystemPrompt(
+      archetypeId,
+      identity,
+      groupContext,
+      otherPlayers,
+      storyContext,
+    );
+
+    agents.push({
+      archetype: archetypeId,
+      name: identity.name,
+      model: archetype.model,
+      modelId: ARCHETYPE_MODEL_MAP[archetype.model] || '',
+      identity,
+      systemPrompt,
+    });
+  }
+
+  return agents;
+}
+
+/**
+ * Create a single player agent
+ *
+ * For single-player scenarios, we still generate a minimal group context.
+ */
+export async function createPlayerAgent(
+  archetypeId: ArchetypeId,
+  storyContext: StoryContext,
+): Promise<PlayerAgent> {
+  const agents = await createPlayerAgents([archetypeId], storyContext);
+  return agents[0] || ({} as PlayerAgent);
 }

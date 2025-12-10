@@ -11,7 +11,7 @@ import { generateText, type LanguageModelUsage } from 'ai';
 import type { ArchetypeId } from '../archetypes/types';
 import { ARCHETYPES } from '../archetypes/definitions';
 import type { PlayerAgent, StoryContext } from '../agents/player';
-import { createPlayerAgent } from '../agents/player';
+import { createPlayerAgents } from '../agents/player';
 import type { NarratorConfig } from '../agents/narrator';
 import { NARRATOR_MODEL_MAP } from '../agents/narrator';
 import type { Message } from './turn';
@@ -617,7 +617,9 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
   try {
     // 1. Generate group composition
     const archetypeIds = generateGroupComposition(config.groupSize);
-    const playerAgents = archetypeIds.map((id) => createPlayerAgent(id, config.story));
+
+    console.log(`\n👥 Generating group of ${archetypeIds.length} players...`);
+    const playerAgents = await createPlayerAgents(archetypeIds, config.story);
 
     // 2. Select random spokesperson
     const spokesperson =

@@ -37,3 +37,41 @@ export const ARCHETYPE_MODEL_MAP: Record<PlayerModel, string> = {
   deepseek: 'deepseek/deepseek-v3.2',
   'kimi-k2': 'moonshotai/kimi-k2',
 };
+
+/**
+ * Group Context - How the friend group knows each other
+ */
+export interface GroupContext {
+  /** How they know each other */
+  relationship: string;
+  /** How long they've known each other */
+  history: string;
+  /** Why they're playing tonight */
+  occasion: string;
+  /** Who found The Pulse and why */
+  organizer: string;
+  /** Why they picked THIS story */
+  storyReason: string;
+  /** Group vibe */
+  dynamic: string;
+  /** 2-3 shared memories they might reference */
+  sharedMemories: string[];
+}
+
+/**
+ * Player Identity - Individual character within the group
+ */
+export interface PlayerIdentity {
+  /** Player's name */
+  name: string;
+  /** Their role in the friend group */
+  groupRole: string;
+  /** Specific relationships to other players by name */
+  relationships: Record<string, string>;
+  /** Why they specifically are here tonight */
+  personalReason: string;
+  /** Their mood/state tonight */
+  currentState: string;
+  /** Backstory snippet for narrator's personality questions */
+  backstory: string;
+}
