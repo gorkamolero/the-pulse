@@ -23,11 +23,11 @@ export interface SessionMetadata {
  * Common tag categories for organization
  */
 export const TagCategories = {
-  /** Prompt variant being tested */
-  PROMPT: ['baseline', 'pulse-aware', 'pulse-detailed', 'concise'],
+  /** Prompt variant being tested (only production now) */
+  PROMPT: ['production'],
 
   /** Narrator model */
-  NARRATOR: ['opus-4.5', 'grok-4', 'deepseek-r1'],
+  NARRATOR: ['opus-4.5', 'grok-4', 'deepseek-v3.2'],
 
   /** Story being tested */
   STORY: ['shadow-over-innsmouth', 'the-hollow-choir', 'whispering-pines', 'siren-of-the-red-dust', 'endless-path'],

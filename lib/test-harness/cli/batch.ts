@@ -43,7 +43,7 @@ program
   .description('Run multiple test sessions for batch analysis')
   .requiredOption('--sessions <number>', 'Number of sessions to run per configuration', Number.parseInt)
   .option('--story <id>', `Story ID (${listStoryIds().join(', ')})`)
-  .option('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-r1)')
+  .option('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-v3.2)')
   .option('--max-parallel <number>', 'Maximum parallel sessions', Number.parseInt, 3)
   .option('--players <number>', 'Group size (2-5)', Number.parseInt)
   .option('--max-turns <number>', 'Maximum turns', Number.parseInt, 100)

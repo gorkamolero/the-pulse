@@ -11,22 +11,29 @@ Surface narrator weaknesses, validate prompt changes, and ensure story quality b
 ### Run a Session
 
 ```bash
-pnpm test:run --story innsmouth --prompt baseline --narrator opus-4.5
+pnpm test:run --story shadow-over-innsmouth --narrator deepseek-v3.2
 ```
 
 Options:
-- `--story` - Story ID (innsmouth, hollow-choir, whispering-pines, etc.)
-- `--prompt` - System prompt variant (baseline, pulse-aware, etc.)
-- `--narrator` - Narrator model (opus-4.5, grok-4, deepseek-r2)
+- `--story` - Story ID (shadow-over-innsmouth, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)
+- `--narrator` - Narrator model (opus-4.5, grok-4, deepseek-v3.2)
 - `--players` - Force specific group size (2-5, default: random)
+- `--max-turns` - Maximum turns (default: 100)
 
 ### Replay from Checkpoint
 
 ```bash
-pnpm test:replay --checkpoint sessions/abc123/turn-22.json --prompt pulse-aware
+pnpm test:replay --checkpoint test-harness-checkpoints/abc123/turn-22.json
 ```
 
-Load a checkpoint and continue the session with a different prompt or narrator model. Perfect for A/B testing prompt changes on the exact same scenario.
+Replays from a saved checkpoint using the **current production prompt**. This is how you test prompt changes:
+
+1. Find issue in a session transcript
+2. Edit `lib/ai/prompts/system.ts` directly
+3. Run replay with the checkpoint
+4. If better, commit the prompt change
+
+The replay always uses whatever is currently in the production prompt file - no variants needed.
 
 ## Architecture
 
@@ -73,20 +80,20 @@ Reports include:
 ## Iteration Workflow
 
 1. Run session → Read report
-2. Find problem at turn N
-3. Paste transcript to Claude for analysis
-4. Tweak prompt or story guide
-5. Replay from turn N-1 with new config
-6. Compare: did it help?
+2. Find problem at turn N (e.g., forced segue, contradiction)
+3. Edit production prompt directly (`lib/ai/prompts/system.ts`)
+4. Replay from turn N-1 checkpoint
+5. Compare: did it help?
+6. If yes, commit prompt change
 
-The checkpoint system enables fast iteration without re-running entire sessions.
+The checkpoint system enables fast iteration without re-running entire sessions. You're always testing the production prompt.
 
 ## Cost Estimates
 
 Per session (varies by narrator model):
 - **Opus 4.5**: $2-5
 - **Grok 4**: $0.50-1
-- **DeepSeek R2**: $0.30-0.80
+- **DeepSeek v3.2**: $0.30-0.80
 
 Player agents add ~$0.10-0.30 per session. Start testing with cheaper narrators, validate winners with Opus.
 

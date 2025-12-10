@@ -38,8 +38,8 @@ export interface CostBreakdown {
 const MODEL_PRICING = {
   // Narrator models
   'anthropic/claude-opus-4.5': { input: 15.0, output: 75.0 },
-  'x-ai/grok-4': { input: 2.0, output: 10.0 },
-  'deepseek/deepseek-r1': { input: 0.27, output: 1.1 },
+  'x-ai/grok-4.1-fast': { input: 2.0, output: 10.0 },
+  'deepseek/deepseek-v3.2': { input: 0.27, output: 1.1 },
 
   // Player models
   'qwen/qwen-2.5-72b-instruct': { input: 0.35, output: 0.4 },

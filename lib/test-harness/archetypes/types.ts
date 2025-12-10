@@ -32,8 +32,8 @@ export interface Archetype {
  * All models accessed through OpenRouter
  */
 export const ARCHETYPE_MODEL_MAP: Record<PlayerModel, string> = {
-  grok: 'x-ai/grok-4',
+  grok: 'x-ai/grok-4.1-fast',
   qwen: 'qwen/qwen-2.5-72b-instruct',
-  deepseek: 'deepseek/deepseek-r1',
+  deepseek: 'deepseek/deepseek-v3.2',
   'kimi-k2': 'moonshotai/kimi-k2',
 };

@@ -27,7 +27,7 @@ program
   .name('test-replay')
   .description('Replay session from checkpoint (uses current production prompt)')
   .requiredOption('--checkpoint <path>', 'Path to checkpoint file')
-  .option('--narrator <model>', 'Override narrator model (opus-4.5, grok-4, deepseek-r1)')
+  .option('--narrator <model>', 'Override narrator model (opus-4.5, grok-4, deepseek-v3.2)')
   .option('--temperature <number>', 'Override temperature', Number.parseFloat)
   .parse();
 

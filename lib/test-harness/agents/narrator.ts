@@ -5,7 +5,7 @@
  * story content. All models are accessed through OpenRouter.
  */
 
-export type NarratorModel = 'opus-4.5' | 'grok-4' | 'deepseek-r1';
+export type NarratorModel = 'opus-4.5' | 'grok-4' | 'deepseek-v3.2';
 
 export interface NarratorConfig {
   model: NarratorModel;
@@ -21,8 +21,8 @@ export interface NarratorConfig {
  */
 export const NARRATOR_MODEL_MAP: Record<NarratorModel, string> = {
   'opus-4.5': 'anthropic/claude-opus-4.5',
-  'grok-4': 'x-ai/grok-4',
-  'deepseek-r1': 'deepseek/deepseek-r1',
+  'grok-4': 'x-ai/grok-4.1-fast',
+  'deepseek-v3.2': 'deepseek/deepseek-v3.2',
 };
 
 /**

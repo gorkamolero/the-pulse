@@ -26,7 +26,7 @@ program
   .name('test-run')
   .description('Run a test harness session')
   .requiredOption('--story <id>', 'Story ID (shadow-over-innsmouth, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)')
-  .requiredOption('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-r1)')
+  .requiredOption('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-v3.2)')
   .option('--players <number>', 'Group size (2-5)', Number.parseInt)
   .option('--max-turns <number>', 'Maximum turns', Number.parseInt, 100)
   .option('--temperature <number>', 'Temperature', Number.parseFloat, 0.7)
