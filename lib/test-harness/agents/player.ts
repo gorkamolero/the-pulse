@@ -143,9 +143,11 @@ export async function createPlayerAgents(
   console.log(`📋 ${generated.group.relationship} | ${generated.group.occasion}`);
   console.log(`👥 ${generated.players.map(p => p.name).join(', ')}\n`);
 
-  // Log character backstories
-  for (const player of generated.players) {
-    console.log(`   ${player.name}: ${player.backstory}`);
+  // Log character backstories with archetypes
+  for (let i = 0; i < generated.players.length; i++) {
+    const player = generated.players[i];
+    const archetypeId = archetypeIds[i];
+    console.log(`   ${player.name} (${archetypeId}): ${player.backstory}`);
   }
 
   // Build player agents

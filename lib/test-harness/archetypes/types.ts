@@ -33,7 +33,7 @@ export interface Archetype {
  */
 export const ARCHETYPE_MODEL_MAP: Record<PlayerModel, string> = {
   grok: 'x-ai/grok-4.1-fast',
-  qwen: 'qwen/qwen-2.5-72b-instruct',
+  qwen: 'qwen/qwen3-32b',
   deepseek: 'deepseek/deepseek-v3.2',
   'kimi-k2': 'moonshotai/kimi-k2',
 };
