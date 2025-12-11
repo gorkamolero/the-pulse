@@ -7,6 +7,7 @@
 import { writeFile } from 'node:fs/promises';
 import type { SessionResult } from '../session/runner';
 import type { Message } from '../session/turn';
+import type { SessionFeedback } from '../session/feedback';
 import { detectAllIssues } from './issues';
 import { generateTimeline, formatTimelineMarkdown, getTimelineSummary } from './timeline';
 import { saveHTMLReport } from './html';
@@ -101,6 +102,8 @@ ${formatIssues(issues)}`
     : '## No Issues Detected ✓'
 }
 
+${result.playerFeedback ? formatPlayerFeedback(result.playerFeedback) : ''}
+
 ## Full Transcript
 
 ${formatTranscript(result.conversationHistory)}
@@ -180,6 +183,61 @@ ${issue.relatedContent ? `> ${issue.relatedContent}` : ''}
 `,
     )
     .join('\n');
+}
+
+/**
+ * Format player feedback for markdown
+ */
+function formatPlayerFeedback(feedback: SessionFeedback): string {
+  const playerFeedbackSections = feedback.players.map(p => `
+### ${p.agentName} (${p.archetype})
+
+**Highlight**: ${p.highlight.moment}
+> ${p.highlight.reason}
+
+**Agency**: ${p.agency.feltMeaningful ? '✓ Felt meaningful' : '✗ Did not feel meaningful'}
+> ${p.agency.example}
+
+**Pacing**: ${p.pacing.rating === 'good' ? '✓ Good' : p.pacing.rating === 'too-fast' ? '⚡ Too fast' : '🐌 Too slow'}
+> ${p.pacing.notes}
+
+**Narrator Rating**: ${p.narratorRating.score}/10
+- Positives: ${p.narratorRating.positives.join(', ') || 'None mentioned'}
+- Negatives: ${p.narratorRating.negatives.join(', ') || 'None mentioned'}
+
+**Frustrations**: ${p.frustrations.length > 0 ? p.frustrations.map(f => `\n- ${f}`).join('') : 'None'}
+
+**Missed Opportunities**: ${p.missedOpportunities.length > 0 ? p.missedOpportunities.map(m => `\n- ${m}`).join('') : 'None'}
+
+**Group Dynamics**: ${p.groupDynamics}
+`).join('\n---\n');
+
+  return `## Player Feedback
+
+### Summary
+
+- **Narrator Score**: ${feedback.narratorScore.toFixed(1)}/10
+- **Pacing**: ${feedback.pacingVerdict}
+
+**Top Moments**:
+${feedback.topMoments.map(m => `- ${m}`).join('\n')}
+
+**Shared Pain Points**:
+${feedback.sharedPainPoints.length > 0 ? feedback.sharedPainPoints.map(p => `- ${p}`).join('\n') : '- None'}
+
+**Narrator Strengths**:
+${feedback.narratorStrengths.length > 0 ? feedback.narratorStrengths.map(s => `- ${s}`).join('\n') : '- None mentioned'}
+
+**Narrator Weaknesses**:
+${feedback.narratorWeaknesses.length > 0 ? feedback.narratorWeaknesses.map(w => `- ${w}`).join('\n') : '- None mentioned'}
+
+**Recommendations**:
+${feedback.recommendations.length > 0 ? feedback.recommendations.map(r => `- ${r}`).join('\n') : '- None'}
+
+### Individual Player Feedback
+
+${playerFeedbackSections}
+`;
 }
 
 /**

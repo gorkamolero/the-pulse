@@ -50,7 +50,7 @@ const MODEL_PRICING = {
   // Character generation
   'x-ai/grok-4': { input: 5.0, output: 15.0 },
 
-  // Classification and validation
+  // Classification, validation, and feedback collection
   'google/gemini-2.5-flash': { input: 0.075, output: 0.3 },
 };
 

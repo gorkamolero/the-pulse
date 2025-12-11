@@ -95,9 +95,14 @@ async function main() {
 
     console.log(chalk.green(`\n✔ ${result.outcome} | ${result.finalTurn} turns | ${result.detectedPulses.length}/~20 pulses | ${Math.round(result.duration / 1000)}s`));
 
-    const reportSpinner = ora('Generating report...').start();
-    const reportPath = await saveSessionReport(result);
-    reportSpinner.succeed(`Report: ${reportPath}`);
+    // Only generate report if session has valid config
+    if (result.config && result.outcome !== 'failed') {
+      const reportSpinner = ora('Generating report...').start();
+      const reportPath = await saveSessionReport(result);
+      reportSpinner.succeed(`Report: ${reportPath}`);
+    } else if (result.error) {
+      console.log(chalk.red(`\nError: ${result.error}`));
+    }
   } catch (error) {
     console.log(chalk.red('\n✖ Session failed'));
     console.error(error);

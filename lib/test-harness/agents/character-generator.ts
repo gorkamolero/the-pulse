@@ -192,7 +192,7 @@ Make them feel like real friends with history, not strangers.${languageInstructi
   spinner.start();
 
   const result = await generateObject({
-    model: openrouter('google/gemini-2.5-flash'),
+    model: openrouter('x-ai/grok-4'),
     schema: generatedGroupSchema,
     prompt,
     temperature: 0.8,

@@ -21,6 +21,8 @@ import { saveCheckpoint } from '../checkpoint/save';
 import { PrivateMomentTracker } from './private';
 import { CostTracker, type CostBreakdown } from './cost';
 import { TangentTracker, type TangentAnalysis, type TangentMoment } from './tangent';
+import { runDiscussion, updateAgentWithInnerCharacter } from './discussion';
+import { collectPlayerFeedback, synthesizeFeedback, type SessionFeedback } from './feedback';
 
 export type SessionOutcome = 'completed' | 'timeout' | 'failed';
 
@@ -36,6 +38,7 @@ export interface SessionResult {
   tangents: TangentMoment[];
   tangentAnalysis?: TangentAnalysis;
   costBreakdown?: CostBreakdown;
+  playerFeedback?: SessionFeedback;
   error?: string;
 }
 
@@ -520,8 +523,40 @@ export async function resumeSessionFromCheckpoint(
           console.log(`💎 Payoffs detected: ${payoffs.map((p) => p.target).join(', ')}`);
         }
 
-        // Check for directed questions first (public but targeted)
-        if (classification.type === 'directed-questions' && classification.targetPlayers?.length) {
+        // Check for requires-discussion first (character creation, major group decisions)
+        if (classification.type === 'requires-discussion') {
+          console.log(`🗣️  Discussion required`);
+
+          const discussionResult = await runDiscussion(
+            narratorOutput,
+            playerAgents,
+            spokesperson,
+            conversationHistory,
+            costTracker,
+          );
+
+          // Update agents with their inner characters
+          for (const [agentId, character] of discussionResult.finalCharacters) {
+            const agentIndex = playerAgents.findIndex(a => a.archetype === agentId);
+            if (agentIndex >= 0 && playerAgents[agentIndex]) {
+              playerAgents[agentIndex] = updateAgentWithInnerCharacter(
+                playerAgents[agentIndex],
+                character,
+              );
+            }
+          }
+
+          // Add spokesperson synthesis to history
+          conversationHistory.push({
+            role: 'spokesperson',
+            player: spokesperson.name,
+            content: discussionResult.spokespersonMessage,
+            turn,
+            timestamp: Date.now(),
+          });
+
+        // Check for directed questions (public but targeted)
+        } else if (classification.type === 'directed-questions' && classification.targetPlayers?.length) {
           console.log(`🎯 Directed questions for: ${classification.targetPlayers.join(', ')}`);
 
           // Collect responses from ONLY targeted players, sequentially
@@ -673,6 +708,21 @@ export async function resumeSessionFromCheckpoint(
     tangentTracker.finalize();
     const tangentAnalysis = tangentTracker.getAnalysis();
 
+    // Collect player feedback if story completed successfully
+    let playerFeedback: SessionFeedback | undefined;
+    if (outcome === 'completed') {
+      try {
+        const feedbackList = await collectPlayerFeedback(
+          playerAgents,
+          conversationHistory,
+          costTracker,
+        );
+        playerFeedback = synthesizeFeedback(checkpoint.sessionId, feedbackList);
+      } catch (feedbackError) {
+        console.error('Feedback collection error:', feedbackError);
+      }
+    }
+
     return {
       sessionId: checkpoint.sessionId,
       config: sessionConfig,
@@ -685,6 +735,7 @@ export async function resumeSessionFromCheckpoint(
       tangents: tangentAnalysis.moments,
       tangentAnalysis,
       costBreakdown: costTracker.getBreakdown(),
+      playerFeedback,
     };
   } catch (error) {
     console.error('Session replay error:', error);
@@ -804,8 +855,40 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
           console.log(`💎 Payoffs detected: ${payoffs.map((p) => p.target).join(', ')}`);
         }
 
-        // Check for directed questions first (public but targeted)
-        if (classification.type === 'directed-questions' && classification.targetPlayers?.length) {
+        // Check for requires-discussion first (character creation, major group decisions)
+        if (classification.type === 'requires-discussion') {
+          console.log(`🗣️  Discussion required`);
+
+          const discussionResult = await runDiscussion(
+            narratorOutput,
+            playerAgents,
+            spokesperson,
+            conversationHistory,
+            costTracker,
+          );
+
+          // Update agents with their inner characters
+          for (const [agentId, character] of discussionResult.finalCharacters) {
+            const agentIndex = playerAgents.findIndex(a => a.archetype === agentId);
+            if (agentIndex >= 0 && playerAgents[agentIndex]) {
+              playerAgents[agentIndex] = updateAgentWithInnerCharacter(
+                playerAgents[agentIndex],
+                character,
+              );
+            }
+          }
+
+          // Add spokesperson synthesis to history
+          conversationHistory.push({
+            role: 'spokesperson',
+            player: spokesperson.name,
+            content: discussionResult.spokespersonMessage,
+            turn,
+            timestamp: Date.now(),
+          });
+
+        // Check for directed questions (public but targeted)
+        } else if (classification.type === 'directed-questions' && classification.targetPlayers?.length) {
           console.log(`🎯 Directed questions for: ${classification.targetPlayers.join(', ')}`);
 
           // Collect responses from ONLY targeted players, sequentially
@@ -953,6 +1036,21 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
     tangentTracker.finalize();
     const tangentAnalysis = tangentTracker.getAnalysis();
 
+    // Collect player feedback if story completed successfully
+    let playerFeedback: SessionFeedback | undefined;
+    if (outcome === 'completed') {
+      try {
+        const feedbackList = await collectPlayerFeedback(
+          playerAgents,
+          conversationHistory,
+          costTracker,
+        );
+        playerFeedback = synthesizeFeedback(sessionId, feedbackList);
+      } catch (feedbackError) {
+        console.error('Feedback collection error:', feedbackError);
+      }
+    }
+
     return {
       sessionId,
       config: sessionConfig,
@@ -965,6 +1063,7 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
       tangents: tangentAnalysis.moments,
       tangentAnalysis,
       costBreakdown: costTracker.getBreakdown(),
+      playerFeedback,
     };
   } catch (error) {
     console.error('Session error:', error);

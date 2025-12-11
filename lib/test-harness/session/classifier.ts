@@ -14,6 +14,7 @@ export type OutputType =
   | 'tangent-response'
   | 'private-moment'
   | 'directed-questions'
+  | 'requires-discussion'
   | 'clarification'
   | 'recap'
   | 'ending';
@@ -29,7 +30,7 @@ export interface Classification {
 }
 
 const classificationSchema = z.object({
-  type: z.enum(['pulse', 'tangent-response', 'private-moment', 'directed-questions', 'clarification', 'recap', 'ending']),
+  type: z.enum(['pulse', 'tangent-response', 'private-moment', 'directed-questions', 'requires-discussion', 'clarification', 'recap', 'ending']),
   confidence: z.number().min(0).max(1),
   reasoning: z.string(),
   pulseNumber: z.number().optional(),
@@ -83,6 +84,18 @@ OUTPUT TYPES:
 - Common during character creation when narrator asks individual backstory questions
 - Extract targetPlayers: array of player names being directly asked questions
 - Key: Questions are PUBLIC but directed at SPECIFIC players
+
+**requires-discussion** - Group needs to deliberate before responding
+- Character creation: "Who are you?", "What's your backstory?", "Are you a journalist? A genealogist?"
+- Equipment/item selection: "What do you carry?", "What items do you bring?"
+- Path decisions: "Which way?", "Left or right?", "Door A or Door B?"
+- Accept/reject offers: NPC offers something with "take it or leave it" framing
+- Point of no return: "Do you enter?", "Do you open it?", entering dangerous places
+- Tactical choices: "Up, down, or hold?", multiple options with different consequences
+- Climactic moments: transformation choices, sacrifice decisions, major commitments
+- Key: Players need to DISCUSS with each other before answering
+- NOT for simple reactions or single-answer questions
+- Look for: explicit choices, binary/ternary options, "or" in the question, requests for group coordination
 
 **clarification** - Answering questions about current scene
 - "You see..." describing details already present
@@ -141,104 +154,8 @@ export async function classifyOutput(
     };
   } catch (error) {
     console.error('Classification error:', error);
-    // Fallback to heuristic classification
-    return heuristicClassification(narratorOutput, context);
+    throw error;
   }
-}
-
-/**
- * Heuristic-based classification fallback
- */
-function heuristicClassification(
-  narratorOutput: string,
-  context?: {
-    previousPulseCount?: number;
-    playerNames?: string[];
-  },
-): Classification {
-  const lower = narratorOutput.toLowerCase();
-
-  // Check for private moment indicators
-  if (lower.includes('[to ') || lower.includes('you alone') || lower.includes('only you')) {
-    const targetMatch = narratorOutput.match(/\[to ([^\]]+) only\]/i);
-    return {
-      type: 'private-moment',
-      confidence: 0.8,
-      reasoning: 'Contains private moment markers',
-      privateTarget: targetMatch?.[1],
-    };
-  }
-
-  // Check for directed questions (players addressed by name with questions)
-  const directedPatterns = [
-    /\*\*([A-Z][a-z]+)\*\*\s*[—\-:]/g,  // **Alex** — or **Alex**:
-    /^([A-Z][a-z]+)\s*[—\-:]/gm,        // Alex — at line start
-  ];
-  const targetPlayers: string[] = [];
-  for (const pattern of directedPatterns) {
-    const matches = narratorOutput.matchAll(pattern);
-    for (const match of matches) {
-      const name = match[1];
-      if (name && context?.playerNames?.some(p => p.toLowerCase() === name.toLowerCase())) {
-        if (!targetPlayers.includes(name)) {
-          targetPlayers.push(name);
-        }
-      }
-    }
-  }
-  if (targetPlayers.length > 0) {
-    return {
-      type: 'directed-questions',
-      confidence: 0.8,
-      reasoning: `Questions directed at specific players: ${targetPlayers.join(', ')}`,
-      targetPlayers,
-    };
-  }
-
-  // Check for recap indicators
-  if (
-    lower.includes('as you recall') ||
-    lower.includes('so far you have') ||
-    lower.includes('to recap')
-  ) {
-    return {
-      type: 'recap',
-      confidence: 0.7,
-      reasoning: 'Contains recap language',
-    };
-  }
-
-  // Note: We DON'T classify forced segues ("anyway", "back to") as tangent-response
-  // Those are RED FLAGS that should be caught by issue detection
-  // Tangent responses should be natural engagement, not forced returns
-
-  // Check for clarification indicators
-  if (lower.includes('you see') || lower.includes('you can') || lower.includes('yes, you')) {
-    return {
-      type: 'clarification',
-      confidence: 0.6,
-      reasoning: 'Appears to be clarifying/answering',
-    };
-  }
-
-  // Default to pulse if it's substantial content
-  if (narratorOutput.length > 100) {
-    return {
-      type: 'pulse',
-      confidence: 0.5,
-      reasoning: 'Substantial narrative content, likely a story beat',
-      pulseNumber: context?.previousPulseCount
-        ? context.previousPulseCount + 1
-        : undefined,
-    };
-  }
-
-  // Short responses are likely clarifications
-  return {
-    type: 'clarification',
-    confidence: 0.4,
-    reasoning: 'Short response, likely clarification',
-  };
 }
 
 /**

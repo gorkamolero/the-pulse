@@ -147,6 +147,38 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
     .badge.completed { background: #d4edda; color: #155724; }
     .badge.timeout { background: #fff3cd; color: #856404; }
     .badge.failed { background: #f8d7da; color: #721c24; }
+
+    .feedback-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+    .feedback-card {
+      padding: 1.5rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+    .feedback-card h4 { margin-bottom: 0.75rem; color: #1a1a1a; }
+    .feedback-highlight { font-style: italic; color: #555; margin-bottom: 0.5rem; }
+    .feedback-score {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .feedback-list { list-style: disc; margin-left: 1.5rem; margin-top: 0.5rem; }
+    .feedback-list li { margin-bottom: 0.25rem; }
+    .pacing-good { color: #155724; }
+    .pacing-fast { color: #856404; }
+    .pacing-slow { color: #0c5460; }
+    .recommendations-list {
+      background: #fff3cd;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-top: 1rem;
+    }
+    .recommendations-list h4 { margin-bottom: 0.5rem; color: #856404; }
   </style>
 </head>
 <body>
@@ -212,6 +244,8 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
 
     {{tangentSection}}
 
+    {{feedbackSection}}
+
     <div class="section">
       <h2>Session Timeline</h2>
       <div class="timeline">
@@ -265,6 +299,53 @@ export async function generateHTMLReport(result: SessionResult): Promise<string>
             ${result.costBreakdown.total.tokens.totalTokens.toLocaleString()} total tokens
           </div>
         </div>
+      </div>
+    </div>`;
+  }
+
+  // Feedback section
+  let feedbackSection = '';
+  if (result.playerFeedback) {
+    const fb = result.playerFeedback;
+    const playerCards = fb.players.map(p => {
+      const pacingClass = p.pacing.rating === 'good' ? 'pacing-good' : p.pacing.rating === 'too-fast' ? 'pacing-fast' : 'pacing-slow';
+      const pacingEmoji = p.pacing.rating === 'good' ? '✓' : p.pacing.rating === 'too-fast' ? '⚡' : '🐌';
+      return `
+        <div class="feedback-card">
+          <h4>${p.agentName} (${p.archetype})</h4>
+          <div class="feedback-score">${p.narratorRating.score}/10</div>
+          <p class="feedback-highlight">"${p.highlight.moment}"</p>
+          <p><strong>Agency:</strong> ${p.agency.feltMeaningful ? '✓ Felt meaningful' : '✗ Did not feel meaningful'}</p>
+          <p><strong>Pacing:</strong> <span class="${pacingClass}">${pacingEmoji} ${p.pacing.rating}</span></p>
+          ${p.frustrations.length > 0 ? `<p><strong>Frustrations:</strong></p><ul class="feedback-list">${p.frustrations.map(f => `<li>${f}</li>`).join('')}</ul>` : ''}
+        </div>`;
+    }).join('');
+
+    feedbackSection = `
+    <div class="section">
+      <h2>Player Feedback</h2>
+      <div class="metrics-grid">
+        <div class="metric-card success">
+          <div class="metric-label">Narrator Score</div>
+          <div class="metric-value">${fb.narratorScore.toFixed(1)}</div>
+          <div class="metric-subtitle">out of 10</div>
+        </div>
+        <div class="metric-card info">
+          <div class="metric-label">Pacing</div>
+          <div class="metric-value">${fb.pacingVerdict.split(' ')[0]}</div>
+          <div class="metric-subtitle">${fb.pacingVerdict}</div>
+        </div>
+      </div>
+      ${fb.recommendations.length > 0 ? `
+      <div class="recommendations-list">
+        <h4>Recommendations</h4>
+        <ul class="feedback-list">
+          ${fb.recommendations.map(r => `<li>${r}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+      <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Individual Feedback</h3>
+      <div class="feedback-grid">
+        ${playerCards}
       </div>
     </div>`;
   }
@@ -353,6 +434,7 @@ export async function generateHTMLReport(result: SessionResult): Promise<string>
     .replace(/{{payoffRate}}/g, payoffRate.toString())
     .replace(/{{costSection}}/g, costSection)
     .replace(/{{tangentSection}}/g, tangentSection)
+    .replace(/{{feedbackSection}}/g, feedbackSection)
     .replace(/{{timelineItems}}/g, timelineItems);
 
   return html;
