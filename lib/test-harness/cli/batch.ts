@@ -41,10 +41,22 @@ export interface BatchConfig {
 program
   .name('test-batch')
   .description('Run multiple test sessions for batch analysis')
-  .requiredOption('--sessions <number>', 'Number of sessions to run per configuration', Number.parseInt)
+  .requiredOption(
+    '--sessions <number>',
+    'Number of sessions to run per configuration',
+    Number.parseInt,
+  )
   .option('--story <id>', `Story ID (${listStoryIds().join(', ')})`)
-  .option('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-v3.2)')
-  .option('--max-parallel <number>', 'Maximum parallel sessions', Number.parseInt, 3)
+  .option(
+    '--narrator <model>',
+    'Narrator model (opus-4.5, grok-4, deepseek-v3.2)',
+  )
+  .option(
+    '--max-parallel <number>',
+    'Maximum parallel sessions',
+    Number.parseInt,
+    3,
+  )
   .option('--players <number>', 'Group size (2-5)', Number.parseInt)
   .option('--max-turns <number>', 'Maximum turns', Number.parseInt, 100)
   .parse();
@@ -60,7 +72,9 @@ async function runBatchSession(
 
   const result = await runSession(config);
 
-  console.log(chalk.green(`[${index + 1}/${total}] Session completed: ${result.outcome}`));
+  console.log(
+    chalk.green(`[${index + 1}/${total}] Session completed: ${result.outcome}`),
+  );
 
   // Generate report
   await saveSessionReport(result);
@@ -135,21 +149,51 @@ async function main() {
     const failed = results.filter((r) => r.outcome === 'failed').length;
 
     console.log(chalk.white(`Total Sessions: ${chalk.bold(results.length)}`));
-    console.log(chalk.green(`✓ Completed: ${completed} (${((completed / results.length) * 100).toFixed(1)}%)`));
-    console.log(chalk.yellow(`⏱ Timeout: ${timeout} (${((timeout / results.length) * 100).toFixed(1)}%)`));
-    console.log(chalk.red(`✗ Failed: ${failed} (${((failed / results.length) * 100).toFixed(1)}%)`));
+    console.log(
+      chalk.green(
+        `✓ Completed: ${completed} (${((completed / results.length) * 100).toFixed(1)}%)`,
+      ),
+    );
+    console.log(
+      chalk.yellow(
+        `⏱ Timeout: ${timeout} (${((timeout / results.length) * 100).toFixed(1)}%)`,
+      ),
+    );
+    console.log(
+      chalk.red(
+        `✗ Failed: ${failed} (${((failed / results.length) * 100).toFixed(1)}%)`,
+      ),
+    );
 
-    const avgTurns = results.reduce((sum, r) => sum + r.finalTurn, 0) / results.length;
-    const avgPulses = results.reduce((sum, r) => sum + r.detectedPulses.length, 0) / results.length;
-    const avgDuration = results.reduce((sum, r) => sum + r.duration, 0) / results.length;
+    const avgTurns =
+      results.reduce((sum, r) => sum + r.finalTurn, 0) / results.length;
+    const avgPulses =
+      results.reduce((sum, r) => sum + r.detectedPulses.length, 0) /
+      results.length;
+    const avgDuration =
+      results.reduce((sum, r) => sum + r.duration, 0) / results.length;
 
-    console.log(chalk.white(`\nAverage Turns: ${chalk.bold(avgTurns.toFixed(1))}`));
-    console.log(chalk.white(`Average Pulses: ${chalk.bold(avgPulses.toFixed(1))} / ~20`));
-    console.log(chalk.white(`Average Duration: ${chalk.bold((avgDuration / 1000).toFixed(1))}s`));
+    console.log(
+      chalk.white(`\nAverage Turns: ${chalk.bold(avgTurns.toFixed(1))}`),
+    );
+    console.log(
+      chalk.white(`Average Pulses: ${chalk.bold(avgPulses.toFixed(1))} / ~20`),
+    );
+    console.log(
+      chalk.white(
+        `Average Duration: ${chalk.bold((avgDuration / 1000).toFixed(1))}s`,
+      ),
+    );
 
     if (results[0]?.costBreakdown) {
-      const avgCost = results.reduce((sum, r) => sum + (r.costBreakdown?.total.cost || 0), 0) / results.length;
-      console.log(chalk.white(`Average Cost: ${chalk.bold(`$${avgCost.toFixed(4)}`)}`));
+      const avgCost =
+        results.reduce(
+          (sum, r) => sum + (r.costBreakdown?.total.cost || 0),
+          0,
+        ) / results.length;
+      console.log(
+        chalk.white(`Average Cost: ${chalk.bold(`$${avgCost.toFixed(4)}`)}`),
+      );
     }
 
     console.log(chalk.cyan('\n✨ Batch analysis complete!\n'));

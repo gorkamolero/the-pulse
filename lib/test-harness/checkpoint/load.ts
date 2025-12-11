@@ -5,7 +5,7 @@
  */
 
 import { readFile, readdir } from 'node:fs/promises';
-import type { Checkpoint, } from './schema';
+import type { Checkpoint } from './schema';
 import { deserializeCheckpoint, getCheckpointFilename } from './schema';
 import type { NarratorConfig } from '../agents/narrator';
 
@@ -31,12 +31,16 @@ export async function loadCheckpointByTurn(
 /**
  * Load latest checkpoint for a session
  */
-export async function loadLatestCheckpoint(sessionId: string): Promise<Checkpoint> {
+export async function loadLatestCheckpoint(
+  sessionId: string,
+): Promise<Checkpoint> {
   const dir = `sessions/${sessionId}`;
   const files = await readdir(dir);
 
   // Find highest turn number
-  const turnFiles = files.filter((f) => f.startsWith('turn-') && f.endsWith('.json'));
+  const turnFiles = files.filter(
+    (f) => f.startsWith('turn-') && f.endsWith('.json'),
+  );
 
   if (turnFiles.length === 0) {
     throw new Error(`No checkpoints found for session ${sessionId}`);
@@ -111,9 +115,12 @@ function generateBranchReason(config: ReplayConfig): string {
 
   if (config.systemPrompt) changes.push('system prompt');
   if (config.storyGuide) changes.push('story guide');
-  if (config.narratorModel) changes.push(`narrator model → ${config.narratorModel}`);
-  if (config.temperature !== undefined) changes.push(`temperature → ${config.temperature}`);
-  if (config.maxTokens !== undefined) changes.push(`max tokens → ${config.maxTokens}`);
+  if (config.narratorModel)
+    changes.push(`narrator model → ${config.narratorModel}`);
+  if (config.temperature !== undefined)
+    changes.push(`temperature → ${config.temperature}`);
+  if (config.maxTokens !== undefined)
+    changes.push(`max tokens → ${config.maxTokens}`);
 
   return `Modified: ${changes.join(', ')}`;
 }

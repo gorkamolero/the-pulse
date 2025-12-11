@@ -1,4 +1,3 @@
-
 import type { Classification } from './classifier';
 
 export interface TangentMoment {
@@ -59,12 +58,12 @@ export function detectPlayerTangent(playerMessages: string[]): boolean {
  */
 export function analyzeTangentHandling(
   narratorResponse: string,
-  playerMessages: string[],
+  _playerMessages: string[],
 ): TangentMoment['handling'] {
   const response = narratorResponse.toLowerCase();
 
   // Ignored - narrator doesn't acknowledge the tangent at all
-  const ignorePatterns = [
+  const _ignorePatterns = [
     /^(?!.*(you|your|however|but)).+$/s, // Response that doesn't reference player at all
   ];
 
@@ -99,13 +98,12 @@ export function analyzeTangentHandling(
 /**
  * Check if narrator returned to main story after tangent
  */
-export function checkReturnToStory(
-  subsequentOutputs: Classification[],
-): { returned: boolean; turnsUntilReturn?: number } {
+export function checkReturnToStory(subsequentOutputs: Classification[]): {
+  returned: boolean;
+  turnsUntilReturn?: number;
+} {
   // Find the next pulse after the tangent
-  const nextPulseIndex = subsequentOutputs.findIndex(
-    (c) => c.type === 'pulse',
-  );
+  const nextPulseIndex = subsequentOutputs.findIndex((c) => c.type === 'pulse');
 
   if (nextPulseIndex === -1) {
     return { returned: false };
@@ -210,8 +208,7 @@ export class TangentTracker {
       moments: this.moments,
       totalTangents: this.moments.length,
       successfulRedirects: totalReturns,
-      avgTurnsToReturn:
-        totalReturns > 0 ? sumTurnsToReturn / totalReturns : 0,
+      avgTurnsToReturn: totalReturns > 0 ? sumTurnsToReturn / totalReturns : 0,
       handlingDistribution,
     };
   }

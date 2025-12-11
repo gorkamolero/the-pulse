@@ -25,12 +25,35 @@ const program = new Command();
 program
   .name('test-run')
   .description('Run a test harness session')
-  .requiredOption('--story <id>', 'Story ID (shadow-over-innsmouth, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)')
-  .option('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-v3.2)', 'opus-4.5')
-  .option('--players <number>', 'Group size (2-5)', (v) => Number.parseInt(v, 10))
-  .option('--max-turns <number>', 'Maximum turns', (v) => Number.parseInt(v, 10), 100)
-  .option('--temperature <number>', 'Temperature', (v) => Number.parseFloat(v), 0.7)
-  .option('--language <lang>', 'Output language (english, spanish, etc.)', 'english')
+  .requiredOption(
+    '--story <id>',
+    'Story ID (shadow-over-innsmouth, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)',
+  )
+  .option(
+    '--narrator <model>',
+    'Narrator model (opus-4.5, grok-4, deepseek-v3.2)',
+    'opus-4.5',
+  )
+  .option('--players <number>', 'Group size (2-5)', (v) =>
+    Number.parseInt(v, 10),
+  )
+  .option(
+    '--max-turns <number>',
+    'Maximum turns',
+    (v) => Number.parseInt(v, 10),
+    100,
+  )
+  .option(
+    '--temperature <number>',
+    'Temperature',
+    (v) => Number.parseFloat(v),
+    0.7,
+  )
+  .option(
+    '--language <lang>',
+    'Output language (english, spanish, etc.)',
+    'english',
+  )
   .option('--dry-run', 'Show config without executing')
   .parse();
 
@@ -52,8 +75,6 @@ function buildStoryContext(storyId: string): StoryContext {
   };
 }
 
-
-
 async function main() {
   // Load story using the story loader
   let story: StoryContext;
@@ -66,7 +87,10 @@ async function main() {
   } catch (error) {
     console.error(chalk.red((error as Error).message));
     const availableStories = listStoryIds();
-    console.log(chalk.yellow('Available stories:'), availableStories.join(', '));
+    console.log(
+      chalk.yellow('Available stories:'),
+      availableStories.join(', '),
+    );
     process.exit(1);
   }
 
@@ -85,7 +109,11 @@ async function main() {
   };
 
   if (options.dryRun) {
-    console.log(chalk.cyan(`\n📋 ${story.storyTitle} | ${options.narrator} | ${options.players || 'random'} players | ${options.maxTurns} turns`));
+    console.log(
+      chalk.cyan(
+        `\n📋 ${story.storyTitle} | ${options.narrator} | ${options.players || 'random'} players | ${options.maxTurns} turns`,
+      ),
+    );
     console.log(chalk.yellow('[Dry run - not executing]\n'));
     process.exit(0);
   }
@@ -93,7 +121,11 @@ async function main() {
   try {
     const result = await runSession(config);
 
-    console.log(chalk.green(`\n✔ ${result.outcome} | ${result.finalTurn} turns | ${result.detectedPulses.length}/~20 pulses | ${Math.round(result.duration / 1000)}s`));
+    console.log(
+      chalk.green(
+        `\n✔ ${result.outcome} | ${result.finalTurn} turns | ${result.detectedPulses.length}/~20 pulses | ${Math.round(result.duration / 1000)}s`,
+      ),
+    );
 
     // Only generate report if session has valid config
     if (result.config && result.outcome !== 'failed') {

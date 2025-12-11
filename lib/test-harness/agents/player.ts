@@ -62,9 +62,10 @@ function composeSystemPrompt(
     .map((m) => `- ${m}`)
     .join('\n');
 
-  const languageInstruction = language !== 'english'
-    ? `\n\nIMPORTANT: Respond ONLY in ${language}. All your dialogue and responses must be in ${language}.`
-    : '';
+  const languageInstruction =
+    language !== 'english'
+      ? `\n\nIMPORTANT: Respond ONLY in ${language}. All your dialogue and responses must be in ${language}.`
+      : '';
 
   return `You are ${player.name}, playing an interactive fiction game with friends.
 
@@ -168,11 +169,17 @@ export async function createPlayerAgents(
   console.log('\n--- Group Generation ---\n');
 
   // Single LLM call generates everything
-  const generated = await generateGroup(generatorContext, archetypeIds, language);
+  const generated = await generateGroup(
+    generatorContext,
+    archetypeIds,
+    language,
+  );
 
   // Log generated group
-  console.log(`📋 ${generated.group.relationship} | ${generated.group.occasion}`);
-  console.log(`👥 ${generated.players.map(p => p.name).join(', ')}\n`);
+  console.log(
+    `📋 ${generated.group.relationship} | ${generated.group.occasion}`,
+  );
+  console.log(`👥 ${generated.players.map((p) => p.name).join(', ')}\n`);
 
   // Log character backstories with archetypes
   for (let i = 0; i < generated.players.length; i++) {

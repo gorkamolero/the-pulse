@@ -174,7 +174,11 @@ export const EXPERIENCED: Archetype = {
     'Appreciates subverted expectations',
   ],
   quirkFrequency: 0.2,
-  testsFor: ['Trope handling', 'Subverting expectations', 'Genre savvy players'],
+  testsFor: [
+    'Trope handling',
+    'Subverting expectations',
+    'Genre savvy players',
+  ],
   model: 'qwen',
 };
 

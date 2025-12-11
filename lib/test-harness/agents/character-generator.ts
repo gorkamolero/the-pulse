@@ -90,25 +90,39 @@ export interface GeneratedGroup {
  */
 const generatedGroupSchema = z.object({
   group: z.object({
-    relationship: z.string().describe('How they know each other (e.g., "College roommates", "Coworkers")'),
+    relationship: z
+      .string()
+      .describe(
+        'How they know each other (e.g., "College roommates", "Coworkers")',
+      ),
     history: z.string().describe('How long they have known each other'),
     occasion: z.string().describe('Why they are playing tonight'),
-    organizer: z.string().describe('Name of the person who suggested The Pulse'),
+    organizer: z
+      .string()
+      .describe('Name of the person who suggested The Pulse'),
     storyReason: z.string().describe('Why they picked this specific story'),
     dynamic: z.string().describe('The group vibe/energy'),
-    sharedMemories: z.array(z.string()).describe('2-3 shared memories they might reference'),
+    sharedMemories: z
+      .array(z.string())
+      .describe('2-3 shared memories they might reference'),
   }),
   players: z.array(
     z.object({
       name: z.string().describe('Natural first name'),
-      archetypeId: z.string().describe('The archetype ID assigned to this player'),
+      archetypeId: z
+        .string()
+        .describe('The archetype ID assigned to this player'),
       groupRole: z.string().describe('Their role in the friend group'),
-      relationships: z.array(
-        z.object({
-          name: z.string().describe('Name of the other player'),
-          relationship: z.string().describe('Description of their relationship'),
-        }),
-      ).describe('Relationships to other players'),
+      relationships: z
+        .array(
+          z.object({
+            name: z.string().describe('Name of the other player'),
+            relationship: z
+              .string()
+              .describe('Description of their relationship'),
+          }),
+        )
+        .describe('Relationships to other players'),
       personalReason: z.string().describe('Why they are here tonight'),
       currentState: z.string().describe('Their mood/energy tonight'),
       backstory: z.string().describe('2-3 sentences about their background'),
@@ -120,7 +134,18 @@ const generatedGroupSchema = z.object({
  * Simple spinner for waiting states
  */
 function createSpinner() {
-  const frames = ['\u28CB', '\u28D9', '\u28F9', '\u28F8', '\u28FC', '\u28F4', '\u28E6', '\u28E7', '\u28C7', '\u28CF'];
+  const frames = [
+    '\u28CB',
+    '\u28D9',
+    '\u28F9',
+    '\u28F8',
+    '\u28FC',
+    '\u28F4',
+    '\u28E6',
+    '\u28E7',
+    '\u28C7',
+    '\u28CF',
+  ];
   let i = 0;
   let interval: ReturnType<typeof setInterval> | null = null;
 
@@ -161,9 +186,10 @@ export async function generateGroup(
     })
     .join('\n');
 
-  const languageInstruction = language !== 'english'
-    ? `\n\nIMPORTANT: Generate ALL content in ${language}. Names, relationships, backstories, memories - everything must be in ${language}.`
-    : '';
+  const languageInstruction =
+    language !== 'english'
+      ? `\n\nIMPORTANT: Generate ALL content in ${language}. Names, relationships, backstories, memories - everything must be in ${language}.`
+      : '';
 
   const prompt = `Generate a complete friend group for an interactive fiction game session.
 

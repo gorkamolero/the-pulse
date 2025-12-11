@@ -29,7 +29,9 @@ export async function saveCheckpoint(checkpoint: Checkpoint): Promise<string> {
 /**
  * Save multiple checkpoints in batch
  */
-export async function saveCheckpoints(checkpoints: Checkpoint[]): Promise<string[]> {
+export async function saveCheckpoints(
+  checkpoints: Checkpoint[],
+): Promise<string[]> {
   return Promise.all(checkpoints.map(saveCheckpoint));
 }
 

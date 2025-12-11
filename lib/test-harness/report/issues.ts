@@ -9,7 +9,12 @@ import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { Message } from '../session/turn';
 
-export type IssueType = 'contradiction' | 'loop' | 'forced-segue' | 'stuck' | 'confusion';
+export type IssueType =
+  | 'contradiction'
+  | 'loop'
+  | 'forced-segue'
+  | 'stuck'
+  | 'confusion';
 
 export type IssueSeverity = 'warning' | 'error';
 
@@ -98,7 +103,10 @@ export function detectForcedSegues(messages: Message[]): Issue[] {
 /**
  * Detect stuck moments (no pulse progress)
  */
-export function detectStuckMoments(messages: Message[], pulses: number[]): Issue[] {
+export function detectStuckMoments(
+  messages: Message[],
+  pulses: number[],
+): Issue[] {
   const issues: Issue[] = [];
   const narratorMessages = messages.filter((m) => m.role === 'narrator');
 
@@ -130,7 +138,9 @@ export function detectStuckMoments(messages: Message[], pulses: number[]): Issue
 /**
  * Detect contradictions using LLM
  */
-export async function detectContradictions(messages: Message[]): Promise<Issue[]> {
+export async function detectContradictions(
+  messages: Message[],
+): Promise<Issue[]> {
   const issues: Issue[] = [];
   const narratorMessages = messages.filter((m) => m.role === 'narrator');
 
@@ -156,9 +166,15 @@ function detectDoorContradictions(narratorMessages: Message[]): Issue[] {
   };
 
   for (const message of narratorMessages) {
-    const doorOpenMatch = message.content.match(/the (\w+) door (?:is |stands )?open/i);
-    const doorClosedMatch = message.content.match(/the (\w+) door (?:is |stands )?closed/i);
-    const doorLockedMatch = message.content.match(/the (\w+) door (?:is |stands )?locked/i);
+    const doorOpenMatch = message.content.match(
+      /the (\w+) door (?:is |stands )?open/i,
+    );
+    const doorClosedMatch = message.content.match(
+      /the (\w+) door (?:is |stands )?closed/i,
+    );
+    const doorLockedMatch = message.content.match(
+      /the (\w+) door (?:is |stands )?locked/i,
+    );
 
     if (doorOpenMatch) {
       const doorName = doorOpenMatch[1];
@@ -193,12 +209,16 @@ function detectDoorContradictions(narratorMessages: Message[]): Issue[] {
 /**
  * LLM-based semantic contradiction detection
  */
-async function detectSemanticContradictions(narratorMessages: Message[]): Promise<Issue[]> {
+async function detectSemanticContradictions(
+  narratorMessages: Message[],
+): Promise<Issue[]> {
   const issues: Issue[] = [];
 
   try {
     // Sample every 5th message to keep context manageable
-    const sampledMessages = narratorMessages.filter((_, i) => i % 5 === 0 || i === narratorMessages.length - 1);
+    const sampledMessages = narratorMessages.filter(
+      (_, i) => i % 5 === 0 || i === narratorMessages.length - 1,
+    );
 
     const transcript = sampledMessages
       .map((m) => `Turn ${m.turn}: ${m.content}`)
@@ -249,7 +269,10 @@ If no contradictions found, return an empty array.`;
 /**
  * Detect all issues in a session
  */
-export async function detectAllIssues(messages: Message[], pulses: number[]): Promise<Issue[]> {
+export async function detectAllIssues(
+  messages: Message[],
+  pulses: number[],
+): Promise<Issue[]> {
   const [loops, segues, stuck, contradictions] = await Promise.all([
     Promise.resolve(detectLoops(messages)),
     Promise.resolve(detectForcedSegues(messages)),
@@ -257,7 +280,9 @@ export async function detectAllIssues(messages: Message[], pulses: number[]): Pr
     detectContradictions(messages),
   ]);
 
-  return [...loops, ...segues, ...stuck, ...contradictions].sort((a, b) => a.turn - b.turn);
+  return [...loops, ...segues, ...stuck, ...contradictions].sort(
+    (a, b) => a.turn - b.turn,
+  );
 }
 
 /**

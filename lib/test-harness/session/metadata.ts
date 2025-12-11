@@ -30,13 +30,26 @@ export const TagCategories = {
   NARRATOR: ['opus-4.5', 'grok-4', 'deepseek-v3.2'],
 
   /** Story being tested */
-  STORY: ['shadow-over-innsmouth', 'the-hollow-choir', 'whispering-pines', 'siren-of-the-red-dust', 'endless-path'],
+  STORY: [
+    'shadow-over-innsmouth',
+    'the-hollow-choir',
+    'whispering-pines',
+    'siren-of-the-red-dust',
+    'endless-path',
+  ],
 
   /** Experiment type */
   EXPERIMENT: ['a-b-test', 'prompt-comparison', 'model-comparison', 'baseline'],
 
   /** Quality indicators */
-  QUALITY: ['success', 'failed', 'partial', 'timeout', 'tangent-heavy', 'on-track'],
+  QUALITY: [
+    'success',
+    'failed',
+    'partial',
+    'timeout',
+    'tangent-heavy',
+    'on-track',
+  ],
 } as const;
 
 /**
@@ -61,7 +74,10 @@ export function createSessionMetadata(options: {
 /**
  * Add tags to metadata
  */
-export function addTags(metadata: SessionMetadata, ...tags: string[]): SessionMetadata {
+export function addTags(
+  metadata: SessionMetadata,
+  ...tags: string[]
+): SessionMetadata {
   return {
     ...metadata,
     tags: [...new Set([...metadata.tags, ...tags])],
@@ -71,7 +87,10 @@ export function addTags(metadata: SessionMetadata, ...tags: string[]): SessionMe
 /**
  * Check if metadata matches tag filter
  */
-export function matchesTags(metadata: SessionMetadata, requiredTags: string[]): boolean {
+export function matchesTags(
+  metadata: SessionMetadata,
+  requiredTags: string[],
+): boolean {
   return requiredTags.every((tag) => metadata.tags.includes(tag));
 }
 

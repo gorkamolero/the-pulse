@@ -51,7 +51,9 @@ export function routePrivateMoment(
   );
 
   if (!targetAgent) {
-    console.warn(`Private moment target "${target}" not found in player agents`);
+    console.warn(
+      `Private moment target "${target}" not found in player agents`,
+    );
     return {
       isPrivate: true,
       targetName: target,
@@ -162,7 +164,10 @@ export class PrivateMomentTracker {
   /**
    * Check if a narrative event pays off a private moment
    */
-  async checkPayoff(turn: number, narrativeContent: string): Promise<PrivateMoment[]> {
+  async checkPayoff(
+    turn: number,
+    narrativeContent: string,
+  ): Promise<PrivateMoment[]> {
     const payoffs: PrivateMoment[] = [];
 
     for (const moments of this.moments.values()) {
@@ -170,7 +175,10 @@ export class PrivateMomentTracker {
         if (moment.payoffDetected) continue;
 
         // Try LLM-based detection first
-        const hasPayoff = await this.detectPayoffWithLLM(moment, narrativeContent);
+        const hasPayoff = await this.detectPayoffWithLLM(
+          moment,
+          narrativeContent,
+        );
 
         if (hasPayoff) {
           moment.payoffDetected = true;
@@ -219,7 +227,7 @@ Answer with ONLY: true or false`;
       });
 
       return text.trim().toLowerCase() === 'true';
-    } catch (error) {
+    } catch (_error) {
       // Fallback to keyword matching
       const momentKeywords = moment.content.toLowerCase().split(/\s+/);
       const contentLower = narrativeContent.toLowerCase();

@@ -75,7 +75,8 @@ export function synthesizeResponses(
   if (responses.length === 1) {
     // Single response, spokesperson just relays it (possibly with their flavor)
     const archetype = ARCHETYPE_BY_ID[spokesperson.archetype];
-    const shouldAddFlavor = archetype && Math.random() < archetype.quirkFrequency;
+    const shouldAddFlavor =
+      archetype && Math.random() < archetype.quirkFrequency;
 
     if (shouldAddFlavor && spokesperson.archetype === 'joker') {
       return `${responses[0]?.response} *chuckles*`;

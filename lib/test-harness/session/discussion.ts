@@ -70,19 +70,30 @@ export interface DiscussionResult {
 
 // Zod schema for structured discussion response
 const characterChoiceSchema = z.object({
-  inGameName: z.string().describe('Your character\'s name in the story'),
-  role: z.string().describe('Your character\'s role (e.g., "journalist", "professor")'),
+  inGameName: z.string().describe("Your character's name in the story"),
+  role: z
+    .string()
+    .describe('Your character\'s role (e.g., "journalist", "professor")'),
   backstory: z.string().describe('Brief backstory for your character'),
   items: z.array(z.string()).describe('Items your character carries'),
-  relationshipToOthers: z.record(z.string(), z.string()).optional().describe('How your character knows other characters'),
+  relationshipToOthers: z
+    .record(z.string(), z.string())
+    .optional()
+    .describe('How your character knows other characters'),
 });
 
 const discussionResponseSchema = z.object({
-  message: z.string().describe('What you say to your friends (as yourself, not your character)'),
-  decision: z.enum(['settled', 'discussing', 'needs-input']).describe(
-    'settled = you\'ve decided your character, discussing = still thinking, needs-input = want suggestions from friends'
-  ),
-  characterChoice: characterChoiceSchema.optional().describe('Only provide if decision is "settled"'),
+  message: z
+    .string()
+    .describe('What you say to your friends (as yourself, not your character)'),
+  decision: z
+    .enum(['settled', 'discussing', 'needs-input'])
+    .describe(
+      "settled = you've decided your character, discussing = still thinking, needs-input = want suggestions from friends",
+    ),
+  characterChoice: characterChoiceSchema
+    .optional()
+    .describe('Only provide if decision is "settled"'),
 });
 
 /**
@@ -97,13 +108,18 @@ function buildDiscussionPrompt(
 ): string {
   // Build settled list
   const settledList = Array.from(settled.entries())
-    .map(([id, char]) => `- ${id} → playing "${char.inGameName}" (${char.role})`)
+    .map(
+      ([id, char]) => `- ${id} → playing "${char.inGameName}" (${char.role})`,
+    )
     .join('\n');
 
   // Build discussion so far
   const discussionSoFar = previousRounds
-    .flatMap(round => round.responses)
-    .map(r => `${r.agentName}: "${r.message}"${r.decision === 'settled' ? ' [DECIDED]' : ''}`)
+    .flatMap((round) => round.responses)
+    .map(
+      (r) =>
+        `${r.agentName}: "${r.message}"${r.decision === 'settled' ? ' [DECIDED]' : ''}`,
+    )
     .join('\n\n');
 
   const settledInstruction = isAlreadySettled
@@ -124,7 +140,7 @@ Example: "I'll play Dr. Helena Marsh, an occult researcher from Boston. She carr
 NOT: "I'm ${agent.name}, I work as a designer..."
 
 == DISCUSSION SO FAR ==
-${discussionSoFar || '(No discussion yet—you\'re first to speak)'}
+${discussionSoFar || "(No discussion yet—you're first to speak)"}
 
 == WHO HAS DECIDED ==
 ${settledList || '(No one has finalized their character yet)'}
@@ -176,11 +192,17 @@ export async function generateDiscussionResponse(
     });
 
     // Log the response
-    const decisionIcon = result.object.decision === 'settled' ? '✓' :
-                         result.object.decision === 'needs-input' ? '?' : '…';
+    const decisionIcon =
+      result.object.decision === 'settled'
+        ? '✓'
+        : result.object.decision === 'needs-input'
+          ? '?'
+          : '…';
     console.log(`   ${decisionIcon} ${agent.name}: "${result.object.message}"`);
     if (result.object.decision === 'settled' && result.object.characterChoice) {
-      console.log(`      → Playing: ${result.object.characterChoice.inGameName} (${result.object.characterChoice.role})`);
+      console.log(
+        `      → Playing: ${result.object.characterChoice.inGameName} (${result.object.characterChoice.role})`,
+      );
     }
 
     return {
@@ -188,7 +210,9 @@ export async function generateDiscussionResponse(
       agentName: agent.name,
       message: result.object.message,
       decision: result.object.decision,
-      characterChoice: result.object.characterChoice as CharacterChoice | undefined,
+      characterChoice: result.object.characterChoice as
+        | CharacterChoice
+        | undefined,
       usage: result.usage,
     };
   } catch (error) {
@@ -200,7 +224,10 @@ export async function generateDiscussionResponse(
         model: openrouter(agent.modelId),
         messages: [
           { role: 'system', content: agent.systemPrompt },
-          { role: 'user', content: `${discussionPrompt}\n\nRespond naturally as yourself. If you've decided on a character, describe them clearly.` },
+          {
+            role: 'user',
+            content: `${discussionPrompt}\n\nRespond naturally as yourself. If you've decided on a character, describe them clearly.`,
+          },
         ],
         temperature: 0.8,
       });
@@ -211,9 +238,14 @@ export async function generateDiscussionResponse(
       }
 
       // Simple heuristic: if they mention "I'll be" or "I want to be", they're settling
-      const isSettling = /i('ll| will) (be|play)|i('m| am) (going to be|playing)|my character (is|will be)/i.test(text);
+      const isSettling =
+        /i('ll| will) (be|play)|i('m| am) (going to be|playing)|my character (is|will be)/i.test(
+          text,
+        );
       const decisionIcon = isSettling ? '✓' : '…';
-      console.log(`   ${decisionIcon} ${agent.name} (fallback): "${text.slice(0, 150)}${text.length > 150 ? '...' : ''}"`);
+      console.log(
+        `   ${decisionIcon} ${agent.name} (fallback): "${text.slice(0, 150)}${text.length > 150 ? '...' : ''}"`,
+      );
 
       return {
         agentId: agent.archetype,
@@ -244,7 +276,7 @@ export async function runDiscussion(
   narratorPrompt: string,
   agents: PlayerAgent[],
   spokesperson: PlayerAgent,
-  conversationHistory: Message[],
+  _conversationHistory: Message[],
   costTracker: CostTracker,
 ): Promise<DiscussionResult> {
   const MAX_ROUNDS = 6;
@@ -329,11 +361,16 @@ export async function runDiscussion(
   // Log final character summary
   console.log('--- Final Characters ---\n');
   for (const [agentId, char] of settled) {
-    const agent = agents.find(a => a.archetype === agentId);
+    const agent = agents.find((a) => a.archetype === agentId);
     const agentName = agent?.name || agentId;
     console.log(`   ${agentName} → ${char.inGameName} (${char.role})`);
-    if (char.relationshipToOthers && Object.keys(char.relationshipToOthers).length > 0) {
-      for (const [otherName, rel] of Object.entries(char.relationshipToOthers)) {
+    if (
+      char.relationshipToOthers &&
+      Object.keys(char.relationshipToOthers).length > 0
+    ) {
+      for (const [otherName, rel] of Object.entries(
+        char.relationshipToOthers,
+      )) {
         console.log(`      ↳ ${otherName}: ${rel}`);
       }
     }
@@ -359,7 +396,7 @@ export async function runDiscussion(
  * Spokesperson synthesizes the discussion for the narrator
  */
 async function synthesizeDiscussion(
-  rounds: DiscussionRound[],
+  _rounds: DiscussionRound[],
   finalCharacters: Map<string, CharacterChoice>,
   spokesperson: PlayerAgent,
   costTracker: CostTracker,
@@ -370,7 +407,7 @@ async function synthesizeDiscussion(
 
   // Build character summary
   const characterSummary = Array.from(finalCharacters.entries())
-    .map(([agentId, char]) => {
+    .map(([_agentId, char]) => {
       const relationships = char.relationshipToOthers
         ? Object.entries(char.relationshipToOthers)
             .map(([name, rel]) => `${name}: ${rel}`)
@@ -415,7 +452,9 @@ Keep it conversational - you're talking to the game master, not writing a formal
   } catch (error) {
     console.error('Synthesis error:', error);
     // Fallback to simple list
-    return `We're ready. ${Array.from(finalCharacters.values()).map(c => `${c.inGameName} (${c.role})`).join(', ')}.`;
+    return `We're ready. ${Array.from(finalCharacters.values())
+      .map((c) => `${c.inGameName} (${c.role})`)
+      .join(', ')}.`;
   }
 }
 
@@ -427,7 +466,9 @@ export function updateAgentWithInnerCharacter(
   innerCharacter: CharacterChoice,
 ): PlayerAgent {
   const relationshipsText = innerCharacter.relationshipToOthers
-    ? `\nRelationships to other characters:\n${Object.entries(innerCharacter.relationshipToOthers)
+    ? `\nRelationships to other characters:\n${Object.entries(
+        innerCharacter.relationshipToOthers,
+      )
         .map(([name, rel]) => `- ${name}: ${rel}`)
         .join('\n')}`
     : '';

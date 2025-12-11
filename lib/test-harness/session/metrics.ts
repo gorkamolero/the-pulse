@@ -117,7 +117,15 @@ export class PerformanceTracker {
     paidOffMoments: number;
     costBreakdown: CostBreakdown;
   }): PerformanceMetrics {
-    const { totalDuration, totalTurns, totalPulses, tangentAnalysis, privateMoments, paidOffMoments, costBreakdown } = options;
+    const {
+      totalDuration,
+      totalTurns,
+      totalPulses,
+      tangentAnalysis,
+      privateMoments,
+      paidOffMoments,
+      costBreakdown,
+    } = options;
 
     const turnDurations = this.turnTimings.map((t) => t.totalTime);
     const narratorTimes = this.turnTimings.map((t) => t.narratorTime);
@@ -125,36 +133,59 @@ export class PerformanceTracker {
 
     return {
       totalDuration,
-      avgTurnDuration: turnDurations.length > 0 ? turnDurations.reduce((a, b) => a + b, 0) / turnDurations.length : 0,
+      avgTurnDuration:
+        turnDurations.length > 0
+          ? turnDurations.reduce((a, b) => a + b, 0) / turnDurations.length
+          : 0,
       maxTurnDuration: Math.max(...turnDurations, 0),
-      minTurnDuration: Math.min(...turnDurations.filter((t) => t > 0), Number.MAX_SAFE_INTEGER),
+      minTurnDuration: Math.min(
+        ...turnDurations.filter((t) => t > 0),
+        Number.MAX_SAFE_INTEGER,
+      ),
 
       narratorMetrics: {
-        avgResponseTime: narratorTimes.length > 0 ? narratorTimes.reduce((a, b) => a + b, 0) / narratorTimes.length : 0,
+        avgResponseTime:
+          narratorTimes.length > 0
+            ? narratorTimes.reduce((a, b) => a + b, 0) / narratorTimes.length
+            : 0,
         maxResponseTime: Math.max(...narratorTimes, 0),
-        minResponseTime: Math.min(...narratorTimes.filter((t) => t > 0), Number.MAX_SAFE_INTEGER),
+        minResponseTime: Math.min(
+          ...narratorTimes.filter((t) => t > 0),
+          Number.MAX_SAFE_INTEGER,
+        ),
         totalTokens: costBreakdown.narrator.totalTokens,
-        avgTokensPerResponse: totalTurns > 0 ? costBreakdown.narrator.totalTokens / totalTurns : 0,
+        avgTokensPerResponse:
+          totalTurns > 0 ? costBreakdown.narrator.totalTokens / totalTurns : 0,
       },
 
       playerMetrics: {
-        avgResponseTime: playerTimes.length > 0 ? playerTimes.reduce((a, b) => a + b, 0) / playerTimes.length : 0,
+        avgResponseTime:
+          playerTimes.length > 0
+            ? playerTimes.reduce((a, b) => a + b, 0) / playerTimes.length
+            : 0,
         maxResponseTime: Math.max(...playerTimes, 0),
-        minResponseTime: Math.min(...playerTimes.filter((t) => t > 0), Number.MAX_SAFE_INTEGER),
+        minResponseTime: Math.min(
+          ...playerTimes.filter((t) => t > 0),
+          Number.MAX_SAFE_INTEGER,
+        ),
         totalTokens: costBreakdown.players.totalTokens,
-        avgTokensPerPlayer: costBreakdown.players.totalTokens / costBreakdown.players.models.length,
+        avgTokensPerPlayer:
+          costBreakdown.players.totalTokens /
+          costBreakdown.players.models.length,
       },
 
       pacingMetrics: {
         totalPulses,
         avgTurnsBetweenPulses: totalPulses > 0 ? totalTurns / totalPulses : 0,
-        pulsesPerMinute: totalDuration > 0 ? (totalPulses / totalDuration) * 60000 : 0,
+        pulsesPerMinute:
+          totalDuration > 0 ? (totalPulses / totalDuration) * 60000 : 0,
         targetPulses: 20,
         completionRate: totalPulses / 20,
       },
 
       qualityMetrics: {
-        tangentRate: totalTurns > 0 ? tangentAnalysis.totalTangents / totalTurns : 0,
+        tangentRate:
+          totalTurns > 0 ? tangentAnalysis.totalTangents / totalTurns : 0,
         privateMomentRate: totalTurns > 0 ? privateMoments / totalTurns : 0,
         payoffRate: privateMoments > 0 ? paidOffMoments / privateMoments : 0,
       },
@@ -162,7 +193,8 @@ export class PerformanceTracker {
       costMetrics: {
         totalCost: costBreakdown.total.cost,
         costPerTurn: totalTurns > 0 ? costBreakdown.total.cost / totalTurns : 0,
-        costPerPulse: totalPulses > 0 ? costBreakdown.total.cost / totalPulses : 0,
+        costPerPulse:
+          totalPulses > 0 ? costBreakdown.total.cost / totalPulses : 0,
       },
     };
   }

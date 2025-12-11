@@ -259,14 +259,24 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
 /**
  * Generate HTML report from session result
  */
-export async function generateHTMLReport(result: SessionResult): Promise<string> {
+export async function generateHTMLReport(
+  result: SessionResult,
+): Promise<string> {
   const pulseCount = result.detectedPulses.length;
   const pulsePercentage = Math.round((pulseCount / 20) * 100);
   const tangentCount = result.tangentAnalysis?.totalTangents || 0;
-  const tangentRate = result.finalTurn > 0 ? ((tangentCount / result.finalTurn) * 100).toFixed(1) : '0';
+  const tangentRate =
+    result.finalTurn > 0
+      ? ((tangentCount / result.finalTurn) * 100).toFixed(1)
+      : '0';
   const privateMomentCount = result.privateMoments.length;
-  const paidOffCount = result.privateMoments.filter((pm: any) => pm.payoffDetected).length;
-  const payoffRate = privateMomentCount > 0 ? Math.round((paidOffCount / privateMomentCount) * 100) : 0;
+  const paidOffCount = result.privateMoments.filter(
+    (pm: any) => pm.payoffDetected,
+  ).length;
+  const payoffRate =
+    privateMomentCount > 0
+      ? Math.round((paidOffCount / privateMomentCount) * 100)
+      : 0;
 
   // Cost section
   let costSection = '';
@@ -307,19 +317,31 @@ export async function generateHTMLReport(result: SessionResult): Promise<string>
   let feedbackSection = '';
   if (result.playerFeedback) {
     const fb = result.playerFeedback;
-    const playerCards = fb.players.map(p => {
-      const pacingClass = p.pacing.rating === 'good' ? 'pacing-good' : p.pacing.rating === 'too-fast' ? 'pacing-fast' : 'pacing-slow';
-      const pacingEmoji = p.pacing.rating === 'good' ? '✓' : p.pacing.rating === 'too-fast' ? '⚡' : '🐌';
-      return `
+    const playerCards = fb.players
+      .map((p) => {
+        const pacingClass =
+          p.pacing.rating === 'good'
+            ? 'pacing-good'
+            : p.pacing.rating === 'too-fast'
+              ? 'pacing-fast'
+              : 'pacing-slow';
+        const pacingEmoji =
+          p.pacing.rating === 'good'
+            ? '✓'
+            : p.pacing.rating === 'too-fast'
+              ? '⚡'
+              : '🐌';
+        return `
         <div class="feedback-card">
           <h4>${p.agentName} (${p.archetype})</h4>
           <div class="feedback-score">${p.narratorRating.score}/10</div>
           <p class="feedback-highlight">"${p.highlight.moment}"</p>
           <p><strong>Agency:</strong> ${p.agency.feltMeaningful ? '✓ Felt meaningful' : '✗ Did not feel meaningful'}</p>
           <p><strong>Pacing:</strong> <span class="${pacingClass}">${pacingEmoji} ${p.pacing.rating}</span></p>
-          ${p.frustrations.length > 0 ? `<p><strong>Frustrations:</strong></p><ul class="feedback-list">${p.frustrations.map(f => `<li>${f}</li>`).join('')}</ul>` : ''}
+          ${p.frustrations.length > 0 ? `<p><strong>Frustrations:</strong></p><ul class="feedback-list">${p.frustrations.map((f) => `<li>${f}</li>`).join('')}</ul>` : ''}
         </div>`;
-    }).join('');
+      })
+      .join('');
 
     feedbackSection = `
     <div class="section">
@@ -336,13 +358,17 @@ export async function generateHTMLReport(result: SessionResult): Promise<string>
           <div class="metric-subtitle">${fb.pacingVerdict}</div>
         </div>
       </div>
-      ${fb.recommendations.length > 0 ? `
+      ${
+        fb.recommendations.length > 0
+          ? `
       <div class="recommendations-list">
         <h4>Recommendations</h4>
         <ul class="feedback-list">
-          ${fb.recommendations.map(r => `<li>${r}</li>`).join('')}
+          ${fb.recommendations.map((r) => `<li>${r}</li>`).join('')}
         </ul>
-      </div>` : ''}
+      </div>`
+          : ''
+      }
       <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Individual Feedback</h3>
       <div class="feedback-grid">
         ${playerCards}
@@ -419,8 +445,7 @@ export async function generateHTMLReport(result: SessionResult): Promise<string>
     })
     .join('');
 
-  const html = HTML_TEMPLATE
-    .replace(/{{sessionId}}/g, result.sessionId)
+  const html = HTML_TEMPLATE.replace(/{{sessionId}}/g, result.sessionId)
     .replace(/{{storyTitle}}/g, result.config.story.storyTitle)
     .replace(/{{outcome}}/g, result.outcome)
     .replace(/{{duration}}/g, `${Math.round(result.duration / 1000)}s`)

@@ -9,7 +9,11 @@ import type { SessionResult } from '../session/runner';
 import type { Message } from '../session/turn';
 import type { SessionFeedback } from '../session/feedback';
 import { detectAllIssues } from './issues';
-import { generateTimeline, formatTimelineMarkdown, getTimelineSummary } from './timeline';
+import {
+  generateTimeline,
+  formatTimelineMarkdown,
+  getTimelineSummary,
+} from './timeline';
 import { saveHTMLReport } from './html';
 
 export interface SessionReport {
@@ -39,8 +43,13 @@ export interface SessionReport {
 /**
  * Generate complete session report
  */
-export async function generateSessionReport(result: SessionResult): Promise<string> {
-  const issues = await detectAllIssues(result.conversationHistory, result.detectedPulses);
+export async function generateSessionReport(
+  result: SessionResult,
+): Promise<string> {
+  const issues = await detectAllIssues(
+    result.conversationHistory,
+    result.detectedPulses,
+  );
   const timeline = generateTimeline(
     result.conversationHistory,
     result.detectedPulses,
@@ -65,7 +74,10 @@ export async function generateSessionReport(result: SessionResult): Promise<stri
 | Player | Archetype | Model |
 |--------|-----------|-------|
 ${result.config.group.players
-  .map((p) => `| ${p.name} ${p.name === result.config.group.spokesperson.name ? '(spokesperson)' : ''} | ${p.archetype} | ${p.model} |`)
+  .map(
+    (p) =>
+      `| ${p.name} ${p.name === result.config.group.spokesperson.name ? '(spokesperson)' : ''} | ${p.archetype} | ${p.model} |`,
+  )
   .join('\n')}
 
 ## Summary
@@ -162,10 +174,14 @@ function formatDuration(ms: number): string {
  */
 function estimateCost(result: SessionResult): number {
   // Rough estimates based on model pricing
-  const narratorCostPerTurn = result.config.narratorConfig.model === 'opus-4.5' ? 0.15 : 0.02;
+  const narratorCostPerTurn =
+    result.config.narratorConfig.model === 'opus-4.5' ? 0.15 : 0.02;
   const playerCostPerTurn = 0.01;
 
-  return result.finalTurn * (narratorCostPerTurn + playerCostPerTurn * result.config.group.size);
+  return (
+    result.finalTurn *
+    (narratorCostPerTurn + playerCostPerTurn * result.config.group.size)
+  );
 }
 
 /**
@@ -189,7 +205,9 @@ ${issue.relatedContent ? `> ${issue.relatedContent}` : ''}
  * Format player feedback for markdown
  */
 function formatPlayerFeedback(feedback: SessionFeedback): string {
-  const playerFeedbackSections = feedback.players.map(p => `
+  const playerFeedbackSections = feedback.players
+    .map(
+      (p) => `
 ### ${p.agentName} (${p.archetype})
 
 **Highlight**: ${p.highlight.moment}
@@ -205,12 +223,14 @@ function formatPlayerFeedback(feedback: SessionFeedback): string {
 - Positives: ${p.narratorRating.positives.join(', ') || 'None mentioned'}
 - Negatives: ${p.narratorRating.negatives.join(', ') || 'None mentioned'}
 
-**Frustrations**: ${p.frustrations.length > 0 ? p.frustrations.map(f => `\n- ${f}`).join('') : 'None'}
+**Frustrations**: ${p.frustrations.length > 0 ? p.frustrations.map((f) => `\n- ${f}`).join('') : 'None'}
 
-**Missed Opportunities**: ${p.missedOpportunities.length > 0 ? p.missedOpportunities.map(m => `\n- ${m}`).join('') : 'None'}
+**Missed Opportunities**: ${p.missedOpportunities.length > 0 ? p.missedOpportunities.map((m) => `\n- ${m}`).join('') : 'None'}
 
 **Group Dynamics**: ${p.groupDynamics}
-`).join('\n---\n');
+`,
+    )
+    .join('\n---\n');
 
   return `## Player Feedback
 
@@ -220,19 +240,19 @@ function formatPlayerFeedback(feedback: SessionFeedback): string {
 - **Pacing**: ${feedback.pacingVerdict}
 
 **Top Moments**:
-${feedback.topMoments.map(m => `- ${m}`).join('\n')}
+${feedback.topMoments.map((m) => `- ${m}`).join('\n')}
 
 **Shared Pain Points**:
-${feedback.sharedPainPoints.length > 0 ? feedback.sharedPainPoints.map(p => `- ${p}`).join('\n') : '- None'}
+${feedback.sharedPainPoints.length > 0 ? feedback.sharedPainPoints.map((p) => `- ${p}`).join('\n') : '- None'}
 
 **Narrator Strengths**:
-${feedback.narratorStrengths.length > 0 ? feedback.narratorStrengths.map(s => `- ${s}`).join('\n') : '- None mentioned'}
+${feedback.narratorStrengths.length > 0 ? feedback.narratorStrengths.map((s) => `- ${s}`).join('\n') : '- None mentioned'}
 
 **Narrator Weaknesses**:
-${feedback.narratorWeaknesses.length > 0 ? feedback.narratorWeaknesses.map(w => `- ${w}`).join('\n') : '- None mentioned'}
+${feedback.narratorWeaknesses.length > 0 ? feedback.narratorWeaknesses.map((w) => `- ${w}`).join('\n') : '- None mentioned'}
 
 **Recommendations**:
-${feedback.recommendations.length > 0 ? feedback.recommendations.map(r => `- ${r}`).join('\n') : '- None'}
+${feedback.recommendations.length > 0 ? feedback.recommendations.map((r) => `- ${r}`).join('\n') : '- None'}
 
 ### Individual Player Feedback
 

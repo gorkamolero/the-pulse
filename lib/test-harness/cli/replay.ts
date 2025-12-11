@@ -25,9 +25,14 @@ const program = new Command();
 
 program
   .name('test-replay')
-  .description('Replay session from checkpoint (uses current production prompt)')
+  .description(
+    'Replay session from checkpoint (uses current production prompt)',
+  )
   .requiredOption('--checkpoint <path>', 'Path to checkpoint file')
-  .option('--narrator <model>', 'Override narrator model (opus-4.5, grok-4, deepseek-v3.2)')
+  .option(
+    '--narrator <model>',
+    'Override narrator model (opus-4.5, grok-4, deepseek-v3.2)',
+  )
   .option('--temperature <number>', 'Override temperature', Number.parseFloat)
   .parse();
 
@@ -69,12 +74,16 @@ async function main() {
 
     if (options.temperature !== undefined) {
       replayConfig.temperature = options.temperature;
-      console.log(chalk.yellow(`→ Changing temperature to: ${options.temperature}`));
+      console.log(
+        chalk.yellow(`→ Changing temperature to: ${options.temperature}`),
+      );
     }
 
     if (options.maxTokens !== undefined) {
       replayConfig.maxTokens = options.maxTokens;
-      console.log(chalk.yellow(`→ Changing max tokens to: ${options.maxTokens}`));
+      console.log(
+        chalk.yellow(`→ Changing max tokens to: ${options.maxTokens}`),
+      );
     }
 
     // Apply config changes
@@ -82,11 +91,21 @@ async function main() {
 
     if (Object.keys(replayConfig).length > 0) {
       console.log(
-        chalk.green(`\n✓ Config updated. New session ID: ${updatedCheckpoint.sessionId}`),
+        chalk.green(
+          `\n✓ Config updated. New session ID: ${updatedCheckpoint.sessionId}`,
+        ),
       );
-      console.log(chalk.gray(`  Branch reason: ${updatedCheckpoint.metadata.branchReason}`));
+      console.log(
+        chalk.gray(
+          `  Branch reason: ${updatedCheckpoint.metadata.branchReason}`,
+        ),
+      );
     } else {
-      console.log(chalk.yellow('\n⚠️  No config changes specified, continuing with original config'));
+      console.log(
+        chalk.yellow(
+          '\n⚠️  No config changes specified, continuing with original config',
+        ),
+      );
     }
 
     console.log('\n');
@@ -105,10 +124,14 @@ async function main() {
       console.log(chalk.white(`Outcome: ${chalk.bold(result.outcome)}`));
       console.log(chalk.white(`Turns: ${chalk.bold(result.finalTurn)}`));
       console.log(
-        chalk.white(`Pulses: ${chalk.bold(`${result.detectedPulses.length}/~20`)}`),
+        chalk.white(
+          `Pulses: ${chalk.bold(`${result.detectedPulses.length}/~20`)}`,
+        ),
       );
       console.log(
-        chalk.white(`Duration: ${chalk.bold(`${Math.round(result.duration / 1000)}s`)}`),
+        chalk.white(
+          `Duration: ${chalk.bold(`${Math.round(result.duration / 1000)}s`)}`,
+        ),
       );
 
       // Generate report

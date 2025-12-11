@@ -55,9 +55,21 @@ const MODEL_PRICING = {
 };
 
 export class CostTracker {
-  private narratorUsage: TokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
-  private playerUsage: TokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
-  private classificationUsage: TokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+  private narratorUsage: TokenUsage = {
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  };
+  private playerUsage: TokenUsage = {
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  };
+  private classificationUsage: TokenUsage = {
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  };
 
   constructor(
     private narratorModel: string,
@@ -74,7 +86,8 @@ export class CostTracker {
 
     this.narratorUsage.promptTokens += inputTokens;
     this.narratorUsage.completionTokens += outputTokens;
-    this.narratorUsage.totalTokens += usage.totalTokens ?? (inputTokens + outputTokens);
+    this.narratorUsage.totalTokens +=
+      usage.totalTokens ?? inputTokens + outputTokens;
   }
 
   /**
@@ -86,7 +99,8 @@ export class CostTracker {
 
     this.playerUsage.promptTokens += inputTokens;
     this.playerUsage.completionTokens += outputTokens;
-    this.playerUsage.totalTokens += usage.totalTokens ?? (inputTokens + outputTokens);
+    this.playerUsage.totalTokens +=
+      usage.totalTokens ?? inputTokens + outputTokens;
   }
 
   /**
@@ -98,7 +112,8 @@ export class CostTracker {
 
     this.classificationUsage.promptTokens += inputTokens;
     this.classificationUsage.completionTokens += outputTokens;
-    this.classificationUsage.totalTokens += usage.totalTokens ?? (inputTokens + outputTokens);
+    this.classificationUsage.totalTokens +=
+      usage.totalTokens ?? inputTokens + outputTokens;
   }
 
   /**
@@ -122,7 +137,10 @@ export class CostTracker {
    * Get complete cost breakdown
    */
   getBreakdown(): CostBreakdown {
-    const narratorCost = this.calculateCost(this.narratorUsage, this.narratorModel);
+    const narratorCost = this.calculateCost(
+      this.narratorUsage,
+      this.narratorModel,
+    );
     const playerCost = this.calculateAveragePlayerCost();
     const classificationCost = this.calculateCost(
       this.classificationUsage,
@@ -173,7 +191,8 @@ export class CostTracker {
     // Distribute usage across player models
     const usagePerModel = {
       promptTokens: this.playerUsage.promptTokens / this.playerModels.length,
-      completionTokens: this.playerUsage.completionTokens / this.playerModels.length,
+      completionTokens:
+        this.playerUsage.completionTokens / this.playerModels.length,
       totalTokens: this.playerUsage.totalTokens / this.playerModels.length,
     };
 

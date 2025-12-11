@@ -30,7 +30,16 @@ export interface Classification {
 }
 
 const classificationSchema = z.object({
-  type: z.enum(['pulse', 'tangent-response', 'private-moment', 'directed-questions', 'requires-discussion', 'clarification', 'recap', 'ending']),
+  type: z.enum([
+    'pulse',
+    'tangent-response',
+    'private-moment',
+    'directed-questions',
+    'requires-discussion',
+    'clarification',
+    'recap',
+    'ending',
+  ]),
   confidence: z.number().min(0).max(1),
   reasoning: z.string(),
   pulseNumber: z.number().optional(),

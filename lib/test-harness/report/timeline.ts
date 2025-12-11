@@ -52,11 +52,15 @@ export function generateTimeline(
   }
 
   // Process messages turn by turn
-  const narratorMessages = messages.filter((m) => m.role === 'narrator' && m.turn > 0);
+  const narratorMessages = messages.filter(
+    (m) => m.role === 'narrator' && m.turn > 0,
+  );
 
   for (const message of narratorMessages) {
     const isPulse = pulses.includes(message.turn);
-    const hasPrivateMoment = privateMoments.some((pm) => pm.turn === message.turn);
+    const hasPrivateMoment = privateMoments.some(
+      (pm) => pm.turn === message.turn,
+    );
     const hasIssue = issues.some((i) => i.turn === message.turn);
 
     if (isPulse) {
@@ -90,7 +94,9 @@ export function generateTimeline(
           type: 'issue',
           title: `⚠️ ${issue.type.toUpperCase()}`,
           content: issue.description,
-          notes: issue.relatedContent ? `Context: ${issue.relatedContent}` : undefined,
+          notes: issue.relatedContent
+            ? `Context: ${issue.relatedContent}`
+            : undefined,
         });
       }
     }
@@ -131,7 +137,9 @@ export function formatTimelineMarkdown(timeline: TimelineEntry[]): string {
 /**
  * Group timeline by type
  */
-export function groupTimelineByType(timeline: TimelineEntry[]): Record<string, TimelineEntry[]> {
+export function groupTimelineByType(
+  timeline: TimelineEntry[],
+): Record<string, TimelineEntry[]> {
   const grouped: Record<string, TimelineEntry[]> = {};
 
   for (const entry of timeline) {

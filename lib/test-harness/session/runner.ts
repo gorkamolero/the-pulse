@@ -20,9 +20,17 @@ import { createCheckpoint } from '../checkpoint/schema';
 import { saveCheckpoint } from '../checkpoint/save';
 import { PrivateMomentTracker } from './private';
 import { CostTracker, type CostBreakdown } from './cost';
-import { TangentTracker, type TangentAnalysis, type TangentMoment } from './tangent';
+import {
+  TangentTracker,
+  type TangentAnalysis,
+  type TangentMoment,
+} from './tangent';
 import { runDiscussion, updateAgentWithInnerCharacter } from './discussion';
-import { collectPlayerFeedback, synthesizeFeedback, type SessionFeedback } from './feedback';
+import {
+  collectPlayerFeedback,
+  synthesizeFeedback,
+  type SessionFeedback,
+} from './feedback';
 
 export type SessionOutcome = 'completed' | 'timeout' | 'failed';
 
@@ -63,7 +71,8 @@ export function generateGroupComposition(size?: number): ArchetypeId[] {
 
   const group: ArchetypeId[] = [];
   for (let i = 0; i < groupSize; i++) {
-    const randomId = archetypeIds[Math.floor(Math.random() * archetypeIds.length)];
+    const randomId =
+      archetypeIds[Math.floor(Math.random() * archetypeIds.length)];
     if (randomId) group.push(randomId);
   }
 
@@ -164,10 +173,7 @@ async function generateNarratorResponse(
   try {
     const result = streamText({
       model: openrouter(modelId),
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages,
-      ] as any,
+      messages: [{ role: 'system', content: systemPrompt }, ...messages] as any,
       temperature: narratorConfig.temperature,
     });
 
@@ -357,52 +363,6 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
 }
 
 /**
- * Character creation phase
- */
-async function runCharacterCreation(
-  narratorConfig: NarratorConfig,
-  playerAgents: PlayerAgent[],
-  costTracker: CostTracker,
-): Promise<Message[]> {
-  const messages: Message[] = [];
-  const timestamp = Date.now();
-
-  console.log('\n--- Character Creation ---\n');
-
-  // Narrator introduces and asks for characters
-  const { text: intro, usage } = await generateNarratorResponse(
-    [],
-    narratorConfig,
-    playerAgents.map((a) => a.name),
-  );
-
-  costTracker.recordNarratorUsage(usage);
-
-  messages.push({
-    role: 'narrator',
-    content: intro,
-    turn: 0,
-    timestamp,
-  });
-
-  // Players introduce their characters
-  for (const agent of playerAgents) {
-    const introduction = `I'm ${agent.name}. ${agent.identity.backstory}`;
-    console.log(`\n👤 ${agent.name}: ${introduction}`);
-
-    messages.push({
-      role: 'player',
-      player: agent.name,
-      content: introduction,
-      turn: 0,
-      timestamp,
-    });
-  }
-
-  return messages;
-}
-
-/**
  * Detect if session should end
  */
 function shouldEndSession(
@@ -433,7 +393,9 @@ export async function resumeSessionFromCheckpoint(
 
   try {
     console.log(`\n🔄 Resuming from turn ${checkpoint.turn}`);
-    console.log(`📖 ${checkpoint.sessionConfig.story.storyTitle} | 🤖 ${checkpoint.sessionConfig.narratorConfig.model}\n`);
+    console.log(
+      `📖 ${checkpoint.sessionConfig.story.storyTitle} | 🤖 ${checkpoint.sessionConfig.narratorConfig.model}\n`,
+    );
 
     const sessionConfig = checkpoint.sessionConfig;
     const playerAgents = checkpoint.playerAgents;
@@ -468,18 +430,18 @@ export async function resumeSessionFromCheckpoint(
     // Continue from next turn
     const startTurn = checkpoint.turn + 1;
 
-
     // Main session loop (same as runSession)
     for (let turn = startTurn; turn <= sessionConfig.maxTurns; turn++) {
       console.log(`\n--- Turn ${turn} ---`);
 
       try {
         // Generate narrator output
-        const { text: narratorOutput, usage: narratorUsage } = await generateNarratorResponse(
-          conversationHistory,
-          sessionConfig.narratorConfig,
-          playerAgents.map((a) => a.name),
-        );
+        const { text: narratorOutput, usage: narratorUsage } =
+          await generateNarratorResponse(
+            conversationHistory,
+            sessionConfig.narratorConfig,
+            playerAgents.map((a) => a.name),
+          );
 
         costTracker.recordNarratorUsage(narratorUsage);
 
@@ -518,9 +480,14 @@ export async function resumeSessionFromCheckpoint(
         });
 
         // Check for private moment payoffs
-        const payoffs = await privateMomentTracker.checkPayoff(turn, narratorOutput);
+        const payoffs = await privateMomentTracker.checkPayoff(
+          turn,
+          narratorOutput,
+        );
         if (payoffs.length > 0) {
-          console.log(`💎 Payoffs detected: ${payoffs.map((p) => p.target).join(', ')}`);
+          console.log(
+            `💎 Payoffs detected: ${payoffs.map((p) => p.target).join(', ')}`,
+          );
         }
 
         // Check for requires-discussion first (character creation, major group decisions)
@@ -537,7 +504,9 @@ export async function resumeSessionFromCheckpoint(
 
           // Update agents with their inner characters
           for (const [agentId, character] of discussionResult.finalCharacters) {
-            const agentIndex = playerAgents.findIndex(a => a.archetype === agentId);
+            const agentIndex = playerAgents.findIndex(
+              (a) => a.archetype === agentId,
+            );
             if (agentIndex >= 0 && playerAgents[agentIndex]) {
               playerAgents[agentIndex] = updateAgentWithInnerCharacter(
                 playerAgents[agentIndex],
@@ -555,9 +524,14 @@ export async function resumeSessionFromCheckpoint(
             timestamp: Date.now(),
           });
 
-        // Check for directed questions (public but targeted)
-        } else if (classification.type === 'directed-questions' && classification.targetPlayers?.length) {
-          console.log(`🎯 Directed questions for: ${classification.targetPlayers.join(', ')}`);
+          // Check for directed questions (public but targeted)
+        } else if (
+          classification.type === 'directed-questions' &&
+          classification.targetPlayers?.length
+        ) {
+          console.log(
+            `🎯 Directed questions for: ${classification.targetPlayers.join(', ')}`,
+          );
 
           // Collect responses from ONLY targeted players, sequentially
           for (const targetName of classification.targetPlayers) {
@@ -565,11 +539,12 @@ export async function resumeSessionFromCheckpoint(
               (a) => a.name.toLowerCase() === targetName.toLowerCase(),
             );
             if (agent) {
-              const { text: response, usage: playerUsage } = await generateDirectedResponse(
-                agent,
-                narratorOutput,
-                conversationHistory,
-              );
+              const { text: response, usage: playerUsage } =
+                await generateDirectedResponse(
+                  agent,
+                  narratorOutput,
+                  conversationHistory,
+                );
 
               costTracker.recordPlayerUsage(playerUsage);
 
@@ -586,81 +561,95 @@ export async function resumeSessionFromCheckpoint(
         } else {
           // Check for private moment
           const { routePrivateMoment } = await import('./private');
-          const privateRouting = routePrivateMoment(narratorOutput, playerAgents);
+          const privateRouting = routePrivateMoment(
+            narratorOutput,
+            playerAgents,
+          );
 
           if (privateRouting.isPrivate && privateRouting.targetAgent) {
             // Private moment
-            console.log(`🔒 Private moment for ${privateRouting.targetAgent.name}`);
+            console.log(
+              `🔒 Private moment for ${privateRouting.targetAgent.name}`,
+            );
 
-          const { text: response, usage: playerUsage } = await generatePlayerResponse(
-            privateRouting.targetAgent,
-            narratorOutput,
-            conversationHistory,
-          );
+            const { text: response, usage: playerUsage } =
+              await generatePlayerResponse(
+                privateRouting.targetAgent,
+                narratorOutput,
+                conversationHistory,
+              );
 
-          costTracker.recordPlayerUsage(playerUsage);
+            costTracker.recordPlayerUsage(playerUsage);
 
-          conversationHistory.push({
-            role: 'player',
-            player: privateRouting.targetAgent.name,
-            content: response,
-            turn,
-            timestamp: Date.now(),
-          });
-
-          privateMomentTracker.add({
-            turn,
-            target: privateRouting.targetAgent.name,
-            content: narratorOutput,
-            response,
-          });
-        } else {
-          // Group interaction - sequential to avoid garbled streaming output
-          const playerResponses: Array<{ agent: PlayerAgent; response: string }> = [];
-
-          for (const agent of playerAgents) {
-            const result = await generatePlayerResponse(agent, narratorOutput, conversationHistory);
-            costTracker.recordPlayerUsage(result.usage);
-            playerResponses.push({ agent, response: result.text });
-          }
-
-          // Spokesperson synthesis
-          const { text: synthesis, usage: spokespersonUsage } = await generateSpokespersonSynthesis(
-            spokesperson,
-            playerResponses,
-            narratorOutput,
-          );
-
-          costTracker.recordPlayerUsage(spokespersonUsage);
-
-          // Spokesperson synthesis already streamed above
-
-          // Add to history
-          for (const { agent, response } of playerResponses) {
             conversationHistory.push({
               role: 'player',
-              player: agent.name,
+              player: privateRouting.targetAgent.name,
               content: response,
               turn,
               timestamp: Date.now(),
             });
-          }
 
-          conversationHistory.push({
-            role: 'spokesperson',
-            player: spokesperson.name,
-            content: synthesis,
-            turn,
-            timestamp: Date.now(),
-          });
+            privateMomentTracker.add({
+              turn,
+              target: privateRouting.targetAgent.name,
+              content: narratorOutput,
+              response,
+            });
+          } else {
+            // Group interaction - sequential to avoid garbled streaming output
+            const playerResponses: Array<{
+              agent: PlayerAgent;
+              response: string;
+            }> = [];
 
-          // Record tangent tracking with player responses
-          tangentTracker.recordTangent(
-            turn,
-            playerResponses.map((r) => r.response),
-            narratorOutput,
-            classification,
-          );
+            for (const agent of playerAgents) {
+              const result = await generatePlayerResponse(
+                agent,
+                narratorOutput,
+                conversationHistory,
+              );
+              costTracker.recordPlayerUsage(result.usage);
+              playerResponses.push({ agent, response: result.text });
+            }
+
+            // Spokesperson synthesis
+            const { text: synthesis, usage: spokespersonUsage } =
+              await generateSpokespersonSynthesis(
+                spokesperson,
+                playerResponses,
+                narratorOutput,
+              );
+
+            costTracker.recordPlayerUsage(spokespersonUsage);
+
+            // Spokesperson synthesis already streamed above
+
+            // Add to history
+            for (const { agent, response } of playerResponses) {
+              conversationHistory.push({
+                role: 'player',
+                player: agent.name,
+                content: response,
+                turn,
+                timestamp: Date.now(),
+              });
+            }
+
+            conversationHistory.push({
+              role: 'spokesperson',
+              player: spokesperson.name,
+              content: synthesis,
+              turn,
+              timestamp: Date.now(),
+            });
+
+            // Record tangent tracking with player responses
+            tangentTracker.recordTangent(
+              turn,
+              playerResponses.map((r) => r.response),
+              narratorOutput,
+              classification,
+            );
           }
         }
 
@@ -728,7 +717,9 @@ export async function resumeSessionFromCheckpoint(
       config: sessionConfig,
       conversationHistory,
       outcome,
-      finalTurn: conversationHistory[conversationHistory.length - 1]?.turn || checkpoint.turn,
+      finalTurn:
+        conversationHistory[conversationHistory.length - 1]?.turn ||
+        checkpoint.turn,
       duration,
       detectedPulses,
       privateMoments: privateMomentTracker.getAll(),
@@ -757,29 +748,42 @@ export async function resumeSessionFromCheckpoint(
 /**
  * Run a complete session
  */
-export async function runSession(config: SessionRunnerConfig): Promise<SessionResult> {
+export async function runSession(
+  config: SessionRunnerConfig,
+): Promise<SessionResult> {
   const startTime = Date.now();
 
   try {
     // 1. Generate group composition
     const archetypeIds = generateGroupComposition(config.groupSize);
 
-    const playerAgents = await createPlayerAgents(archetypeIds, config.story, config.language);
+    const playerAgents = await createPlayerAgents(
+      archetypeIds,
+      config.story,
+      config.language,
+    );
 
     // 2. Select random spokesperson
     const spokesperson =
-      playerAgents[Math.floor(Math.random() * playerAgents.length)] || playerAgents[0];
+      playerAgents[Math.floor(Math.random() * playerAgents.length)] ||
+      playerAgents[0];
     if (!spokesperson) {
       throw new Error('No players generated');
     }
 
     // 3. Create session config
-    const sessionConfig = createSessionConfig(config, playerAgents, spokesperson);
+    const sessionConfig = createSessionConfig(
+      config,
+      playerAgents,
+      spokesperson,
+    );
     const sessionId = sessionConfig.sessionId;
 
     console.log(`\n🎬 ${sessionId}`);
     console.log(`📖 ${config.story.storyTitle} | 🤖 ${config.narratorModel}`);
-    console.log(`👥 ${playerAgents.map((a) => `${a.name} (${a.archetype})`).join(', ')}`);
+    console.log(
+      `👥 ${playerAgents.map((a) => `${a.name} (${a.archetype})`).join(', ')}`,
+    );
     console.log(`🎙️  Spokesperson: ${spokesperson.name}\n`);
 
     // 4. Initialize cost tracker
@@ -788,12 +792,8 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
       playerAgents.map((a) => a.modelId),
     );
 
-    // 5. Character creation phase
-    const conversationHistory = await runCharacterCreation(
-      sessionConfig.narratorConfig,
-      playerAgents,
-      costTracker,
-    );
+    // 5. Initialize conversation history (empty - narrator starts fresh)
+    const conversationHistory: Message[] = [];
 
     // 6. Initialize tracking
     const privateMomentTracker = new PrivateMomentTracker();
@@ -807,11 +807,12 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
 
       try {
         // Generate narrator output
-        const { text: narratorOutput, usage: narratorUsage } = await generateNarratorResponse(
-          conversationHistory,
-          sessionConfig.narratorConfig,
-          playerAgents.map((a) => a.name),
-        );
+        const { text: narratorOutput, usage: narratorUsage } =
+          await generateNarratorResponse(
+            conversationHistory,
+            sessionConfig.narratorConfig,
+            playerAgents.map((a) => a.name),
+          );
 
         costTracker.recordNarratorUsage(narratorUsage);
 
@@ -850,9 +851,14 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
         });
 
         // Check for private moment payoffs
-        const payoffs = await privateMomentTracker.checkPayoff(turn, narratorOutput);
+        const payoffs = await privateMomentTracker.checkPayoff(
+          turn,
+          narratorOutput,
+        );
         if (payoffs.length > 0) {
-          console.log(`💎 Payoffs detected: ${payoffs.map((p) => p.target).join(', ')}`);
+          console.log(
+            `💎 Payoffs detected: ${payoffs.map((p) => p.target).join(', ')}`,
+          );
         }
 
         // Check for requires-discussion first (character creation, major group decisions)
@@ -869,7 +875,9 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
 
           // Update agents with their inner characters
           for (const [agentId, character] of discussionResult.finalCharacters) {
-            const agentIndex = playerAgents.findIndex(a => a.archetype === agentId);
+            const agentIndex = playerAgents.findIndex(
+              (a) => a.archetype === agentId,
+            );
             if (agentIndex >= 0 && playerAgents[agentIndex]) {
               playerAgents[agentIndex] = updateAgentWithInnerCharacter(
                 playerAgents[agentIndex],
@@ -887,9 +895,14 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
             timestamp: Date.now(),
           });
 
-        // Check for directed questions (public but targeted)
-        } else if (classification.type === 'directed-questions' && classification.targetPlayers?.length) {
-          console.log(`🎯 Directed questions for: ${classification.targetPlayers.join(', ')}`);
+          // Check for directed questions (public but targeted)
+        } else if (
+          classification.type === 'directed-questions' &&
+          classification.targetPlayers?.length
+        ) {
+          console.log(
+            `🎯 Directed questions for: ${classification.targetPlayers.join(', ')}`,
+          );
 
           // Collect responses from ONLY targeted players, sequentially
           for (const targetName of classification.targetPlayers) {
@@ -897,11 +910,12 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
               (a) => a.name.toLowerCase() === targetName.toLowerCase(),
             );
             if (agent) {
-              const { text: response, usage: playerUsage } = await generateDirectedResponse(
-                agent,
-                narratorOutput,
-                conversationHistory,
-              );
+              const { text: response, usage: playerUsage } =
+                await generateDirectedResponse(
+                  agent,
+                  narratorOutput,
+                  conversationHistory,
+                );
 
               costTracker.recordPlayerUsage(playerUsage);
 
@@ -918,81 +932,95 @@ export async function runSession(config: SessionRunnerConfig): Promise<SessionRe
         } else {
           // Check for private moment
           const { routePrivateMoment } = await import('./private');
-          const privateRouting = routePrivateMoment(narratorOutput, playerAgents);
+          const privateRouting = routePrivateMoment(
+            narratorOutput,
+            playerAgents,
+          );
 
           if (privateRouting.isPrivate && privateRouting.targetAgent) {
             // Private moment
-            console.log(`🔒 Private moment for ${privateRouting.targetAgent.name}`);
+            console.log(
+              `🔒 Private moment for ${privateRouting.targetAgent.name}`,
+            );
 
-          const { text: response, usage: playerUsage } = await generatePlayerResponse(
-            privateRouting.targetAgent,
-            narratorOutput,
-            conversationHistory,
-          );
+            const { text: response, usage: playerUsage } =
+              await generatePlayerResponse(
+                privateRouting.targetAgent,
+                narratorOutput,
+                conversationHistory,
+              );
 
-          costTracker.recordPlayerUsage(playerUsage);
+            costTracker.recordPlayerUsage(playerUsage);
 
-          conversationHistory.push({
-            role: 'player',
-            player: privateRouting.targetAgent.name,
-            content: response,
-            turn,
-            timestamp: Date.now(),
-          });
-
-          privateMomentTracker.add({
-            turn,
-            target: privateRouting.targetAgent.name,
-            content: narratorOutput,
-            response,
-          });
-        } else {
-          // Group interaction - sequential to avoid garbled streaming output
-          const playerResponses: Array<{ agent: PlayerAgent; response: string }> = [];
-
-          for (const agent of playerAgents) {
-            const result = await generatePlayerResponse(agent, narratorOutput, conversationHistory);
-            costTracker.recordPlayerUsage(result.usage);
-            playerResponses.push({ agent, response: result.text });
-          }
-
-          // Spokesperson synthesis
-          const { text: synthesis, usage: spokespersonUsage } = await generateSpokespersonSynthesis(
-            spokesperson,
-            playerResponses,
-            narratorOutput,
-          );
-
-          costTracker.recordPlayerUsage(spokespersonUsage);
-
-          // Spokesperson synthesis already streamed above
-
-          // Add to history
-          for (const { agent, response } of playerResponses) {
             conversationHistory.push({
               role: 'player',
-              player: agent.name,
+              player: privateRouting.targetAgent.name,
               content: response,
               turn,
               timestamp: Date.now(),
             });
-          }
 
-          conversationHistory.push({
-            role: 'spokesperson',
-            player: spokesperson.name,
-            content: synthesis,
-            turn,
-            timestamp: Date.now(),
-          });
+            privateMomentTracker.add({
+              turn,
+              target: privateRouting.targetAgent.name,
+              content: narratorOutput,
+              response,
+            });
+          } else {
+            // Group interaction - sequential to avoid garbled streaming output
+            const playerResponses: Array<{
+              agent: PlayerAgent;
+              response: string;
+            }> = [];
 
-          // Record tangent tracking with player responses
-          tangentTracker.recordTangent(
-            turn,
-            playerResponses.map((r) => r.response),
-            narratorOutput,
-            classification,
-          );
+            for (const agent of playerAgents) {
+              const result = await generatePlayerResponse(
+                agent,
+                narratorOutput,
+                conversationHistory,
+              );
+              costTracker.recordPlayerUsage(result.usage);
+              playerResponses.push({ agent, response: result.text });
+            }
+
+            // Spokesperson synthesis
+            const { text: synthesis, usage: spokespersonUsage } =
+              await generateSpokespersonSynthesis(
+                spokesperson,
+                playerResponses,
+                narratorOutput,
+              );
+
+            costTracker.recordPlayerUsage(spokespersonUsage);
+
+            // Spokesperson synthesis already streamed above
+
+            // Add to history
+            for (const { agent, response } of playerResponses) {
+              conversationHistory.push({
+                role: 'player',
+                player: agent.name,
+                content: response,
+                turn,
+                timestamp: Date.now(),
+              });
+            }
+
+            conversationHistory.push({
+              role: 'spokesperson',
+              player: spokesperson.name,
+              content: synthesis,
+              turn,
+              timestamp: Date.now(),
+            });
+
+            // Record tangent tracking with player responses
+            tangentTracker.recordTangent(
+              turn,
+              playerResponses.map((r) => r.response),
+              narratorOutput,
+              classification,
+            );
           }
         }
 
