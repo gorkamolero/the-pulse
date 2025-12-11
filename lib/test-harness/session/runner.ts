@@ -26,7 +26,7 @@ import {
   type TangentAnalysis,
   type TangentMoment,
 } from './tangent';
-import { runDiscussion, updateAgentWithInnerCharacter } from './discussion';
+import { runDiscussion } from './discussion';
 import {
   collectPlayerFeedback,
   synthesizeFeedback,
@@ -548,7 +548,7 @@ export async function resumeSessionFromCheckpoint(
           );
         }
 
-        // Check for requires-discussion first (character creation, major group decisions)
+        // Check for requires-discussion first (major group decisions)
         if (classification.type === 'requires-discussion') {
           console.log(`🗣️  Discussion required`);
 
@@ -556,22 +556,8 @@ export async function resumeSessionFromCheckpoint(
             narratorOutput,
             playerAgents,
             spokesperson,
-            conversationHistory,
             costTracker,
           );
-
-          // Update agents with their inner characters
-          for (const [agentId, character] of discussionResult.finalCharacters) {
-            const agentIndex = playerAgents.findIndex(
-              (a) => a.archetype === agentId,
-            );
-            if (agentIndex >= 0 && playerAgents[agentIndex]) {
-              playerAgents[agentIndex] = updateAgentWithInnerCharacter(
-                playerAgents[agentIndex],
-                character,
-              );
-            }
-          }
 
           // Add spokesperson synthesis to history
           conversationHistory.push({
@@ -919,7 +905,7 @@ export async function runSession(
           );
         }
 
-        // Check for requires-discussion first (character creation, major group decisions)
+        // Check for requires-discussion first (major group decisions)
         if (classification.type === 'requires-discussion') {
           console.log(`🗣️  Discussion required`);
 
@@ -927,22 +913,8 @@ export async function runSession(
             narratorOutput,
             playerAgents,
             spokesperson,
-            conversationHistory,
             costTracker,
           );
-
-          // Update agents with their inner characters
-          for (const [agentId, character] of discussionResult.finalCharacters) {
-            const agentIndex = playerAgents.findIndex(
-              (a) => a.archetype === agentId,
-            );
-            if (agentIndex >= 0 && playerAgents[agentIndex]) {
-              playerAgents[agentIndex] = updateAgentWithInnerCharacter(
-                playerAgents[agentIndex],
-                character,
-              );
-            }
-          }
 
           // Add spokesperson synthesis to history
           conversationHistory.push({
