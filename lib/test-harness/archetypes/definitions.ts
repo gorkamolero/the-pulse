@@ -22,7 +22,7 @@ export const JOKER: Archetype = {
   ],
   quirkFrequency: 0.3,
   testsFor: ['Tangent recovery', 'Tone flexibility', 'Humor handling'],
-  model: 'grok',
+  model: 'deepseek',
 };
 
 export const ENGAGED: Archetype = {
@@ -73,7 +73,7 @@ export const WILDCARD: Archetype = {
   ],
   quirkFrequency: 0.2,
   testsFor: ['Flexibility', 'Edge case handling', 'Creative actions'],
-  model: 'grok',
+  model: 'deepseek',
 };
 
 export const FOLLOWER: Archetype = {

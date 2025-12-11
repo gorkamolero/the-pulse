@@ -32,6 +32,17 @@ import {
   synthesizeFeedback,
   type SessionFeedback,
 } from './feedback';
+import {
+  type GameState,
+  createInitialState,
+  formatStateForInjection,
+  extractCharacterMappings,
+  updateGameState,
+} from './state';
+import {
+  isGarbageOutput,
+  describeGarbageReason,
+} from '@/lib/narrator/validation';
 
 export type SessionOutcome = 'completed' | 'timeout' | 'failed';
 
@@ -143,6 +154,7 @@ async function generateNarratorResponse(
   conversationHistory: Message[],
   narratorConfig: NarratorConfig,
   playerNames: string[],
+  gameState: GameState | null,
 ): Promise<{ text: string; usage: LanguageModelUsage }> {
   const modelId = NARRATOR_MODEL_MAP[narratorConfig.model];
 
@@ -166,33 +178,61 @@ async function generateNarratorResponse(
           : m.content,
   }));
 
+  // Inject game state before narrator responds
+  const stateInjection = gameState ? formatStateForInjection(gameState) : '';
+
   // All narrator models use OpenRouter
   const openrouter = createOpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY,
   });
 
-  try {
-    const result = streamText({
-      model: openrouter(modelId),
-      messages: [{ role: 'system', content: systemPrompt }, ...messages] as any,
-      temperature: narratorConfig.temperature,
-    });
+  const allMessages = [
+    { role: 'system', content: systemPrompt },
+    ...messages,
+  ];
 
-    // Stream to console
-    let fullText = '';
-    process.stdout.write('\n📖 Narrator: ');
-    for await (const chunk of result.textStream) {
-      process.stdout.write(chunk);
-      fullText += chunk;
-    }
-    process.stdout.write('\n');
-
-    const usage = await result.usage;
-    return { text: fullText, usage };
-  } catch (error) {
-    console.error('Narrator generation error:', error);
-    throw error;
+  // Add state injection as final system message if we have state
+  if (stateInjection) {
+    allMessages.push({ role: 'system', content: stateInjection });
   }
+
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = streamText({
+        model: openrouter(modelId),
+        messages: allMessages as any,
+        temperature: narratorConfig.temperature,
+      });
+
+      // Stream to console
+      let fullText = '';
+      const retryNote = attempt > 1 ? ` [retry ${attempt}]` : '';
+      process.stdout.write(`\n📖 Narrator${retryNote}: `);
+      for await (const chunk of result.textStream) {
+        process.stdout.write(chunk);
+        fullText += chunk;
+      }
+      process.stdout.write('\n');
+
+      // Check for garbage output
+      if (isGarbageOutput(fullText, playerNames)) {
+        const reason = describeGarbageReason(fullText, playerNames);
+        console.warn(`\n⚠️  Garbage output detected (${reason}), retrying (${attempt}/${maxRetries})...`);
+        continue;
+      }
+
+      const usage = await result.usage;
+      return { text: fullText, usage };
+    } catch (error) {
+      console.error(`Narrator generation error (attempt ${attempt}):`, error);
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  throw lastError || new Error('Narrator generation failed after retries');
 }
 
 /**
@@ -485,6 +525,10 @@ export async function resumeSessionFromCheckpoint(
     const detectedPulses = [...checkpoint.detectedPulses];
     let outcome: SessionOutcome = 'timeout';
 
+    // Initialize game state - try to reconstruct from checkpoint history
+    let gameState: GameState = createInitialState();
+    // TODO: Could reconstruct state from checkpoint history if needed
+
     // Continue from next turn
     const startTurn = checkpoint.turn + 1;
 
@@ -493,12 +537,13 @@ export async function resumeSessionFromCheckpoint(
       console.log(`\n--- Turn ${turn} ---`);
 
       try {
-        // Generate narrator output
+        // Generate narrator output (inject game state for character consistency)
         const { text: narratorOutput, usage: narratorUsage } =
           await generateNarratorResponse(
             conversationHistory,
             sessionConfig.narratorConfig,
             playerAgents.map((a) => a.name),
+            gameState,
           );
 
         costTracker.recordNarratorUsage(narratorUsage);
@@ -537,6 +582,11 @@ export async function resumeSessionFromCheckpoint(
           classification: classification.type,
         });
 
+        // Update game state based on narrator response (location, items, NPCs)
+        if (gameState.characters.length > 0) {
+          gameState = await updateGameState(gameState, narratorOutput);
+        }
+
         // Check for private moment payoffs
         const payoffs = await privateMomentTracker.checkPayoff(
           turn,
@@ -567,6 +617,22 @@ export async function resumeSessionFromCheckpoint(
             turn,
             timestamp: Date.now(),
           });
+
+          // Extract character mappings if not already populated
+          if (gameState.characters.length === 0) {
+            console.log('🎭 Extracting character mappings...');
+            const characters = await extractCharacterMappings(
+              discussionResult.spokespersonMessage,
+              playerAgents,
+              spokesperson.name,
+            );
+            if (characters.length > 0) {
+              gameState.characters = characters;
+              console.log(
+                `   Mapped: ${characters.map((c) => `${c.odName}→${c.idName}`).join(', ')}`,
+              );
+            }
+          }
 
           // Check for directed questions (public but targeted)
         } else if (
@@ -844,18 +910,20 @@ export async function runSession(
     const tangentTracker = new TangentTracker();
     const detectedPulses: number[] = [];
     let outcome: SessionOutcome = 'timeout';
+    let gameState: GameState = createInitialState();
 
     // 7. Main session loop
     for (let turn = 1; turn <= sessionConfig.maxTurns; turn++) {
       console.log(`\n--- Turn ${turn} ---`);
 
       try {
-        // Generate narrator output
+        // Generate narrator output (inject game state for character consistency)
         const { text: narratorOutput, usage: narratorUsage } =
           await generateNarratorResponse(
             conversationHistory,
             sessionConfig.narratorConfig,
             playerAgents.map((a) => a.name),
+            gameState,
           );
 
         costTracker.recordNarratorUsage(narratorUsage);
@@ -894,6 +962,11 @@ export async function runSession(
           classification: classification.type,
         });
 
+        // Update game state based on narrator response (location, items, NPCs)
+        if (gameState.characters.length > 0) {
+          gameState = await updateGameState(gameState, narratorOutput);
+        }
+
         // Check for private moment payoffs
         const payoffs = await privateMomentTracker.checkPayoff(
           turn,
@@ -924,6 +997,22 @@ export async function runSession(
             turn,
             timestamp: Date.now(),
           });
+
+          // Extract character mappings from first discussion (character intro turn)
+          if (turn === 1 && gameState.characters.length === 0) {
+            console.log('🎭 Extracting character mappings...');
+            const characters = await extractCharacterMappings(
+              discussionResult.spokespersonMessage,
+              playerAgents,
+              spokesperson.name,
+            );
+            if (characters.length > 0) {
+              gameState.characters = characters;
+              console.log(
+                `   Mapped: ${characters.map((c) => `${c.odName}→${c.idName}`).join(', ')}`,
+              );
+            }
+          }
 
           // Check for directed questions (public but targeted)
         } else if (

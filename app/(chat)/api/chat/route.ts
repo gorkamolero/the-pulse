@@ -17,6 +17,10 @@ import {
   getMostRecentUserMessage,
   sanitizeResponseMessages,
 } from "@/lib/utils";
+import {
+  isGarbageOutput,
+  describeGarbageReason,
+} from "@/lib/narrator/validation";
 
 import { generateTitleFromUserMessage } from "../../actions";
 import { generatePulseImage } from "@/lib/ai/tools/generate-image";
@@ -81,11 +85,49 @@ export async function POST(request: Request) {
     language: language === "es" ? "spanish" : "english",
   })
 
-  const result = streamText({
-    model: myProvider.languageModel(selectedChatModel),
-    system: getSystemPromptForLanguage(language),
-    messages: messages as any,
-    onFinish: async ({ response, reasoning, }) => {
+  // Extract player names from conversation for garbage detection
+  const playerNames: string[] = [];
+  for (const msg of messages) {
+    if (msg.role === 'user' && typeof msg.content === 'string') {
+      // Look for common player name patterns in early messages
+      const nameMatch = msg.content.match(/(?:I'm|I am|name is|call me)\s+(\w+)/i);
+      if (nameMatch?.[1]) {
+        playerNames.push(nameMatch[1]);
+      }
+    }
+  }
+
+  const maxRetries = 3;
+
+  // Generate with retry - collect full text first, then stream if valid
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = streamText({
+        model: myProvider.languageModel(selectedChatModel),
+        system: getSystemPromptForLanguage(language),
+        messages: messages as any,
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId: "stream-text",
+        },
+      });
+
+      // Collect full text to check for garbage before returning
+      const fullText = await result.text;
+
+      if (isGarbageOutput(fullText, playerNames)) {
+        const reason = describeGarbageReason(fullText, playerNames);
+        console.warn(`Narrator garbage detected (attempt ${attempt}/${maxRetries}): ${reason}`);
+        if (attempt < maxRetries) {
+          continue; // Retry
+        }
+        // Last attempt - return anyway with warning logged
+      }
+
+      // Valid response - save and return
+      const response = await result.response;
+      const reasoning = await result.reasoning;
+
       if (session.user?.id) {
         try {
           const sanitizedResponseMessages = sanitizeResponseMessages({
@@ -121,14 +163,20 @@ export async function POST(request: Request) {
           console.error("Failed to save chat", error);
         }
       }
-    },
-    experimental_telemetry: {
-      isEnabled: true,
-      functionId: "stream-text",
-    },
-  });
 
-  return result.toTextStreamResponse();
+      // Return as text response (already collected)
+      return new Response(fullText, {
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
+    } catch (error) {
+      console.error(`Narrator generation error (attempt ${attempt}):`, error);
+      if (attempt >= maxRetries) {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error("Narrator generation failed after retries");
 }
 
 export async function DELETE(request: Request) {
