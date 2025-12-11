@@ -38,6 +38,7 @@ import {
   formatStateForInjection,
   extractCharacterMappings,
   updateGameState,
+  commitCharacterToAgent,
 } from './state';
 import {
   isGarbageOutput,
@@ -59,6 +60,7 @@ export interface SessionResult {
   tangentAnalysis?: TangentAnalysis;
   costBreakdown?: CostBreakdown;
   playerFeedback?: SessionFeedback;
+  gameState?: GameState;
   error?: string;
 }
 
@@ -68,6 +70,7 @@ export interface SessionRunnerConfig {
   storyGuide: string;
   narratorModel: NarratorConfig['model'];
   groupSize?: number; // If not specified, random 2-5
+  archetypes?: ArchetypeId[]; // Specific archetypes to use (overrides groupSize)
   maxTurns?: number;
   temperature?: number;
   maxTokens?: number;
@@ -218,8 +221,8 @@ async function generateNarratorResponse(
       process.stdout.write('\n');
 
       // Check for garbage output
-      if (isGarbageOutput(fullText, playerNames)) {
-        const reason = describeGarbageReason(fullText, playerNames);
+      if (isGarbageOutput(fullText)) {
+        const reason = describeGarbageReason(fullText);
         console.warn(`\n⚠️  Garbage output detected (${reason}), retrying (${attempt}/${maxRetries})...`);
         continue;
       }
@@ -461,27 +464,6 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
 }
 
 /**
- * Detect if session should end
- */
-function shouldEndSession(
-  classificationType: string,
-  turn: number,
-  maxTurns: number,
-): { shouldEnd: boolean; reason: string } {
-  // Max turns reached
-  if (turn >= maxTurns) {
-    return { shouldEnd: true, reason: 'timeout' };
-  }
-
-  // Classifier detected story ending
-  if (classificationType === 'ending') {
-    return { shouldEnd: true, reason: 'completed' };
-  }
-
-  return { shouldEnd: false, reason: '' };
-}
-
-/**
  * Resume session from checkpoint
  */
 export async function resumeSessionFromCheckpoint(
@@ -561,16 +543,15 @@ export async function resumeSessionFromCheckpoint(
           costTracker.recordClassificationUsage(classification.usage);
         }
 
-        console.log(`🏷️  Classified as: ${classification.type}`);
+        // Log classification (multi-label)
+        const pulseTag = classification.isPulse ? ' [PULSE]' : '';
+        const endTag = classification.isEnding ? ' [END]' : '';
+        console.log(`🏷️  ${classification.responseType}${pulseTag}${endTag}`);
 
-        if (classification.type === 'pulse') {
+        // Track pulse separately from response type
+        if (classification.isPulse) {
           detectedPulses.push(turn);
           console.log(`💓 Pulse ${detectedPulses.length}/~20`);
-        }
-
-        // Track tangent if detected
-        if (classification.type === 'tangent-response') {
-          console.log(`🌀 Tangent detected`);
         }
 
         // Add narrator message
@@ -579,7 +560,7 @@ export async function resumeSessionFromCheckpoint(
           content: narratorOutput,
           turn,
           timestamp: Date.now(),
-          classification: classification.type,
+          classification: classification.type, // Legacy field for reports
         });
 
         // Update game state based on narrator response (location, items, NPCs)
@@ -598,60 +579,111 @@ export async function resumeSessionFromCheckpoint(
           );
         }
 
-        // Check for requires-discussion first (major group decisions)
-        if (classification.type === 'requires-discussion') {
-          console.log(`🗣️  Discussion required`);
+        // Route based on responseType (not mutually exclusive with isPulse)
+        switch (classification.responseType) {
+          case 'discussion': {
+            console.log(`🗣️  Discussion required`);
 
-          const discussionResult = await runDiscussion(
-            narratorOutput,
-            playerAgents,
-            spokesperson,
-            costTracker,
-          );
-
-          // Add spokesperson synthesis to history
-          conversationHistory.push({
-            role: 'spokesperson',
-            player: spokesperson.name,
-            content: discussionResult.spokespersonMessage,
-            turn,
-            timestamp: Date.now(),
-          });
-
-          // Extract character mappings if not already populated
-          if (gameState.characters.length === 0) {
-            console.log('🎭 Extracting character mappings...');
-            const characters = await extractCharacterMappings(
-              discussionResult.spokespersonMessage,
+            const discussionResult = await runDiscussion(
+              narratorOutput,
               playerAgents,
-              spokesperson.name,
+              spokesperson,
+              costTracker,
             );
-            if (characters.length > 0) {
-              gameState.characters = characters;
-              console.log(
-                `   Mapped: ${characters.map((c) => `${c.odName}→${c.idName}`).join(', ')}`,
+
+            // Add spokesperson synthesis to history
+            conversationHistory.push({
+              role: 'spokesperson',
+              player: spokesperson.name,
+              content: discussionResult.spokespersonMessage,
+              turn,
+              timestamp: Date.now(),
+            });
+
+            // Extract character mappings if not already populated
+            if (gameState.characters.length === 0) {
+              console.log('🎭 Extracting character mappings...');
+              const characters = await extractCharacterMappings(
+                discussionResult.spokespersonMessage,
+                playerAgents,
+                spokesperson.name,
               );
+              if (characters.length > 0) {
+                gameState.characters = characters;
+                console.log(
+                  `   Mapped: ${characters.map((c) => `${c.odName}→${c.idName}`).join(', ')}`,
+                );
+
+                // Commit character names to each player agent's prompt
+                console.log('🔒 Committing characters to agent prompts...');
+                for (const character of characters) {
+                  const agent = playerAgents.find(
+                    (a) => a.name.toLowerCase() === character.odName.toLowerCase(),
+                  );
+                  if (agent) {
+                    commitCharacterToAgent(agent, character);
+                  }
+                }
+              }
             }
+            break;
           }
 
-          // Check for directed questions (public but targeted)
-        } else if (
-          classification.type === 'directed-questions' &&
-          classification.targetPlayers?.length
-        ) {
-          console.log(
-            `🎯 Directed questions for: ${classification.targetPlayers.join(', ')}`,
-          );
+          case 'directed': {
+            const targets = classification.targetPlayers || [];
+            console.log(`🎯 Directed questions for: ${targets.join(', ')}`);
 
-          // Collect responses from ONLY targeted players, sequentially
-          for (const targetName of classification.targetPlayers) {
-            const agent = playerAgents.find(
-              (a) => a.name.toLowerCase() === targetName.toLowerCase(),
-            );
-            if (agent) {
+            // Collect responses from ONLY targeted players, sequentially
+            for (const targetName of targets) {
+              const agent = playerAgents.find(
+                (a) => a.name.toLowerCase() === targetName.toLowerCase(),
+              );
+              if (agent) {
+                const { text: response, usage: playerUsage } =
+                  await generateDirectedResponse(
+                    agent,
+                    narratorOutput,
+                    conversationHistory,
+                  );
+
+                costTracker.recordPlayerUsage(playerUsage);
+
+                conversationHistory.push({
+                  role: 'player',
+                  player: agent.name,
+                  content: response,
+                  turn,
+                  timestamp: Date.now(),
+                });
+              }
+            }
+            // NO spokesperson synthesis - responses are individual
+            break;
+          }
+
+          case 'private': {
+            // Use classifier's target or fall back to pattern detection
+            let targetAgent: PlayerAgent | undefined;
+
+            if (classification.targetPlayers?.[0]) {
+              targetAgent = playerAgents.find(
+                (a) => a.name.toLowerCase() === classification.targetPlayers?.[0].toLowerCase(),
+              );
+            }
+
+            if (!targetAgent) {
+              // Fall back to pattern-based detection
+              const { routePrivateMoment } = await import('./private');
+              const privateRouting = routePrivateMoment(narratorOutput, playerAgents);
+              targetAgent = privateRouting.targetAgent;
+            }
+
+            if (targetAgent) {
+              console.log(`🔒 Private moment for ${targetAgent.name}`);
+
               const { text: response, usage: playerUsage } =
-                await generateDirectedResponse(
-                  agent,
+                await generatePlayerResponse(
+                  targetAgent,
                   narratorOutput,
                   conversationHistory,
                 );
@@ -660,52 +692,30 @@ export async function resumeSessionFromCheckpoint(
 
               conversationHistory.push({
                 role: 'player',
-                player: agent.name,
+                player: targetAgent.name,
                 content: response,
                 turn,
                 timestamp: Date.now(),
               });
+
+              privateMomentTracker.add({
+                turn,
+                target: targetAgent.name,
+                content: narratorOutput,
+                response,
+              });
             }
+            break;
           }
-          // NO spokesperson synthesis - responses are individual
-        } else {
-          // Check for private moment
-          const { routePrivateMoment } = await import('./private');
-          const privateRouting = routePrivateMoment(
-            narratorOutput,
-            playerAgents,
-          );
 
-          if (privateRouting.isPrivate && privateRouting.targetAgent) {
-            // Private moment
-            console.log(
-              `🔒 Private moment for ${privateRouting.targetAgent.name}`,
-            );
+          case 'none': {
+            // No response needed (ending, pure narration)
+            console.log(`📖 No response needed`);
+            break;
+          }
 
-            const { text: response, usage: playerUsage } =
-              await generatePlayerResponse(
-                privateRouting.targetAgent,
-                narratorOutput,
-                conversationHistory,
-              );
-
-            costTracker.recordPlayerUsage(playerUsage);
-
-            conversationHistory.push({
-              role: 'player',
-              player: privateRouting.targetAgent.name,
-              content: response,
-              turn,
-              timestamp: Date.now(),
-            });
-
-            privateMomentTracker.add({
-              turn,
-              target: privateRouting.targetAgent.name,
-              content: narratorOutput,
-              response,
-            });
-          } else {
+          case 'group':
+          default: {
             // Group interaction - sequential to avoid garbled streaming output
             const playerResponses: Array<{
               agent: PlayerAgent;
@@ -731,8 +741,6 @@ export async function resumeSessionFromCheckpoint(
               );
 
             costTracker.recordPlayerUsage(spokespersonUsage);
-
-            // Spokesperson synthesis already streamed above
 
             // Add to history
             for (const { agent, response } of playerResponses) {
@@ -760,6 +768,7 @@ export async function resumeSessionFromCheckpoint(
               narratorOutput,
               classification,
             );
+            break;
           }
         }
 
@@ -782,15 +791,11 @@ export async function resumeSessionFromCheckpoint(
 
         await saveCheckpoint(newCheckpoint);
 
-        // Check if session should end
-        const endCheck = shouldEndSession(
-          classification.type,
-          turn,
-          sessionConfig.maxTurns,
-        );
+        // Check if session should end (use isEnding flag)
+        const shouldEnd = classification.isEnding || turn >= sessionConfig.maxTurns;
 
-        if (endCheck.shouldEnd) {
-          outcome = endCheck.reason === 'timeout' ? 'timeout' : 'completed';
+        if (shouldEnd) {
+          outcome = classification.isEnding ? 'completed' : 'timeout';
           console.log(`\n✅ Session ended: ${outcome}`);
           break;
         }
@@ -837,6 +842,7 @@ export async function resumeSessionFromCheckpoint(
       tangentAnalysis,
       costBreakdown: costTracker.getBreakdown(),
       playerFeedback,
+      gameState,
     };
   } catch (error) {
     console.error('Session replay error:', error);
@@ -864,8 +870,8 @@ export async function runSession(
   const startTime = Date.now();
 
   try {
-    // 1. Generate group composition
-    const archetypeIds = generateGroupComposition(config.groupSize);
+    // 1. Generate group composition (use provided archetypes or random)
+    const archetypeIds = config.archetypes || generateGroupComposition(config.groupSize);
 
     const playerAgents = await createPlayerAgents(
       archetypeIds,
@@ -941,16 +947,15 @@ export async function runSession(
           costTracker.recordClassificationUsage(classification.usage);
         }
 
-        console.log(`🏷️  Classified as: ${classification.type}`);
+        // Log classification (multi-label)
+        const pulseTag = classification.isPulse ? ' [PULSE]' : '';
+        const endTag = classification.isEnding ? ' [END]' : '';
+        console.log(`🏷️  ${classification.responseType}${pulseTag}${endTag}`);
 
-        if (classification.type === 'pulse') {
+        // Track pulse separately from response type
+        if (classification.isPulse) {
           detectedPulses.push(turn);
           console.log(`💓 Pulse ${detectedPulses.length}/~20`);
-        }
-
-        // Track tangent if detected
-        if (classification.type === 'tangent-response') {
-          console.log(`🌀 Tangent detected`);
         }
 
         // Add narrator message
@@ -959,7 +964,7 @@ export async function runSession(
           content: narratorOutput,
           turn,
           timestamp: Date.now(),
-          classification: classification.type,
+          classification: classification.type, // Legacy field for reports
         });
 
         // Update game state based on narrator response (location, items, NPCs)
@@ -978,60 +983,111 @@ export async function runSession(
           );
         }
 
-        // Check for requires-discussion first (major group decisions)
-        if (classification.type === 'requires-discussion') {
-          console.log(`🗣️  Discussion required`);
+        // Route based on responseType (not mutually exclusive with isPulse)
+        switch (classification.responseType) {
+          case 'discussion': {
+            console.log(`🗣️  Discussion required`);
 
-          const discussionResult = await runDiscussion(
-            narratorOutput,
-            playerAgents,
-            spokesperson,
-            costTracker,
-          );
-
-          // Add spokesperson synthesis to history
-          conversationHistory.push({
-            role: 'spokesperson',
-            player: spokesperson.name,
-            content: discussionResult.spokespersonMessage,
-            turn,
-            timestamp: Date.now(),
-          });
-
-          // Extract character mappings from first discussion (character intro turn)
-          if (turn === 1 && gameState.characters.length === 0) {
-            console.log('🎭 Extracting character mappings...');
-            const characters = await extractCharacterMappings(
-              discussionResult.spokespersonMessage,
+            const discussionResult = await runDiscussion(
+              narratorOutput,
               playerAgents,
-              spokesperson.name,
+              spokesperson,
+              costTracker,
             );
-            if (characters.length > 0) {
-              gameState.characters = characters;
-              console.log(
-                `   Mapped: ${characters.map((c) => `${c.odName}→${c.idName}`).join(', ')}`,
+
+            // Add spokesperson synthesis to history
+            conversationHistory.push({
+              role: 'spokesperson',
+              player: spokesperson.name,
+              content: discussionResult.spokespersonMessage,
+              turn,
+              timestamp: Date.now(),
+            });
+
+            // Extract character mappings from first discussion (character intro turn)
+            if (turn === 1 && gameState.characters.length === 0) {
+              console.log('🎭 Extracting character mappings...');
+              const characters = await extractCharacterMappings(
+                discussionResult.spokespersonMessage,
+                playerAgents,
+                spokesperson.name,
               );
+              if (characters.length > 0) {
+                gameState.characters = characters;
+                console.log(
+                  `   Mapped: ${characters.map((c) => `${c.odName}→${c.idName}`).join(', ')}`,
+                );
+
+                // Commit character names to each player agent's prompt
+                console.log('🔒 Committing characters to agent prompts...');
+                for (const character of characters) {
+                  const agent = playerAgents.find(
+                    (a) => a.name.toLowerCase() === character.odName.toLowerCase(),
+                  );
+                  if (agent) {
+                    commitCharacterToAgent(agent, character);
+                  }
+                }
+              }
             }
+            break;
           }
 
-          // Check for directed questions (public but targeted)
-        } else if (
-          classification.type === 'directed-questions' &&
-          classification.targetPlayers?.length
-        ) {
-          console.log(
-            `🎯 Directed questions for: ${classification.targetPlayers.join(', ')}`,
-          );
+          case 'directed': {
+            const targets = classification.targetPlayers || [];
+            console.log(`🎯 Directed questions for: ${targets.join(', ')}`);
 
-          // Collect responses from ONLY targeted players, sequentially
-          for (const targetName of classification.targetPlayers) {
-            const agent = playerAgents.find(
-              (a) => a.name.toLowerCase() === targetName.toLowerCase(),
-            );
-            if (agent) {
+            // Collect responses from ONLY targeted players, sequentially
+            for (const targetName of targets) {
+              const agent = playerAgents.find(
+                (a) => a.name.toLowerCase() === targetName.toLowerCase(),
+              );
+              if (agent) {
+                const { text: response, usage: playerUsage } =
+                  await generateDirectedResponse(
+                    agent,
+                    narratorOutput,
+                    conversationHistory,
+                  );
+
+                costTracker.recordPlayerUsage(playerUsage);
+
+                conversationHistory.push({
+                  role: 'player',
+                  player: agent.name,
+                  content: response,
+                  turn,
+                  timestamp: Date.now(),
+                });
+              }
+            }
+            // NO spokesperson synthesis - responses are individual
+            break;
+          }
+
+          case 'private': {
+            // Use classifier's target or fall back to pattern detection
+            let targetAgent: PlayerAgent | undefined;
+
+            if (classification.targetPlayers?.[0]) {
+              targetAgent = playerAgents.find(
+                (a) => a.name.toLowerCase() === classification.targetPlayers?.[0].toLowerCase(),
+              );
+            }
+
+            if (!targetAgent) {
+              // Fall back to pattern-based detection
+              const { routePrivateMoment } = await import('./private');
+              const privateRouting = routePrivateMoment(narratorOutput, playerAgents);
+              targetAgent = privateRouting.targetAgent;
+            }
+
+            if (targetAgent) {
+              console.log(`🔒 Private moment for ${targetAgent.name}`);
+
               const { text: response, usage: playerUsage } =
-                await generateDirectedResponse(
-                  agent,
+                await generatePlayerResponse(
+                  targetAgent,
                   narratorOutput,
                   conversationHistory,
                 );
@@ -1040,52 +1096,30 @@ export async function runSession(
 
               conversationHistory.push({
                 role: 'player',
-                player: agent.name,
+                player: targetAgent.name,
                 content: response,
                 turn,
                 timestamp: Date.now(),
               });
+
+              privateMomentTracker.add({
+                turn,
+                target: targetAgent.name,
+                content: narratorOutput,
+                response,
+              });
             }
+            break;
           }
-          // NO spokesperson synthesis - responses are individual
-        } else {
-          // Check for private moment
-          const { routePrivateMoment } = await import('./private');
-          const privateRouting = routePrivateMoment(
-            narratorOutput,
-            playerAgents,
-          );
 
-          if (privateRouting.isPrivate && privateRouting.targetAgent) {
-            // Private moment
-            console.log(
-              `🔒 Private moment for ${privateRouting.targetAgent.name}`,
-            );
+          case 'none': {
+            // No response needed (ending, pure narration)
+            console.log(`📖 No response needed`);
+            break;
+          }
 
-            const { text: response, usage: playerUsage } =
-              await generatePlayerResponse(
-                privateRouting.targetAgent,
-                narratorOutput,
-                conversationHistory,
-              );
-
-            costTracker.recordPlayerUsage(playerUsage);
-
-            conversationHistory.push({
-              role: 'player',
-              player: privateRouting.targetAgent.name,
-              content: response,
-              turn,
-              timestamp: Date.now(),
-            });
-
-            privateMomentTracker.add({
-              turn,
-              target: privateRouting.targetAgent.name,
-              content: narratorOutput,
-              response,
-            });
-          } else {
+          case 'group':
+          default: {
             // Group interaction - sequential to avoid garbled streaming output
             const playerResponses: Array<{
               agent: PlayerAgent;
@@ -1111,8 +1145,6 @@ export async function runSession(
               );
 
             costTracker.recordPlayerUsage(spokespersonUsage);
-
-            // Spokesperson synthesis already streamed above
 
             // Add to history
             for (const { agent, response } of playerResponses) {
@@ -1140,6 +1172,7 @@ export async function runSession(
               narratorOutput,
               classification,
             );
+            break;
           }
         }
 
@@ -1158,15 +1191,11 @@ export async function runSession(
 
         await saveCheckpoint(checkpoint);
 
-        // Check if session should end
-        const endCheck = shouldEndSession(
-          classification.type,
-          turn,
-          sessionConfig.maxTurns,
-        );
+        // Check if session should end (use isEnding flag)
+        const shouldEnd = classification.isEnding || turn >= sessionConfig.maxTurns;
 
-        if (endCheck.shouldEnd) {
-          outcome = endCheck.reason === 'timeout' ? 'timeout' : 'completed';
+        if (shouldEnd) {
+          outcome = classification.isEnding ? 'completed' : 'timeout';
           console.log(`\n✅ Session ended: ${outcome}`);
           break;
         }
@@ -1211,6 +1240,7 @@ export async function runSession(
       tangentAnalysis,
       costBreakdown: costTracker.getBreakdown(),
       playerFeedback,
+      gameState,
     };
   } catch (error) {
     console.error('Session error:', error);

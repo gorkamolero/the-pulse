@@ -6,6 +6,7 @@
 
 // Direct imports from the main codebase
 import { innsmouth } from '../../ai/stories/shadow-over-innsmouth';
+import { innsmouthNonlinear } from '../../ai/stories/shadow-over-innsmouth-non-linear';
 import { theHollowChoir } from '../../ai/stories/the-hollow-choir';
 import { whisperingPines } from '../../ai/stories/whispering-pines';
 import { sirenOfTheRedDust } from '../../ai/stories/siren-of-the-red-dust';
@@ -23,6 +24,7 @@ export interface Story {
  */
 const ALL_STORIES = new Map<string, Story>([
   [innsmouth.id, innsmouth],
+  [innsmouthNonlinear.id, innsmouthNonlinear],
   [theHollowChoir.id, theHollowChoir],
   [whisperingPines.id, whisperingPines],
   [sirenOfTheRedDust.id, sirenOfTheRedDust],

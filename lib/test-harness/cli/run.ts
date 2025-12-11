@@ -14,6 +14,7 @@ import { runSession } from '../session/runner';
 import { saveSessionReport } from '../report/markdown';
 import type { StoryContext } from '../agents/player';
 import type { NarratorModel } from '../agents/narrator';
+import type { ArchetypeId } from '../archetypes/types';
 import { getStory, listStoryIds } from '../stories/loader';
 import { getSystemPrompt } from '../prompts/loader';
 
@@ -27,12 +28,12 @@ program
   .description('Run a test harness session')
   .requiredOption(
     '--story <id>',
-    'Story ID (shadow-over-innsmouth, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)',
+    'Story ID (shadow-over-innsmouth, innsmouth-nonlinear, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)',
   )
   .option(
     '--narrator <model>',
-    'Narrator model (opus-4.5, grok-4, deepseek-v3.2)',
-    'opus-4.5',
+    'Narrator model (deepseek-v3.2, opus-4.5, grok-4)',
+    'deepseek-v3.2',
   )
   .option('--players <number>', 'Group size (2-5)', (v) =>
     Number.parseInt(v, 10),
@@ -53,6 +54,10 @@ program
     '--language <lang>',
     'Output language (english, spanish, etc.)',
     'english',
+  )
+  .option(
+    '--archetypes <ids>',
+    'Comma-separated archetype IDs (e.g., director,contrarian,wildcard)',
   )
   .option('--dry-run', 'Show config without executing')
   .parse();
@@ -97,21 +102,30 @@ async function main() {
   // Get production system prompt
   const systemPrompt = getSystemPrompt(storyGuide, options.language);
 
+  // Parse archetypes if provided
+  const archetypes = options.archetypes
+    ? (options.archetypes.split(',').map((id: string) => id.trim()) as ArchetypeId[])
+    : undefined;
+
   const config = {
     story,
     systemPrompt,
     storyGuide,
     narratorModel: options.narrator as NarratorModel,
     groupSize: options.players,
+    archetypes,
     maxTurns: options.maxTurns,
     temperature: options.temperature,
     language: options.language,
   };
 
   if (options.dryRun) {
+    const playerInfo = archetypes
+      ? archetypes.join(', ')
+      : `${options.players || 'random'} players`;
     console.log(
       chalk.cyan(
-        `\n📋 ${story.storyTitle} | ${options.narrator} | ${options.players || 'random'} players | ${options.maxTurns} turns`,
+        `\n📋 ${story.storyTitle} | ${options.narrator} | ${playerInfo} | ${options.maxTurns} turns`,
       ),
     );
     console.log(chalk.yellow('[Dry run - not executing]\n'));

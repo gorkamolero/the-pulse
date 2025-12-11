@@ -9,6 +9,19 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject, type LanguageModelUsage } from 'ai';
 import { z } from 'zod';
 
+/**
+ * Response type determines HOW players should respond
+ */
+export type ResponseType =
+  | 'group'        // All players respond, spokesperson synthesizes
+  | 'discussion'   // Players need to deliberate before responding
+  | 'directed'     // Only specific named players respond
+  | 'private'      // Single player responds privately
+  | 'none';        // No response needed (ending, pure narration)
+
+/**
+ * Legacy OutputType for backwards compatibility with reports/checkpoints
+ */
 export type OutputType =
   | 'pulse'
   | 'tangent-response'
@@ -20,111 +33,109 @@ export type OutputType =
   | 'ending';
 
 export interface Classification {
-  type: OutputType;
+  // Multi-label flags (not mutually exclusive)
+  isPulse: boolean;           // Did narrative advance?
+  isEnding: boolean;          // Is the story over?
+  responseType: ResponseType; // How should players respond?
+
+  // Metadata
+  targetPlayers?: string[];   // For directed/private responses
   confidence: number;
   reasoning: string;
-  pulseNumber?: number;
-  privateTarget?: string;
-  targetPlayers?: string[];
+
+  // For backwards compatibility
+  type: OutputType;           // Legacy single-label (derived)
+
   usage?: LanguageModelUsage;
 }
 
 const classificationSchema = z.object({
-  type: z.enum([
-    'pulse',
-    'tangent-response',
-    'private-moment',
-    'directed-questions',
-    'requires-discussion',
-    'clarification',
-    'recap',
-    'ending',
-  ]),
+  isPulse: z.boolean(),
+  isEnding: z.boolean(),
+  responseType: z.enum(['group', 'discussion', 'directed', 'private', 'none']),
+  targetPlayers: z.array(z.string()).optional(),
   confidence: z.number().min(0).max(1),
   reasoning: z.string(),
-  pulseNumber: z.number().optional(),
-  privateTarget: z.string().optional(),
-  targetPlayers: z.array(z.string()).optional(),
 });
 
-const CLASSIFICATION_PROMPT = `You are analyzing narrator output from an interactive fiction game to classify its type.
+const CLASSIFICATION_PROMPT = `You are analyzing narrator output from an interactive fiction game.
 
-CRITICAL DISTINCTION - Pulse vs Non-Pulse:
+You must answer TWO INDEPENDENT questions:
 
-A **PULSE** is a story beat that ADVANCES the narrative:
+## QUESTION 1: isPulse - Did the narrative ADVANCE?
+
+A **PULSE** (isPulse: true) means the STORY MOVED FORWARD:
 - New revelation, challenge, location change, or plot development
-- Introduces new information that moves the story forward
-- Changes the situation or escalates stakes
-- Examples: discovering a clue, entering a new room with danger, NPC reveals plot-critical info
+- Introduces new information that changes the situation
+- Escalates stakes or presents new obstacles
+- Examples: discovering a clue, entering a dangerous room, NPC reveals plot info
 
-NOT pulses (these are responses, not story beats):
-- Engaging with player jokes, digressions, banter
-- Answering questions about the world that don't advance plot
-- Atmospheric moments that don't change anything
-- Clarifications about current scene
-- Recaps of what already happened
+**NOT a pulse** (isPulse: false):
+- Responding to player jokes/banter without advancing plot
+- Answering world questions that don't change anything
+- Atmospheric filler that doesn't move story
+- Clarifications or recaps
+- Pure questions without narrative content
 
-OUTPUT TYPES:
+IMPORTANT: A pulse can ALSO require discussion. "You enter the crypt and find two passages—left or right?" is BOTH a pulse (new location) AND requires discussion (choice). These are NOT mutually exclusive.
 
-**pulse** - Story beat that advances narrative
-- New scene/location that changes situation
-- Plot-critical revelation or discovery
-- New challenge or obstacle presented
-- Significant character moment that moves story
-- Ask: "Did the story situation change because of this?"
+## QUESTION 2: responseType - HOW should players respond?
 
-**tangent-response** - Engaging with player off-topic behavior
-- Responding to jokes, banter, or digressions
-- Playing along with tangents
-- Acknowledging player comments that don't affect story
-- NOT forced transitions like "anyway, back to..."
+**discussion** - Players need to deliberate together
+- Character creation: "Who are you?", "What's your backstory?"
+- Equipment choices: "What do you carry?"
+- Path decisions: "Left or right?", "Door A or B?"
+- Major decisions: "Do you accept?", "Do you enter?"
+- Key: Requires GROUP COORDINATION before answering
 
-**private-moment** - Individual player addressed privately/secretly
+**directed** - Only specific named players should respond
+- "**Alex** — tell me about your character"
+- "Alex, Jordan — what do you do?"
+- Questions addressed to specific players BY NAME
+- NOT private, but only named players respond
+- Set targetPlayers to array of names
+
+**private** - Single player addressed secretly
 - "[To X only]" or "X, you alone notice..."
-- Personal revelation matching backstory
-- Visions/dreams for one player
 - Secrets that would spoil group experience
-- Key: OTHER players should NOT hear/know this
+- Set targetPlayers to single-element array
 
-**directed-questions** - Narrator asking specific players questions by name
-- Questions explicitly addressed to named players: "**Alex** —" or "Alex, tell me..."
-- Can target multiple players: "**Alex**, **Jordan** — answer these:"
-- NOT private (others can hear), but only named players should respond
-- Common during character creation when narrator asks individual backstory questions
-- Extract targetPlayers: array of player names being directly asked questions
-- Key: Questions are PUBLIC but directed at SPECIFIC players
+**group** - All players react, spokesperson synthesizes
+- General narrative that invites reactions
+- No specific choice or question posed
+- Default for most story beats
 
-**requires-discussion** - Group needs to deliberate before responding
-- Character creation: "Who are you?", "What's your backstory?", "Are you a journalist? A genealogist?"
-- Equipment/item selection: "What do you carry?", "What items do you bring?"
-- Path decisions: "Which way?", "Left or right?", "Door A or Door B?"
-- Accept/reject offers: NPC offers something with "take it or leave it" framing
-- Point of no return: "Do you enter?", "Do you open it?", entering dangerous places
-- Tactical choices: "Up, down, or hold?", multiple options with different consequences
-- Climactic moments: transformation choices, sacrifice decisions, major commitments
-- Key: Players need to DISCUSS with each other before answering
-- NOT for simple reactions or single-answer questions
-- Look for: explicit choices, binary/ternary options, "or" in the question, requests for group coordination
+**none** - No player response needed
+- Story ending/epilogue
+- Pure narration that doesn't invite response
 
-**clarification** - Answering questions about current scene
-- "You see..." describing details already present
-- "Yes, you can..." answering capability questions
-- Explaining current situation without advancing it
+## QUESTION 3: isEnding - Is the story OVER?
 
-**recap** - Summarizing previous events
-- "As you recall...", "So far you have..."
-- Reminding players of earlier information
+**isEnding: true** only when:
+- Explicit ending: "The End", "Fin", story concludes
+- Epilogue wrapping up fates
+- Narrator explicitly ends session
+- NOT just a dramatic moment
 
-**ending** - Story conclusion/epilogue
-- Explicit story ending: "The End", "Fin", "Our story concludes"
-- Epilogue wrapping up character fates
-- Final resolution of the main conflict
-- Narrator explicitly ending the session
-- Key: The story is OVER, not just a dramatic moment
+Analyze the narrator output and provide isPulse, responseType, isEnding, and targetPlayers (if applicable).`;
 
-RULE: When in doubt between pulse and something else, ask "Did this advance the story or just respond to players?" If it advanced, it's a pulse. If it responded without advancing, it's not.
-
-Analyze the narrator's output and classify it.`;
+/**
+ * Derive legacy type from multi-label classification
+ * For backwards compatibility with reports/checkpoints
+ */
+function deriveLegacyType(
+  isPulse: boolean,
+  isEnding: boolean,
+  responseType: ResponseType,
+): OutputType {
+  if (isEnding) return 'ending';
+  if (responseType === 'private') return 'private-moment';
+  if (responseType === 'directed') return 'directed-questions';
+  if (responseType === 'discussion') return 'requires-discussion';
+  if (isPulse) return 'pulse';
+  // For non-pulse group responses, default to tangent-response
+  return 'tangent-response';
+}
 
 /**
  * Classify narrator output using LLM
@@ -157,8 +168,16 @@ export async function classifyOutput(
       temperature: 0.3,
     });
 
+    const { isPulse, isEnding, responseType, targetPlayers, confidence, reasoning } = result.object;
+
     return {
-      ...result.object,
+      isPulse,
+      isEnding,
+      responseType,
+      targetPlayers,
+      confidence,
+      reasoning,
+      type: deriveLegacyType(isPulse, isEnding, responseType),
       usage: result.usage,
     };
   } catch (error) {

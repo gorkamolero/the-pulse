@@ -6,68 +6,38 @@
 
 /**
  * Patterns that indicate garbage/hallucination output
+ * Based on actual observed failures - not speculative patterns
  */
 export const GARBAGE_PATTERNS = {
-  /** Changelog/release notes patterns */
+  /** Changelog/release notes - observed hallucination type */
   changelog: [
     'fixed a bug',
     '## 1.0',
     '## 0.',
     'changelog',
     'release notes',
-    'breaking changes',
-    'deprecated',
   ],
 
-  /** Code/technical patterns */
+  /** Code patterns - backticks and code blocks don't belong in narrative */
   code: [
-    'function(',
-    'const ',
-    'import ',
-    'export ',
-    '```typescript',
-    '```javascript',
-    'npm install',
-    'yarn add',
-  ],
-
-  /** Repetition patterns (detected by count) */
-  repetition: [
-    '- fixed',
-    '- added',
-    '- updated',
-    '- removed',
-  ],
-
-  /** Meta/system patterns */
-  meta: [
-    'as an ai',
-    'i cannot',
-    'i apologize',
-    'let me help you',
-    'here is',
-    'sure!',
+    '`',  // Any backtick = code, not story
+    '```',
   ],
 } as const;
 
 /**
- * Minimum length for valid narrator output
- */
-export const MIN_OUTPUT_LENGTH = 50;
-
-/**
  * Minimum repetition count to flag as garbage
+ * (same line appearing many times = hallucination loop)
  */
-export const REPETITION_THRESHOLD = 3;
+export const REPETITION_THRESHOLD = 4;
 
 /**
  * Check if narrator output is garbage/hallucination
  *
  * @param text - The narrator output to validate
- * @param playerNames - List of player names to check for story relevance
  * @returns true if output is garbage and should be retried
  */
-export function isGarbageOutput(text: string, playerNames: string[] = []): boolean {
+export function isGarbageOutput(text: string): boolean {
   const lowerText = text.toLowerCase();
 
   // Check changelog patterns
@@ -79,41 +49,22 @@ export function isGarbageOutput(text: string, playerNames: string[] = []): boole
 
   // Check code patterns
   for (const pattern of GARBAGE_PATTERNS.code) {
-    if (lowerText.includes(pattern)) {
+    if (lowerText.includes(pattern.toLowerCase())) {
       return true;
     }
   }
 
-  // Check repetition patterns
-  for (const pattern of GARBAGE_PATTERNS.repetition) {
-    const matches = lowerText.match(new RegExp(pattern, 'g')) || [];
-    if (matches.length >= REPETITION_THRESHOLD) {
+  // Check for repetitive lines (hallucination loop)
+  // Split into lines and count duplicates
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 20);
+  const lineCounts = new Map<string, number>();
+  for (const line of lines) {
+    lineCounts.set(line, (lineCounts.get(line) || 0) + 1);
+  }
+  for (const count of lineCounts.values()) {
+    if (count >= REPETITION_THRESHOLD) {
       return true;
     }
-  }
-
-  // Check meta patterns (AI refusing or being overly helpful)
-  for (const pattern of GARBAGE_PATTERNS.meta) {
-    if (lowerText.includes(pattern)) {
-      return true;
-    }
-  }
-
-  // Too short to be a real narrator turn
-  if (text.trim().length < MIN_OUTPUT_LENGTH) {
-    return true;
-  }
-
-  // No story-like content at all
-  const hasDialogue = text.includes('"') || text.includes('"') || text.includes('"');
-  const hasPlayerReference = playerNames.length > 0 && playerNames.some(
-    (name) => lowerText.includes(name.toLowerCase()),
-  );
-  const hasNarrativeWords = /\b(you|the|door|room|see|hear|feel|walk|stand|look|voice|shadow|light|dark|night|day)\b/i.test(text);
-
-  // If no story indicators at all, likely garbage
-  if (!hasDialogue && !hasPlayerReference && !hasNarrativeWords) {
-    return true;
   }
 
   return false;
@@ -122,46 +73,32 @@ export function isGarbageOutput(text: string, playerNames: string[] = []): boole
 /**
  * Describe why output was flagged as garbage (for logging)
  */
-export function describeGarbageReason(text: string, playerNames: string[] = []): string {
+export function describeGarbageReason(text: string): string {
   const lowerText = text.toLowerCase();
 
   for (const pattern of GARBAGE_PATTERNS.changelog) {
     if (lowerText.includes(pattern)) {
-      return `changelog pattern: "${pattern}"`;
+      return `changelog: "${pattern}"`;
     }
   }
 
   for (const pattern of GARBAGE_PATTERNS.code) {
-    if (lowerText.includes(pattern)) {
-      return `code pattern: "${pattern}"`;
+    if (lowerText.includes(pattern.toLowerCase())) {
+      return `code: "${pattern}"`;
     }
   }
 
-  for (const pattern of GARBAGE_PATTERNS.repetition) {
-    const matches = lowerText.match(new RegExp(pattern, 'g')) || [];
-    if (matches.length >= REPETITION_THRESHOLD) {
-      return `repetition: "${pattern}" x${matches.length}`;
+  // Check for repetitive lines
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 20);
+  const lineCounts = new Map<string, number>();
+  for (const line of lines) {
+    lineCounts.set(line, (lineCounts.get(line) || 0) + 1);
+  }
+  for (const [line, count] of lineCounts.entries()) {
+    if (count >= REPETITION_THRESHOLD) {
+      const preview = line.slice(0, 40) + (line.length > 40 ? '...' : '');
+      return `repetition: "${preview}" x${count}`;
     }
-  }
-
-  for (const pattern of GARBAGE_PATTERNS.meta) {
-    if (lowerText.includes(pattern)) {
-      return `meta pattern: "${pattern}"`;
-    }
-  }
-
-  if (text.trim().length < MIN_OUTPUT_LENGTH) {
-    return `too short: ${text.trim().length} chars`;
-  }
-
-  const hasDialogue = text.includes('"') || text.includes('"') || text.includes('"');
-  const hasPlayerReference = playerNames.length > 0 && playerNames.some(
-    (name) => lowerText.includes(name.toLowerCase()),
-  );
-  const hasNarrativeWords = /\b(you|the|door|room|see|hear|feel|walk|stand|look|voice|shadow|light|dark|night|day)\b/i.test(text);
-
-  if (!hasDialogue && !hasPlayerReference && !hasNarrativeWords) {
-    return 'no story content detected';
   }
 
   return 'unknown';

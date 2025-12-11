@@ -15,8 +15,6 @@ export interface NarratorStreamOptions {
   system: string;
   /** Conversation messages */
   messages: Array<{ role: string; content: string }>;
-  /** Player names for validation (optional) */
-  playerNames?: string[];
   /** Temperature for generation */
   temperature?: number;
   /** Maximum retry attempts for garbage output */
@@ -53,7 +51,6 @@ export async function generateNarratorStream(
     model,
     system,
     messages,
-    playerNames = [],
     temperature = 0.7,
     maxRetries = 3,
     onChunk,
@@ -79,8 +76,8 @@ export async function generateNarratorStream(
       }
 
       // Check for garbage output
-      if (isGarbageOutput(fullText, playerNames)) {
-        const reason = describeGarbageReason(fullText, playerNames);
+      if (isGarbageOutput(fullText)) {
+        const reason = describeGarbageReason(fullText);
         onRetry?.(attempt, reason);
 
         if (attempt < maxRetries) {
@@ -128,7 +125,6 @@ export async function createNarratorStreamResponse(
     model,
     system,
     messages,
-    playerNames = [],
     temperature = 0.7,
     maxRetries = 3,
   } = options;
@@ -149,8 +145,8 @@ export async function createNarratorStreamResponse(
       const fullTextPromise = result.text;
       const fullText = await fullTextPromise;
 
-      if (isGarbageOutput(fullText, playerNames)) {
-        const reason = describeGarbageReason(fullText, playerNames);
+      if (isGarbageOutput(fullText)) {
+        const reason = describeGarbageReason(fullText);
         console.warn(`Narrator garbage detected (attempt ${attempt}/${maxRetries}): ${reason}`);
 
         if (attempt < maxRetries) {

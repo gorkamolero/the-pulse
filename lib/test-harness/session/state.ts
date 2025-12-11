@@ -11,6 +11,41 @@ import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
 import { getNextFallbackModel } from '../archetypes/types';
 
+/**
+ * Commit character to player agent's system prompt
+ * Called after character creation to lock in the INNER character name
+ */
+export function commitCharacterToAgent(
+  agent: PlayerAgent,
+  character: CharacterMapping,
+): void {
+  const itemsList = character.items.length > 0
+    ? `\nEquipment: ${character.items.join(', ')}`
+    : '';
+
+  const description = character.idDescription
+    ? `\n${character.idDescription}`
+    : '';
+
+  const commitment = `
+
+## YOUR COMMITTED CHARACTER (LOCKED)
+
+You created and are now playing: **${character.idName}**${description}${itemsList}
+
+CRITICAL RULES:
+- You ARE ${character.idName} for the rest of this story
+- NEVER change your character's name
+- NEVER refer to yourself by any other name in-story
+- When speaking in-character, you are ${character.idName}
+- OOC commentary uses your real name: (${agent.name}: wow this is creepy!)
+
+Your character name is LOCKED: ${character.idName}`;
+
+  // Mutate the agent's system prompt
+  agent.systemPrompt += commitment;
+}
+
 export interface CharacterMapping {
   /** Outer dimension - real player name */
   odName: string;

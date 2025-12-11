@@ -8,6 +8,7 @@ import { writeFile } from 'node:fs/promises';
 import type { SessionResult } from '../session/runner';
 import type { Message } from '../session/turn';
 import type { SessionFeedback } from '../session/feedback';
+import type { GameState } from '../session/state';
 import { detectAllIssues } from './issues';
 import {
   generateTimeline,
@@ -113,6 +114,8 @@ ${
 ${formatIssues(issues)}`
     : '## No Issues Detected ✓'
 }
+
+${formatGameState(result.gameState)}
 
 ${result.playerFeedback ? formatPlayerFeedback(result.playerFeedback) : ''}
 
@@ -257,6 +260,47 @@ ${feedback.recommendations.length > 0 ? feedback.recommendations.map((r) => `- $
 ### Individual Player Feedback
 
 ${playerFeedbackSections}
+`;
+}
+
+/**
+ * Format game state for markdown
+ */
+function formatGameState(gameState?: GameState): string {
+  if (!gameState || gameState.characters.length === 0) {
+    return `## Game State
+
+*No character mappings extracted*
+`;
+  }
+
+  const characterTable = `| Player (OD) | Character (ID) | Role | Items |
+|-------------|----------------|------|-------|
+${gameState.characters
+  .map(
+    (c) =>
+      `| ${c.odName} | ${c.idName} | ${c.role} | ${c.items.length > 0 ? c.items.join(', ') : '-'} |`,
+  )
+  .join('\n')}`;
+
+  const npcs =
+    gameState.npcsEncountered.length > 0
+      ? `\n**NPCs Encountered**: ${gameState.npcsEncountered.join(', ')}`
+      : '';
+
+  const flags = Object.keys(gameState.plotFlags).length > 0
+    ? `\n**Plot Flags**: ${Object.entries(gameState.plotFlags)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(', ')}`
+    : '';
+
+  return `## Game State
+
+### Character Mappings (Locked after Turn 1)
+
+${characterTable}
+
+**Final Location**: ${gameState.location}${npcs}${flags}
 `;
 }
 

@@ -126,24 +126,20 @@ function buildFeedbackPrompt(
     .map((m) => m.content.slice(0, 200))
     .join('\n---\n');
 
-  return `The story has ended. As ${agent.name}, reflect on your experience.
+  return `You played as "${agent.name}" (archetype: ${agent.archetype}).
 
-Answer honestly as yourself (the player, ${agent.name}), not your in-story character.
-
-Here's a reminder of some key moments from the story:
+Sample narrator outputs from the session:
 ${narratorMoments}
 
-Now share your feedback:
+Evaluate the STORY and NARRATOR:
 
-1. HIGHLIGHT: What was your single favorite moment? Why did it stand out?
-2. AGENCY: Did you feel your choices mattered? Give a specific example.
-3. FRUSTRATIONS: Was anything confusing, unfair, or annoying? List any issues.
-4. MISSED OPPORTUNITIES: What did you want to do that you couldn't?
-5. PACING: Was it too fast, too slow, or just right? Which parts specifically?
-6. NARRATOR: Rate 1-10. What worked well? What didn't?
-7. GROUP DYNAMICS: How did playing with your friends affect your experience?
-
-Be specific and use examples from the session.`;
+1. HIGHLIGHT: Best moment. Why was it effective?
+2. AGENCY: Did choices feel meaningful? Specific example.
+3. FRUSTRATIONS: Problems? (railroading, inconsistency, pacing)
+4. MISSED OPPORTUNITIES: What could have been better?
+5. PACING: Too fast, too slow, or good?
+6. NARRATOR RATING: 1-10. Strengths and weaknesses?
+7. GROUP DYNAMICS: How well did narrator handle multiple players?`;
 }
 
 /**
@@ -166,6 +162,16 @@ async function collectAgentFeedback(
       schema: feedbackSchema,
       messages: [
         { role: 'system', content: agent.systemPrompt },
+        { role: 'system', content: `**MODE CHANGE: FEEDBACK COLLECTION**
+
+The game is OVER. You are now an AI TEST AGENT evaluating the experience.
+
+CRITICAL INSTRUCTIONS:
+- Do NOT roleplay as your character
+- Do NOT reference fictional shared memories as real experiences
+- You are EVALUATING the story and narrator performance analytically
+- Reference actual content from the session
+- Be specific and critical` },
         { role: 'user', content: feedbackPrompt },
       ],
       temperature: 0.7,
