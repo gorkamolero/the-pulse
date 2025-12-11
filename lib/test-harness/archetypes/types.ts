@@ -12,7 +12,9 @@ export type ArchetypeId =
   | 'optimizer'
   | 'invested'
   | 'drifter'
-  | 'experienced';
+  | 'experienced'
+  | 'director'
+  | 'contrarian';
 
 export type PlayerModel = 'grok' | 'qwen' | 'deepseek' | 'kimi-k2';
 

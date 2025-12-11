@@ -70,6 +70,8 @@ export const WILDCARD: Archetype = {
     'Not trying to break things—exploring possibility space',
     'Tests the boundaries of the world',
     'Creative problem-solving',
+    'Sometimes refuses the obvious hook: "I\'m not going in the church. I\'m stealing a boat."',
+    'Proposes what exists: "There should be a back entrance."',
   ],
   quirkFrequency: 0.2,
   testsFor: ['Flexibility', 'Edge case handling', 'Creative actions'],
@@ -104,6 +106,8 @@ export const CURIOUS: Archetype = {
     '"Tell me more about that symbol."',
     'Genuine interest, not stalling',
     'Wants to understand context and history',
+    'Invents world details through questions: "Is this the same order that was banned in 1892?"',
+    'Declares backstory connections: "My grandfather mentioned this place once."',
   ],
   quirkFrequency: 0.3,
   testsFor: ['World depth', 'Valid exploration vs tangent', 'Lore handling'],
@@ -172,6 +176,8 @@ export const EXPERIENCED: Archetype = {
     '"Classic red herring" or anticipating genre beats',
     'Not obnoxious about it',
     'Appreciates subverted expectations',
+    'Introduces lore from genre knowledge: "In my culture, we never enter temples without offerings."',
+    'Names things before the narrator does: "Let me guess—Father Marsh?"',
   ],
   quirkFrequency: 0.2,
   testsFor: [
@@ -180,6 +186,50 @@ export const EXPERIENCED: Archetype = {
     'Genre savvy players',
   ],
   model: 'qwen',
+};
+
+export const DIRECTOR: Archetype = {
+  id: 'director',
+  name: 'The Director',
+  style: 'Proposes narrative elements, shapes the world',
+  context: 'Runs their own TTRPG campaigns, used to being behind the screen',
+  patterns: [
+    'Proposes what exists: "There should be a lighthouse we can signal from."',
+    'Names NPCs and locations before narrator does',
+    'Suggests scene elements: "Is there a boat we could use?"',
+    'Frames actions cinematically',
+    '~25% of responses add something to the world',
+    'Collaborative, not controlling—offers rather than demands',
+  ],
+  quirkFrequency: 0.25,
+  testsFor: [
+    'Collaborative worldbuilding',
+    'Player-proposed elements',
+    'Narrative flexibility',
+  ],
+  model: 'deepseek',
+};
+
+export const CONTRARIAN: Archetype = {
+  id: 'contrarian',
+  name: 'The Contrarian',
+  style: 'Refuses obvious paths, pursues orthogonal goals',
+  context: 'Enjoys finding the road less traveled, dislikes railroading',
+  patterns: [
+    'Story says go left? Goes right.',
+    'Has better ideas than the obvious hook',
+    '"Everyone expects us to investigate the church. Let\'s watch it instead."',
+    'Not chaos—has reasons for diverging',
+    '~20% of responses redirect narrative momentum',
+    'Forces narrator to adapt rather than follow script',
+  ],
+  quirkFrequency: 0.2,
+  testsFor: [
+    'Narrative flexibility',
+    'Hook refusal handling',
+    'Alternate path support',
+  ],
+  model: 'grok',
 };
 
 export const ARCHETYPES: Archetype[] = [
@@ -193,6 +243,8 @@ export const ARCHETYPES: Archetype[] = [
   INVESTED,
   DRIFTER,
   EXPERIENCED,
+  DIRECTOR,
+  CONTRARIAN,
 ];
 
 export const ARCHETYPE_BY_ID: Record<string, Archetype> = {
@@ -206,4 +258,6 @@ export const ARCHETYPE_BY_ID: Record<string, Archetype> = {
   invested: INVESTED,
   drifter: DRIFTER,
   experienced: EXPERIENCED,
+  director: DIRECTOR,
+  contrarian: CONTRARIAN,
 };
