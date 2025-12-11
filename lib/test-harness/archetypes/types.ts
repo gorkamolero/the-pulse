@@ -39,6 +39,29 @@ export const ARCHETYPE_MODEL_MAP: Record<PlayerModel, string> = {
 };
 
 /**
+ * Fallback model pool - if primary model fails, try these in order
+ * Ordered by reliability/availability
+ */
+export const MODEL_FALLBACK_POOL: string[] = [
+  'deepseek/deepseek-v3.2',
+  'qwen/qwen3-32b',
+  'x-ai/grok-4.1-fast',
+  'google/gemini-2.5-flash',
+];
+
+/**
+ * Get next fallback model, excluding already-tried models
+ */
+export function getNextFallbackModel(triedModels: string[]): string | null {
+  for (const model of MODEL_FALLBACK_POOL) {
+    if (!triedModels.includes(model)) {
+      return model;
+    }
+  }
+  return null;
+}
+
+/**
  * Group Context - How the friend group knows each other
  */
 export interface GroupContext {

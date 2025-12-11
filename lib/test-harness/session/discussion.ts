@@ -12,6 +12,7 @@ import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
 import type { Message } from './turn';
 import type { CostTracker } from './cost';
+import { getNextFallbackModel } from '../archetypes/types';
 
 /**
  * Inner character created during discussion
@@ -159,7 +160,7 @@ Remember: You're ${agent.name} talking to friends about what characters to PLAY.
 }
 
 /**
- * Generate a single agent's discussion response
+ * Generate a single agent's discussion response with model fallback
  */
 export async function generateDiscussionResponse(
   agent: PlayerAgent,
@@ -180,91 +181,72 @@ export async function generateDiscussionResponse(
     isAlreadySettled,
   );
 
-  try {
-    const result = await generateObject({
-      model: openrouter(agent.modelId),
-      schema: discussionResponseSchema,
-      messages: [
-        { role: 'system', content: agent.systemPrompt },
-        { role: 'user', content: discussionPrompt },
-      ],
-      temperature: 0.8,
-    });
+  const messages = [
+    { role: 'system' as const, content: agent.systemPrompt },
+    { role: 'user' as const, content: discussionPrompt },
+  ];
 
-    // Log the response
-    const decisionIcon =
-      result.object.decision === 'settled'
-        ? '✓'
-        : result.object.decision === 'needs-input'
-          ? '?'
-          : '…';
-    console.log(`   ${decisionIcon} ${agent.name}: "${result.object.message}"`);
-    if (result.object.decision === 'settled' && result.object.characterChoice) {
-      console.log(
-        `      → Playing: ${result.object.characterChoice.inGameName} (${result.object.characterChoice.role})`,
-      );
-    }
+  // Track tried models for fallback
+  const triedModels: string[] = [];
+  let currentModelId = agent.modelId;
 
-    return {
-      agentId: agent.archetype,
-      agentName: agent.name,
-      message: result.object.message,
-      decision: result.object.decision,
-      characterChoice: result.object.characterChoice as
-        | CharacterChoice
-        | undefined,
-      usage: result.usage,
-    };
-  } catch (error) {
-    console.error(`Discussion response error for ${agent.name}:`, error);
+  while (true) {
+    triedModels.push(currentModelId);
 
-    // Fallback: Try with a simpler text generation and parse manually
     try {
-      const fallbackResult = await streamText({
-        model: openrouter(agent.modelId),
-        messages: [
-          { role: 'system', content: agent.systemPrompt },
-          {
-            role: 'user',
-            content: `${discussionPrompt}\n\nRespond naturally as yourself. If you've decided on a character, describe them clearly.`,
-          },
-        ],
+      const result = await generateObject({
+        model: openrouter(currentModelId),
+        schema: discussionResponseSchema,
+        messages,
         temperature: 0.8,
       });
 
-      let text = '';
-      for await (const chunk of fallbackResult.textStream) {
-        text += chunk;
+      // Log the response (note if using fallback model)
+      const modelNote =
+        currentModelId !== agent.modelId ? ` [${currentModelId}]` : '';
+      const decisionIcon =
+        result.object.decision === 'settled'
+          ? '✓'
+          : result.object.decision === 'needs-input'
+            ? '?'
+            : '…';
+      console.log(
+        `   ${decisionIcon} ${agent.name}${modelNote}: "${result.object.message}"`,
+      );
+      if (
+        result.object.decision === 'settled' &&
+        result.object.characterChoice
+      ) {
+        console.log(
+          `      → Playing: ${result.object.characterChoice.inGameName} (${result.object.characterChoice.role})`,
+        );
       }
 
-      // Simple heuristic: if they mention "I'll be" or "I want to be", they're settling
-      const isSettling =
-        /i('ll| will) (be|play)|i('m| am) (going to be|playing)|my character (is|will be)/i.test(
-          text,
-        );
-      const decisionIcon = isSettling ? '✓' : '…';
-      console.log(
-        `   ${decisionIcon} ${agent.name} (fallback): "${text.slice(0, 150)}${text.length > 150 ? '...' : ''}"`,
+      return {
+        agentId: agent.archetype,
+        agentName: agent.name,
+        message: result.object.message,
+        decision: result.object.decision,
+        characterChoice: result.object.characterChoice as
+          | CharacterChoice
+          | undefined,
+        usage: result.usage,
+      };
+    } catch (error) {
+      console.warn(
+        `   ⚠ ${agent.name} model failed (${currentModelId}), trying fallback...`,
       );
 
-      return {
-        agentId: agent.archetype,
-        agentName: agent.name,
-        message: text,
-        decision: isSettling ? 'settled' : 'discussing',
-        // Can't reliably extract structured character from free text
-        characterChoice: undefined,
-        usage: await fallbackResult.usage,
-      };
-    } catch (fallbackError) {
-      console.error(`Fallback also failed for ${agent.name}:`, fallbackError);
-      return {
-        agentId: agent.archetype,
-        agentName: agent.name,
-        message: `[${agent.name} is thinking...]`,
-        decision: 'discussing',
-        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
-      };
+      // Try next fallback model
+      const nextModel = getNextFallbackModel(triedModels);
+      if (nextModel) {
+        currentModelId = nextModel;
+        continue;
+      }
+
+      // All models exhausted - fail hard
+      console.error(`   ✗ All models failed for ${agent.name}`);
+      throw error;
     }
   }
 }

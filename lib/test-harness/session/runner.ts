@@ -10,6 +10,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { streamText, type LanguageModelUsage } from 'ai';
 import type { ArchetypeId } from '../archetypes/types';
 import { ARCHETYPES } from '../archetypes/definitions';
+import { getNextFallbackModel } from '../archetypes/types';
 import type { PlayerAgent, StoryContext } from '../agents/player';
 import { createPlayerAgents } from '../agents/player';
 import type { NarratorConfig } from '../agents/narrator';
@@ -221,30 +222,48 @@ async function generatePlayerResponse(
     },
   ];
 
-  try {
-    const result = streamText({
-      model: openrouter(agent.modelId),
-      messages: messages as any,
-      temperature: 0.8,
-    });
+  // Track tried models for fallback
+  const triedModels: string[] = [];
+  let currentModelId = agent.modelId;
 
-    // Stream to console
-    let fullText = '';
-    process.stdout.write(`\n👤 ${agent.name}: `);
-    for await (const chunk of result.textStream) {
-      process.stdout.write(chunk);
-      fullText += chunk;
+  while (true) {
+    triedModels.push(currentModelId);
+
+    try {
+      const result = streamText({
+        model: openrouter(currentModelId),
+        messages: messages as any,
+        temperature: 0.8,
+      });
+
+      // Stream to console (note if using fallback)
+      const modelNote =
+        currentModelId !== agent.modelId ? ` [${currentModelId}]` : '';
+      let fullText = '';
+      process.stdout.write(`\n👤 ${agent.name}${modelNote}: `);
+      for await (const chunk of result.textStream) {
+        process.stdout.write(chunk);
+        fullText += chunk;
+      }
+      process.stdout.write('\n');
+
+      const usage = await result.usage;
+      return { text: fullText, usage };
+    } catch (error) {
+      console.warn(
+        `   ⚠ ${agent.name} model failed (${currentModelId}), trying fallback...`,
+      );
+
+      const nextModel = getNextFallbackModel(triedModels);
+      if (nextModel) {
+        currentModelId = nextModel;
+        continue;
+      }
+
+      // All models exhausted
+      console.error(`   ✗ All models failed for ${agent.name}`);
+      throw error;
     }
-    process.stdout.write('\n');
-
-    const usage = await result.usage;
-    return { text: fullText, usage };
-  } catch (error) {
-    console.error(`Player response error for ${agent.name}:`, error);
-    return {
-      text: `[${agent.name} is thinking...]`,
-      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
-    };
   }
 }
 
@@ -280,30 +299,48 @@ Respond in character as ${agent.name}.`,
     },
   ];
 
-  try {
-    const result = streamText({
-      model: openrouter(agent.modelId),
-      messages: messages as any,
-      temperature: 0.8,
-    });
+  // Track tried models for fallback
+  const triedModels: string[] = [];
+  let currentModelId = agent.modelId;
 
-    // Stream to console
-    let fullText = '';
-    process.stdout.write(`\n👤 ${agent.name}: `);
-    for await (const chunk of result.textStream) {
-      process.stdout.write(chunk);
-      fullText += chunk;
+  while (true) {
+    triedModels.push(currentModelId);
+
+    try {
+      const result = streamText({
+        model: openrouter(currentModelId),
+        messages: messages as any,
+        temperature: 0.8,
+      });
+
+      // Stream to console (note if using fallback)
+      const modelNote =
+        currentModelId !== agent.modelId ? ` [${currentModelId}]` : '';
+      let fullText = '';
+      process.stdout.write(`\n👤 ${agent.name}${modelNote}: `);
+      for await (const chunk of result.textStream) {
+        process.stdout.write(chunk);
+        fullText += chunk;
+      }
+      process.stdout.write('\n');
+
+      const usage = await result.usage;
+      return { text: fullText, usage };
+    } catch (error) {
+      console.warn(
+        `   ⚠ ${agent.name} model failed (${currentModelId}), trying fallback...`,
+      );
+
+      const nextModel = getNextFallbackModel(triedModels);
+      if (nextModel) {
+        currentModelId = nextModel;
+        continue;
+      }
+
+      // All models exhausted
+      console.error(`   ✗ All models failed for ${agent.name}`);
+      throw error;
     }
-    process.stdout.write('\n');
-
-    const usage = await result.usage;
-    return { text: fullText, usage };
-  } catch (error) {
-    console.error(`Directed response error for ${agent.name}:`, error);
-    return {
-      text: `[${agent.name} is thinking...]`,
-      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
-    };
   }
 }
 
@@ -331,34 +368,55 @@ ${responsesText}
 
 As ${spokesperson.name}, synthesize these responses into a single coherent message to relay back to the narrator. Keep it concise and preserve important details.`;
 
-  try {
-    const result = streamText({
-      model: openrouter(spokesperson.modelId),
-      messages: [
-        { role: 'system', content: spokesperson.systemPrompt },
-        { role: 'user', content: synthesisPrompt },
-      ] as any,
-      temperature: 0.7,
-    });
+  const messages = [
+    { role: 'system', content: spokesperson.systemPrompt },
+    { role: 'user', content: synthesisPrompt },
+  ];
 
-    // Stream to console
-    let fullText = '';
-    process.stdout.write(`\n🎙️ ${spokesperson.name} (spokesperson): `);
-    for await (const chunk of result.textStream) {
-      process.stdout.write(chunk);
-      fullText += chunk;
+  // Track tried models for fallback
+  const triedModels: string[] = [];
+  let currentModelId = spokesperson.modelId;
+
+  while (true) {
+    triedModels.push(currentModelId);
+
+    try {
+      const result = streamText({
+        model: openrouter(currentModelId),
+        messages: messages as any,
+        temperature: 0.7,
+      });
+
+      // Stream to console (note if using fallback)
+      const modelNote =
+        currentModelId !== spokesperson.modelId ? ` [${currentModelId}]` : '';
+      let fullText = '';
+      process.stdout.write(
+        `\n🎙️ ${spokesperson.name}${modelNote} (spokesperson): `,
+      );
+      for await (const chunk of result.textStream) {
+        process.stdout.write(chunk);
+        fullText += chunk;
+      }
+      process.stdout.write('\n');
+
+      const usage = await result.usage;
+      return { text: fullText, usage };
+    } catch (error) {
+      console.warn(
+        `   ⚠ Spokesperson model failed (${currentModelId}), trying fallback...`,
+      );
+
+      const nextModel = getNextFallbackModel(triedModels);
+      if (nextModel) {
+        currentModelId = nextModel;
+        continue;
+      }
+
+      // All models exhausted
+      console.error(`   ✗ All models failed for spokesperson`);
+      throw error;
     }
-    process.stdout.write('\n');
-
-    const usage = await result.usage;
-    return { text: fullText, usage };
-  } catch (error) {
-    console.error('Spokesperson synthesis error:', error);
-    // Fallback to simple concatenation
-    return {
-      text: playerResponses.map((r) => r.response).join(' '),
-      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
-    };
   }
 }
 
