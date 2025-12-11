@@ -17,8 +17,8 @@ import type { NarratorModel } from '../agents/narrator';
 import { getStory, listStoryIds } from '../stories/loader';
 import { getSystemPrompt } from '../prompts/loader';
 
-// Load environment variables
-config();
+// Load environment variables from .env.local (Next.js convention)
+config({ path: '.env.local' });
 
 const program = new Command();
 
@@ -26,10 +26,11 @@ program
   .name('test-run')
   .description('Run a test harness session')
   .requiredOption('--story <id>', 'Story ID (shadow-over-innsmouth, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)')
-  .requiredOption('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-v3.2)')
-  .option('--players <number>', 'Group size (2-5)', Number.parseInt)
-  .option('--max-turns <number>', 'Maximum turns', Number.parseInt, 100)
-  .option('--temperature <number>', 'Temperature', Number.parseFloat, 0.7)
+  .option('--narrator <model>', 'Narrator model (opus-4.5, grok-4, deepseek-v3.2)', 'opus-4.5')
+  .option('--players <number>', 'Group size (2-5)', (v) => Number.parseInt(v, 10))
+  .option('--max-turns <number>', 'Maximum turns', (v) => Number.parseInt(v, 10), 100)
+  .option('--temperature <number>', 'Temperature', (v) => Number.parseFloat(v), 0.7)
+  .option('--language <lang>', 'Output language (english, spanish, etc.)', 'english')
   .option('--dry-run', 'Show config without executing')
   .parse();
 
@@ -70,7 +71,7 @@ async function main() {
   }
 
   // Get production system prompt
-  const systemPrompt = getSystemPrompt(storyGuide);
+  const systemPrompt = getSystemPrompt(storyGuide, options.language);
 
   const config = {
     story,
@@ -80,48 +81,26 @@ async function main() {
     groupSize: options.players,
     maxTurns: options.maxTurns,
     temperature: options.temperature,
+    language: options.language,
   };
 
-  console.log(chalk.cyan('\n📋 Session Configuration:\n'));
-  console.log(chalk.white(`Story: ${chalk.bold(story.storyTitle)}`));
-  console.log(chalk.white(`Narrator: ${chalk.bold(options.narrator)}`));
-  console.log(chalk.white(`Group Size: ${chalk.bold(options.players || 'random')}`));
-  console.log(chalk.white(`Max Turns: ${chalk.bold(options.maxTurns)}`));
-
   if (options.dryRun) {
-    console.log(chalk.yellow('\n[Dry run - not executing]\n'));
+    console.log(chalk.cyan(`\n📋 ${story.storyTitle} | ${options.narrator} | ${options.players || 'random'} players | ${options.maxTurns} turns`));
+    console.log(chalk.yellow('[Dry run - not executing]\n'));
     process.exit(0);
   }
-
-  console.log('\n');
-
-  const spinner = ora('Running session...').start();
 
   try {
     const result = await runSession(config);
 
-    spinner.succeed(chalk.green('Session completed!'));
+    console.log(chalk.green(`\n✔ ${result.outcome} | ${result.finalTurn} turns | ${result.detectedPulses.length}/~20 pulses | ${Math.round(result.duration / 1000)}s`));
 
-    console.log(chalk.cyan('\n📊 Session Results:\n'));
-    console.log(chalk.white(`Session ID: ${chalk.bold(result.sessionId)}`));
-    console.log(chalk.white(`Outcome: ${chalk.bold(result.outcome)}`));
-    console.log(chalk.white(`Turns: ${chalk.bold(result.finalTurn)}`));
-    console.log(
-      chalk.white(`Pulses: ${chalk.bold(`${result.detectedPulses.length}/~20`)}`),
-    );
-    console.log(
-      chalk.white(`Duration: ${chalk.bold(`${Math.round(result.duration / 1000)}s`)}`),
-    );
-
-    // Generate report
     const reportSpinner = ora('Generating report...').start();
     const reportPath = await saveSessionReport(result);
-    reportSpinner.succeed(chalk.green(`Report saved: ${reportPath}`));
-
-    console.log(chalk.cyan('\n✨ Session complete!\n'));
+    reportSpinner.succeed(`Report: ${reportPath}`);
   } catch (error) {
-    spinner.fail(chalk.red('Session failed'));
-    console.error(chalk.red('\nError:'), error);
+    console.log(chalk.red('\n✖ Session failed'));
+    console.error(error);
     process.exit(1);
   }
 }

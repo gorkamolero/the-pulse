@@ -1,14 +1,46 @@
 /**
  * Group-Aware Character Generation
  *
- * Generates friend groups with shared history and relationships,
- * then creates individual characters within that context.
+ * Single LLM call generates the entire friend group:
+ * - Group context (how they know each other, shared history)
+ * - All individual characters with names and relationships
  */
 
-import { generateText } from 'ai';
+import { generateObject } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import type { GroupContext, PlayerIdentity, ArchetypeId } from '../archetypes/types';
+import { z } from 'zod';
+import { faker } from '@faker-js/faker';
+import type { ArchetypeId } from '../archetypes/types';
 import { ARCHETYPE_BY_ID } from '../archetypes/definitions';
+
+/**
+ * Generate a diverse pool of name suggestions using Faker
+ * Returns unique names from various origins for variety
+ */
+function generateNameSuggestions(count: number): string[] {
+  const names = new Set<string>();
+
+  // Use different faker methods to get diverse names
+  const nameMethods = [
+    () => faker.person.firstName(),
+    () => faker.person.firstName('male'),
+    () => faker.person.firstName('female'),
+  ];
+
+  // Generate more names than needed to ensure uniqueness and variety
+  while (names.size < count * 3) {
+    const method = nameMethods[Math.floor(Math.random() * nameMethods.length)];
+    const name = method();
+    // Filter out very short or very long names
+    if (name.length >= 3 && name.length <= 12) {
+      names.add(name);
+    }
+  }
+
+  // Shuffle and return the requested count
+  const shuffled = Array.from(names).sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -25,159 +57,154 @@ export interface StoryContext {
 }
 
 /**
- * Generate friend group context
- *
- * Single LLM call that establishes how the players know each other,
- * shared history, and why they're playing together tonight.
+ * Generated player from the LLM
  */
-export async function generateGroupContext(
-  storyContext: StoryContext,
-  archetypeIds: ArchetypeId[],
-): Promise<GroupContext> {
-  const archetypeDescriptions = archetypeIds
-    .map((id) => {
-      const archetype = ARCHETYPE_BY_ID[id];
-      return `${archetype.name}: ${archetype.style}`;
-    })
-    .join(', ');
-
-  const prompt = `Generate a friend group context for ${archetypeIds.length} people about to play an interactive fiction game.
-
-Story they're playing: "${storyContext.title}" - ${storyContext.description}
-
-The group has these personality types: ${archetypeDescriptions}
-
-Create a believable friend group. They should:
-- Have a clear relationship (how they met, how long ago)
-- Have a reason for tonight's session (game night, birthday, killing time, etc.)
-- Have someone who suggested this specific story
-- Have 2-3 shared memories they might reference during play (inside jokes, shared experiences)
-- Feel like real friends, not strangers
-
-Output ONLY valid JSON matching this exact schema:
-{
-  "relationship": "string describing how they know each other",
-  "history": "string describing how long they've known each other",
-  "occasion": "string describing why they're playing tonight",
-  "organizer": "string naming who found The Pulse and suggested it",
-  "storyReason": "string explaining why they picked this specific story",
-  "dynamic": "string describing the group's vibe/energy",
-  "sharedMemories": ["memory 1", "memory 2", "memory 3"]
-}
-
-Be creative. Make them feel like actual friends with history.`;
-
-  const result = await generateText({
-    model: openrouter('x-ai/grok-4'),
-    prompt,
-    temperature: 0.8,
-  });
-
-  // Parse JSON response
-  const jsonMatch = result.text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error('Failed to parse group context JSON from LLM response');
-  }
-
-  const groupContext = JSON.parse(jsonMatch[0]) as GroupContext;
-
-  // Validate required fields
-  if (
-    !groupContext.relationship ||
-    !groupContext.history ||
-    !groupContext.occasion ||
-    !groupContext.organizer ||
-    !groupContext.storyReason ||
-    !groupContext.dynamic ||
-    !Array.isArray(groupContext.sharedMemories)
-  ) {
-    throw new Error('Invalid group context structure from LLM');
-  }
-
-  return groupContext;
+export interface GeneratedPlayer {
+  name: string;
+  archetypeId: ArchetypeId;
+  groupRole: string;
+  relationships: Array<{ name: string; relationship: string }>;
+  personalReason: string;
+  currentState: string;
+  backstory: string;
 }
 
 /**
- * Generate individual player identity within group context
- *
- * Called sequentially for each player, so each can see the players
- * already generated and form relationships with them.
+ * Complete generated group output
  */
-export async function generatePlayerIdentity(
-  groupContext: GroupContext,
-  archetypeId: ArchetypeId,
-  existingPlayers: PlayerIdentity[],
-  storyContext: StoryContext,
-): Promise<PlayerIdentity> {
-  const archetype = ARCHETYPE_BY_ID[archetypeId];
-
-  const existingPlayersDesc =
-    existingPlayers.length > 0
-      ? existingPlayers.map((p) => `- ${p.name}: ${p.groupRole}`).join('\n')
-      : 'None yet - this is the first player';
-
-  const prompt = `Generate a player character for a group interactive fiction session.
-
-GROUP CONTEXT:
-${JSON.stringify(groupContext, null, 2)}
-
-OTHER PLAYERS ALREADY CREATED:
-${existingPlayersDesc}
-
-THIS PLAYER'S ARCHETYPE:
-${archetype.name}: ${archetype.style}
-Behavioral patterns: ${archetype.patterns.join(', ')}
-
-Generate a character who:
-- Fits naturally into this friend group
-- Has specific relationships to the other players (use their actual names: ${existingPlayers.map((p) => p.name).join(', ') || 'none yet'})
-- Has a reason for being here tonight that fits the occasion
-- Matches the archetype's personality
-- Feels like a real person, not a game character
-
-Output ONLY valid JSON matching this exact schema:
-{
-  "name": "string - a natural first name",
-  "groupRole": "string - their role in friend group (e.g., 'the responsible one', 'always late')",
-  "relationships": {
-    ${existingPlayers.map((p) => `"${p.name}": "string describing relationship"`).join(',\n    ')}
-  },
-  "personalReason": "string - why they're here tonight specifically",
-  "currentState": "string - their mood/energy tonight",
-  "backstory": "string - 2-3 sentences about their background for narrator personality questions"
+export interface GeneratedGroup {
+  group: {
+    relationship: string;
+    history: string;
+    occasion: string;
+    organizer: string;
+    storyReason: string;
+    dynamic: string;
+    sharedMemories: string[];
+  };
+  players: GeneratedPlayer[];
 }
 
-Be creative and natural. Make them feel real.`;
+/**
+ * Zod schema for structured output
+ */
+const generatedGroupSchema = z.object({
+  group: z.object({
+    relationship: z.string().describe('How they know each other (e.g., "College roommates", "Coworkers")'),
+    history: z.string().describe('How long they have known each other'),
+    occasion: z.string().describe('Why they are playing tonight'),
+    organizer: z.string().describe('Name of the person who suggested The Pulse'),
+    storyReason: z.string().describe('Why they picked this specific story'),
+    dynamic: z.string().describe('The group vibe/energy'),
+    sharedMemories: z.array(z.string()).describe('2-3 shared memories they might reference'),
+  }),
+  players: z.array(
+    z.object({
+      name: z.string().describe('Natural first name'),
+      archetypeId: z.string().describe('The archetype ID assigned to this player'),
+      groupRole: z.string().describe('Their role in the friend group'),
+      relationships: z.array(
+        z.object({
+          name: z.string().describe('Name of the other player'),
+          relationship: z.string().describe('Description of their relationship'),
+        }),
+      ).describe('Relationships to other players'),
+      personalReason: z.string().describe('Why they are here tonight'),
+      currentState: z.string().describe('Their mood/energy tonight'),
+      backstory: z.string().describe('2-3 sentences about their background'),
+    }),
+  ),
+});
 
-  const result = await generateText({
-    model: openrouter('x-ai/grok-4'),
+/**
+ * Simple spinner for waiting states
+ */
+function createSpinner() {
+  const frames = ['\u28CB', '\u28D9', '\u28F9', '\u28F8', '\u28FC', '\u28F4', '\u28E6', '\u28E7', '\u28C7', '\u28CF'];
+  let i = 0;
+  let interval: ReturnType<typeof setInterval> | null = null;
+
+  return {
+    start() {
+      process.stdout.write(' ');
+      interval = setInterval(() => {
+        process.stdout.write(`\r${frames[i++ % frames.length]} `);
+      }, 80);
+    },
+    stop() {
+      if (interval) {
+        clearInterval(interval);
+        process.stdout.write('\r  \r');
+      }
+    },
+  };
+}
+
+/**
+ * Generate complete friend group with all characters
+ *
+ * Single LLM call that creates coherent group context and all players
+ * with proper names and cross-references.
+ */
+export async function generateGroup(
+  storyContext: StoryContext,
+  archetypeIds: ArchetypeId[],
+  language = 'english',
+): Promise<GeneratedGroup> {
+  // Generate a fresh pool of name suggestions for variety
+  const suggestedNames = generateNameSuggestions(archetypeIds.length * 4);
+
+  const archetypeDescriptions = archetypeIds
+    .map((id, index) => {
+      const archetype = ARCHETYPE_BY_ID[id];
+      return `Player ${index + 1} - ${archetype.name} (${id}): ${archetype.style}`;
+    })
+    .join('\n');
+
+  const languageInstruction = language !== 'english'
+    ? `\n\nIMPORTANT: Generate ALL content in ${language}. Names, relationships, backstories, memories - everything must be in ${language}.`
+    : '';
+
+  const prompt = `Generate a complete friend group for an interactive fiction game session.
+
+STORY: "${storyContext.title}"
+${storyContext.description}
+Genre: ${storyContext.genre}
+
+PLAYERS TO GENERATE (${archetypeIds.length} total):
+${archetypeDescriptions}
+
+NAME SUGGESTIONS (pick from these or use similar uncommon names):
+${suggestedNames.join(', ')}
+
+Create a believable friend group where:
+- They have a clear shared history (how they met, how long ago)
+- They have a reason for tonight's session (game night, birthday, etc.)
+- One of them suggested this specific story for a reason
+- They have 2-3 shared memories/inside jokes
+- Each player has relationships with the OTHER players (use their actual names)
+- Each player's personality matches their archetype
+- The "organizer" field should contain one player's NAME (the one who suggested the game)
+
+Make them feel like real friends with history, not strangers.${languageInstruction}`;
+
+  const spinner = createSpinner();
+  spinner.start();
+
+  const result = await generateObject({
+    model: openrouter('google/gemini-2.5-flash'),
+    schema: generatedGroupSchema,
     prompt,
     temperature: 0.8,
   });
 
-  // Parse JSON response
-  const jsonMatch = result.text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error('Failed to parse player identity JSON from LLM response');
+  spinner.stop();
+
+  // Ensure archetypeIds are properly assigned
+  const output = result.object as GeneratedGroup;
+  for (let i = 0; i < output.players.length; i++) {
+    output.players[i].archetypeId = archetypeIds[i];
   }
 
-  const identity = JSON.parse(jsonMatch[0]) as PlayerIdentity;
-
-  // Validate required fields
-  if (
-    !identity.name ||
-    !identity.groupRole ||
-    !identity.personalReason ||
-    !identity.currentState ||
-    !identity.backstory
-  ) {
-    throw new Error('Invalid player identity structure from LLM');
-  }
-
-  // Ensure relationships object exists (might be empty for first player)
-  if (!identity.relationships) {
-    identity.relationships = {};
-  }
-
-  return identity;
+  return output;
 }

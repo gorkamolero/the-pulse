@@ -97,7 +97,7 @@ export async function validatePrivateMoment(
 PLAYER CHARACTER:
 Name: ${targetAgent.name}
 Archetype: ${targetAgent.archetype}
-Backstory: ${targetAgent.generatedBackstory}
+Backstory: ${targetAgent.identity.backstory}
 
 PRIVATE MOMENT CONTENT:
 ${privateMoment.content}
@@ -118,7 +118,7 @@ Evaluate:
     });
 
     const result = await generateObject({
-      model: openrouter('google/gemini-2.0-flash-lite'),
+      model: openrouter('google/gemini-2.5-flash'),
       schema: privateMomentValidationSchema,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
@@ -213,7 +213,7 @@ Answer with ONLY: true or false`;
       });
 
       const { text } = await generateText({
-        model: openrouter('google/gemini-2.0-flash-lite'),
+        model: openrouter('google/gemini-2.5-flash'),
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
       });

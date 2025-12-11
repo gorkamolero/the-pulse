@@ -13,8 +13,10 @@ export type OutputType =
   | 'pulse'
   | 'tangent-response'
   | 'private-moment'
+  | 'directed-questions'
   | 'clarification'
-  | 'recap';
+  | 'recap'
+  | 'ending';
 
 export interface Classification {
   type: OutputType;
@@ -22,15 +24,17 @@ export interface Classification {
   reasoning: string;
   pulseNumber?: number;
   privateTarget?: string;
+  targetPlayers?: string[];
   usage?: LanguageModelUsage;
 }
 
 const classificationSchema = z.object({
-  type: z.enum(['pulse', 'tangent-response', 'private-moment', 'clarification', 'recap']),
+  type: z.enum(['pulse', 'tangent-response', 'private-moment', 'directed-questions', 'clarification', 'recap', 'ending']),
   confidence: z.number().min(0).max(1),
   reasoning: z.string(),
   pulseNumber: z.number().optional(),
   privateTarget: z.string().optional(),
+  targetPlayers: z.array(z.string()).optional(),
 });
 
 const CLASSIFICATION_PROMPT = `You are analyzing narrator output from an interactive fiction game to classify its type.
@@ -65,11 +69,20 @@ OUTPUT TYPES:
 - Acknowledging player comments that don't affect story
 - NOT forced transitions like "anyway, back to..."
 
-**private-moment** - Individual player addressed privately
+**private-moment** - Individual player addressed privately/secretly
 - "[To X only]" or "X, you alone notice..."
 - Personal revelation matching backstory
 - Visions/dreams for one player
 - Secrets that would spoil group experience
+- Key: OTHER players should NOT hear/know this
+
+**directed-questions** - Narrator asking specific players questions by name
+- Questions explicitly addressed to named players: "**Alex** —" or "Alex, tell me..."
+- Can target multiple players: "**Alex**, **Jordan** — answer these:"
+- NOT private (others can hear), but only named players should respond
+- Common during character creation when narrator asks individual backstory questions
+- Extract targetPlayers: array of player names being directly asked questions
+- Key: Questions are PUBLIC but directed at SPECIFIC players
 
 **clarification** - Answering questions about current scene
 - "You see..." describing details already present
@@ -79,6 +92,13 @@ OUTPUT TYPES:
 **recap** - Summarizing previous events
 - "As you recall...", "So far you have..."
 - Reminding players of earlier information
+
+**ending** - Story conclusion/epilogue
+- Explicit story ending: "The End", "Fin", "Our story concludes"
+- Epilogue wrapping up character fates
+- Final resolution of the main conflict
+- Narrator explicitly ending the session
+- Key: The story is OVER, not just a dramatic moment
 
 RULE: When in doubt between pulse and something else, ask "Did this advance the story or just respond to players?" If it advanced, it's a pulse. If it responded without advancing, it's not.
 
@@ -100,7 +120,7 @@ export async function classifyOutput(
     });
 
     const result = await generateObject({
-      model: openrouter('google/gemini-2.0-flash-lite'),
+      model: openrouter('google/gemini-2.5-flash'),
       schema: classificationSchema,
       messages: [
         {
@@ -146,6 +166,32 @@ function heuristicClassification(
       confidence: 0.8,
       reasoning: 'Contains private moment markers',
       privateTarget: targetMatch?.[1],
+    };
+  }
+
+  // Check for directed questions (players addressed by name with questions)
+  const directedPatterns = [
+    /\*\*([A-Z][a-z]+)\*\*\s*[—\-:]/g,  // **Alex** — or **Alex**:
+    /^([A-Z][a-z]+)\s*[—\-:]/gm,        // Alex — at line start
+  ];
+  const targetPlayers: string[] = [];
+  for (const pattern of directedPatterns) {
+    const matches = narratorOutput.matchAll(pattern);
+    for (const match of matches) {
+      const name = match[1];
+      if (name && context?.playerNames?.some(p => p.toLowerCase() === name.toLowerCase())) {
+        if (!targetPlayers.includes(name)) {
+          targetPlayers.push(name);
+        }
+      }
+    }
+  }
+  if (targetPlayers.length > 0) {
+    return {
+      type: 'directed-questions',
+      confidence: 0.8,
+      reasoning: `Questions directed at specific players: ${targetPlayers.join(', ')}`,
+      targetPlayers,
     };
   }
 
