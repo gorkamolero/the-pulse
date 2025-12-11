@@ -51,7 +51,7 @@ const MODEL_PRICING = {
   'x-ai/grok-4': { input: 5.0, output: 15.0 },
 
   // Classification and validation
-  'google/gemini-2.0-flash-lite': { input: 0.075, output: 0.3 },
+  'google/gemini-2.5-flash': { input: 0.075, output: 0.3 },
 };
 
 export class CostTracker {
@@ -126,7 +126,7 @@ export class CostTracker {
     const playerCost = this.calculateAveragePlayerCost();
     const classificationCost = this.calculateCost(
       this.classificationUsage,
-      'google/gemini-2.0-flash-lite',
+      'google/gemini-2.5-flash',
     );
 
     const totalUsage: TokenUsage = {

@@ -48,8 +48,8 @@ export interface GroupContext {
   history: string;
   /** Why they're playing tonight */
   occasion: string;
-  /** Who found The Pulse and why */
-  organizer: string;
+  /** Role description of who found The Pulse (e.g., 'the horror fan') */
+  organizerRole: string;
   /** Why they picked THIS story */
   storyReason: string;
   /** Group vibe */

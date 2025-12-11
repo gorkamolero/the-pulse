@@ -65,7 +65,7 @@ export function generateTimeline(
         turn: message.turn,
         type: 'pulse',
         title: `Pulse ${pulseNumber} - Story Beat`,
-        content: message.content.substring(0, 200) + (message.content.length > 200 ? '...' : ''),
+        content: message.content,
       });
     }
 
@@ -76,8 +76,8 @@ export function generateTimeline(
           turn: message.turn,
           type: 'private-moment',
           title: `Private Moment → ${pm.target}`,
-          content: pm.content.substring(0, 150),
-          notes: `Response: ${pm.response.substring(0, 100)}`,
+          content: pm.content,
+          notes: `Response: ${pm.response}`,
         });
       }
     }
@@ -101,7 +101,7 @@ export function generateTimeline(
         turn: message.turn,
         type: 'recovery',
         title: 'Tangent Recovery',
-        content: message.content.substring(0, 150),
+        content: message.content,
         notes: 'Narrator handling player tangent',
       });
     }

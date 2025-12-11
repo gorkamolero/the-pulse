@@ -55,7 +55,6 @@ export async function generateSessionReport(result: SessionResult): Promise<stri
 - **Session ID**: ${result.sessionId}
 - **Story**: ${result.config.story.storyTitle}
 - **Narrator**: ${result.config.narratorConfig.model}
-- **System Prompt**: ${result.config.systemPrompt.substring(0, 50)}...
 - **Duration**: ${formatDuration(result.duration)}
 - **Outcome**: ${result.outcome}
 - **Cost**: ${result.costBreakdown ? `$${result.costBreakdown.total.cost.toFixed(4)}` : `$${estimateCost(result).toFixed(2)} (estimated)`}

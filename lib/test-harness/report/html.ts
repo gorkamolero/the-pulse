@@ -324,7 +324,7 @@ export async function generateHTMLReport(result: SessionResult): Promise<string>
         typeLabel = 'Private Moment';
       }
 
-      const content = msg.content.substring(0, 150) + (msg.content.length > 150 ? '...' : '');
+      const content = msg.content;
 
       return `
         <div class="timeline-item">

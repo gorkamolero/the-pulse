@@ -51,7 +51,7 @@ export function detectLoops(messages: Message[]): Issue[] {
           type: 'loop',
           description: `Narrator output very similar to turn ${recent.turn}`,
           severity: 'error',
-          relatedContent: recent.content.substring(0, 100),
+          relatedContent: recent.content,
         });
       }
     }
@@ -85,7 +85,7 @@ export function detectForcedSegues(messages: Message[]): Issue[] {
           type: 'forced-segue',
           description: 'Narrator used forced transition language',
           severity: 'warning',
-          relatedContent: message.content.substring(0, 150),
+          relatedContent: message.content,
         });
         break;
       }
@@ -201,7 +201,7 @@ async function detectSemanticContradictions(narratorMessages: Message[]): Promis
     const sampledMessages = narratorMessages.filter((_, i) => i % 5 === 0 || i === narratorMessages.length - 1);
 
     const transcript = sampledMessages
-      .map((m) => `Turn ${m.turn}: ${m.content.substring(0, 300)}`)
+      .map((m) => `Turn ${m.turn}: ${m.content}`)
       .join('\n\n');
 
     const prompt = `Analyze this narrative transcript for contradictions. Look for:
@@ -224,7 +224,7 @@ If no contradictions found, return an empty array.`;
     });
 
     const result = await generateObject({
-      model: openrouter('google/gemini-2.0-flash-lite'),
+      model: openrouter('google/gemini-2.5-flash'),
       schema: contradictionsArraySchema,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
