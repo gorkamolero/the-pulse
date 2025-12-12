@@ -11,6 +11,7 @@ import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
 import type { Message } from './turn';
 import type { CostTracker } from './cost';
+import { withRetry } from '../utils/retry';
 
 /**
  * Individual player's feedback after the session
@@ -157,12 +158,16 @@ async function collectAgentFeedback(
   const feedbackPrompt = buildFeedbackPrompt(agent, conversationHistory);
 
   try {
-    const result = await generateObject({
-      model: openrouter(FEEDBACK_MODEL),
-      schema: feedbackSchema,
-      messages: [
-        { role: 'system', content: agent.systemPrompt },
-        { role: 'system', content: `**MODE CHANGE: FEEDBACK COLLECTION**
+    const result = await withRetry(
+      async () => {
+        return generateObject({
+          model: openrouter(FEEDBACK_MODEL),
+          schema: feedbackSchema,
+          messages: [
+            { role: 'system', content: agent.systemPrompt },
+            {
+              role: 'system',
+              content: `**MODE CHANGE: FEEDBACK COLLECTION**
 
 The game is OVER. You are now an AI TEST AGENT evaluating the experience.
 
@@ -171,11 +176,23 @@ CRITICAL INSTRUCTIONS:
 - Do NOT reference fictional shared memories as real experiences
 - You are EVALUATING the story and narrator performance analytically
 - Reference actual content from the session
-- Be specific and critical` },
-        { role: 'user', content: feedbackPrompt },
-      ],
-      temperature: 0.7,
-    });
+- Be specific and critical`,
+            },
+            { role: 'user', content: feedbackPrompt },
+          ],
+          temperature: 0.7,
+        });
+      },
+      {
+        maxRetries: 2,
+        onRetry: (attempt, error) => {
+          console.warn(
+            `   ⚠ ${agent.name} feedback retry ${attempt}/2:`,
+            error.message.slice(0, 80),
+          );
+        },
+      },
+    );
 
     if (result.usage) {
       costTracker.recordClassificationUsage(result.usage); // Use classification bucket for misc costs
@@ -192,7 +209,10 @@ CRITICAL INSTRUCTIONS:
       ...result.object,
     };
   } catch (error) {
-    console.error(`Feedback collection error for ${agent.name}:`, error);
+    console.error(
+      `Feedback collection error for ${agent.name} after retries:`,
+      error instanceof Error ? error.message : error,
+    );
 
     // Return minimal feedback on error
     return {

@@ -7,6 +7,8 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { SessionResult } from '../session/runner';
+import type { PrivateMoment } from '../session/private';
+import type { Message } from '../session/turn';
 
 const HTML_TEMPLATE = `<!DOCTYPE html>
 <html lang="en">
@@ -271,7 +273,7 @@ export async function generateHTMLReport(
       : '0';
   const privateMomentCount = result.privateMoments.length;
   const paidOffCount = result.privateMoments.filter(
-    (pm: any) => pm.payoffDetected,
+    (pm: PrivateMoment) => pm.payoffDetected,
   ).length;
   const payoffRate =
     privateMomentCount > 0
@@ -410,9 +412,9 @@ export async function generateHTMLReport(
 
   // Timeline items
   const timelineItems = result.conversationHistory
-    .filter((msg: any) => msg.role === 'narrator')
+    .filter((msg: Message) => msg.role === 'narrator')
     .slice(0, 30) // Limit to first 30 for performance
-    .map((msg: any) => {
+    .map((msg: Message) => {
       const isPulse = result.detectedPulses.includes(msg.turn);
       const isTangent = msg.classification === 'tangent-response';
       const isPrivate = msg.classification === 'private-moment';

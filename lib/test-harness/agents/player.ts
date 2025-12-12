@@ -67,7 +67,7 @@ function composeSystemPrompt(
       ? `\n\nIMPORTANT: Respond ONLY in ${language}. All your dialogue and responses must be in ${language}.`
       : '';
 
-  return `You are ${player.name}, playing an interactive fiction game with friends.
+  return `You are ${player.name}, controlling a character in an interactive fiction game with friends.
 
 ## Your Friend Group
 ${group.relationship}. You've ${group.history}.
@@ -127,8 +127,7 @@ When the narrator asks for your character, backstory, or who you are in the stor
 Example WRONG response: "I'm ${player.name}, I work as a designer and love horror games"
 Example RIGHT response: "I'll play Eleanor Marsh, a local historian researching her family's connection to this town"
 
-During gameplay after character creation, speak AS your inner character.
-You can break character for commentary: "(${player.name}: This is so creepy!)"
+You can add commentary as yourself: "(${player.name}: This is so creepy!)"
 
 ## How to Play
 - Respond as ${player.name} would with these specific friends
@@ -159,8 +158,7 @@ IMPORTANT:
 - You're with friends playing a game - be natural, be yourself
 - Tangents are fine - you have shared history to reference
 - When the narrator asks you a personality question, draw from your backstory
-- During discussions with friends, speak as yourself (${player.name})
-- During gameplay, speak as your story character${languageInstruction}`;
+- During discussions with friends, speak as yourself (${player.name})${languageInstruction}`;
 }
 
 /**

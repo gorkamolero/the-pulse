@@ -17,6 +17,8 @@ export interface TestHarnessMessage {
   turn: number;
   timestamp: number;
   classification?: OutputType;
+  /** Model reasoning/thinking (for thinking models like deepseek-v3.2) */
+  reasoning?: string;
 }
 
 // Alias for backwards compatibility

@@ -29,18 +29,12 @@ export function commitCharacterToAgent(
 
   const commitment = `
 
-## YOUR COMMITTED CHARACTER (LOCKED)
+## YOUR CHARACTER (LOCKED)
 
-You created and are now playing: **${character.idName}**${description}${itemsList}
+You are playing: **${character.idName}**${description}${itemsList}
 
-CRITICAL RULES:
-- You ARE ${character.idName} for the rest of this story
-- NEVER change your character's name
-- NEVER refer to yourself by any other name in-story
-- When speaking in-character, you are ${character.idName}
-- OOC commentary uses your real name: (${agent.name}: wow this is creepy!)
-
-Your character name is LOCKED: ${character.idName}`;
+- This character name is LOCKED for the rest of the story
+- OOC commentary uses your real name: (${agent.name}: wow this is creepy!)`;
 
   // Mutate the agent's system prompt
   agent.systemPrompt += commitment;
@@ -194,6 +188,40 @@ For each player, identify:
       return [];
     }
   }
+}
+
+/**
+ * Try to extract characters from a turn's player responses
+ */
+export async function tryExtractCharacters(
+  state: GameState,
+  history: Array<{ turn: number; role: string; player?: string; content: string }>,
+  turn: number,
+  players: PlayerAgent[],
+  spokesperson: PlayerAgent,
+): Promise<GameState> {
+  const turnResponses = history
+    .filter((m) => m.turn === turn && (m.role === 'player' || m.role === 'spokesperson'))
+    .map((m) => `${m.player}: ${m.content}`)
+    .join('\n\n');
+
+  if (!turnResponses) return state;
+
+  console.log('🎭 Extracting character mappings...');
+  const characters = await extractCharacterMappings(turnResponses, players, spokesperson.name);
+
+  if (characters.length === 0) return state;
+
+  console.log(`   Mapped: ${characters.map((c) => `${c.odName}→${c.idName}`).join(', ')}`);
+
+  // Commit to agents
+  console.log('🔒 Committing characters to agent prompts...');
+  for (const character of characters) {
+    const agent = players.find((a) => a.name.toLowerCase() === character.odName.toLowerCase());
+    if (agent) commitCharacterToAgent(agent, character);
+  }
+
+  return { ...state, characters };
 }
 
 /**

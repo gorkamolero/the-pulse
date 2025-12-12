@@ -8,6 +8,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { Message } from '../session/turn';
+import { withRetry } from '../utils/retry';
 
 export type IssueType =
   | 'contradiction'
@@ -243,12 +244,25 @@ If no contradictions found, return an empty array.`;
       apiKey: process.env.OPENROUTER_API_KEY,
     });
 
-    const result = await generateObject({
-      model: openrouter('google/gemini-2.5-flash'),
-      schema: contradictionsArraySchema,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2,
-    });
+    const result = await withRetry(
+      async () => {
+        return generateObject({
+          model: openrouter('google/gemini-2.5-flash'),
+          schema: contradictionsArraySchema,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+        });
+      },
+      {
+        maxRetries: 2,
+        onRetry: (attempt, error) => {
+          console.warn(
+            `Contradiction detection retry ${attempt}/2:`,
+            error.message.slice(0, 100),
+          );
+        },
+      },
+    );
 
     for (const c of result.object) {
       issues.push({
@@ -259,7 +273,10 @@ If no contradictions found, return an empty array.`;
       });
     }
   } catch (error) {
-    console.warn('LLM contradiction detection failed:', error);
+    console.warn(
+      'LLM contradiction detection failed after retries:',
+      error instanceof Error ? error.message : error,
+    );
     // Fallback to heuristics only
   }
 

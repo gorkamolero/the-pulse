@@ -153,9 +153,9 @@ export class PerformanceTracker {
           ...narratorTimes.filter((t) => t > 0),
           Number.MAX_SAFE_INTEGER,
         ),
-        totalTokens: costBreakdown.narrator.totalTokens,
+        totalTokens: costBreakdown.narrator.tokens.totalTokens,
         avgTokensPerResponse:
-          totalTurns > 0 ? costBreakdown.narrator.totalTokens / totalTurns : 0,
+          totalTurns > 0 ? costBreakdown.narrator.tokens.totalTokens / totalTurns : 0,
       },
 
       playerMetrics: {
@@ -168,10 +168,11 @@ export class PerformanceTracker {
           ...playerTimes.filter((t) => t > 0),
           Number.MAX_SAFE_INTEGER,
         ),
-        totalTokens: costBreakdown.players.totalTokens,
+        totalTokens: costBreakdown.players.tokens.totalTokens,
         avgTokensPerPlayer:
-          costBreakdown.players.totalTokens /
-          costBreakdown.players.models.length,
+          playerTimes.length > 0
+            ? costBreakdown.players.tokens.totalTokens / playerTimes.length
+            : 0,
       },
 
       pacingMetrics: {

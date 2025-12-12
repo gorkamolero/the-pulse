@@ -6,7 +6,11 @@
  */
 
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { streamText, type LanguageModelUsage } from 'ai';
+import {
+  streamText,
+  type LanguageModelUsage,
+  type UserModelMessage,
+} from 'ai';
 import type { PlayerAgent } from '../agents/player';
 import type { CostTracker } from './cost';
 import { getNextFallbackModel } from '../archetypes/types';
@@ -14,21 +18,29 @@ import { getNextFallbackModel } from '../archetypes/types';
 export interface DiscussionResult {
   /** What each agent said during discussion */
   messages: Array<{ agent: PlayerAgent; message: string }>;
-  /** Spokesperson's synthesis for the narrator */
+  /** Spokesperson's synthesis for the narrator (empty if skipped) */
   spokespersonMessage: string;
+}
+
+export interface DiscussionOptions {
+  /** Skip the spokesperson synthesis step */
+  skipSynthesis?: boolean;
+  /** Conversation history for context */
+  history?: Array<{ role: string; player?: string; content: string }>;
 }
 
 /**
  * Run a discussion phase
  *
  * Each agent responds to the narrator's prompt, seeing what others said.
- * Then spokesperson synthesizes everything for the narrator.
+ * Then spokesperson synthesizes everything for the narrator (unless skipped).
  */
 export async function runDiscussion(
   narratorPrompt: string,
   agents: PlayerAgent[],
   spokesperson: PlayerAgent,
   costTracker: CostTracker,
+  options: DiscussionOptions = {},
 ): Promise<DiscussionResult> {
   console.log('\n🗣️  Discussion phase\n');
 
@@ -38,24 +50,35 @@ export async function runDiscussion(
     usage?: LanguageModelUsage;
   }> = [];
 
+  // Format recent history if provided
+  const recentHistory = options.history?.slice(-10) || [];
+  const historyContext = recentHistory.length > 0
+    ? `${recentHistory.map((m) => `${m.player || m.role}: ${m.content}`).join('\n')}\n\n`
+    : '';
+
   // Each agent responds, seeing previous responses
   for (const agent of agents) {
     const previousMessages = messages
       .map((m) => `${m.agent.name}: "${m.message}"`)
       .join('\n\n');
 
-    const prompt = `The narrator just said:
+    const prompt = `${historyContext}The narrator just said:
 "${narratorPrompt}"
 
 ${previousMessages ? `Your friends have said:\n${previousMessages}\n\n` : ''}What do you think? Discuss with your friends.`;
 
-    const response = await generateAgentResponse(agent, prompt, costTracker);
+    const response = await generateAgentResponse(agent, prompt, costTracker, true, false);
     messages.push({ agent, message: response.text, usage: response.usage });
-
-    console.log(`   ${agent.name}: "${response.text}"`);
   }
 
-  // Spokesperson synthesizes
+  // Spokesperson synthesizes (unless skipped)
+  if (options.skipSynthesis) {
+    return {
+      messages,
+      spokespersonMessage: '',
+    };
+  }
+
   const allMessages = messages
     .map((m) => `${m.agent.name}: "${m.message}"`)
     .join('\n\n');
@@ -74,6 +97,7 @@ As the spokesperson, relay the group's decision/response to the narrator. Be con
     synthesisPrompt,
     costTracker,
     true,
+    true,
   );
 
   return {
@@ -90,6 +114,7 @@ async function generateAgentResponse(
   prompt: string,
   costTracker: CostTracker,
   stream = false,
+  isSpokesperson = false,
 ): Promise<{ text: string; usage: LanguageModelUsage }> {
   const openrouter = createOpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY,
@@ -102,12 +127,14 @@ async function generateAgentResponse(
     triedModels.push(currentModelId);
 
     try {
+      const messages: Array<UserModelMessage> = [
+        { role: 'user' as const, content: prompt },
+      ];
+
       const result = streamText({
         model: openrouter(currentModelId),
-        messages: [
-          { role: 'system', content: agent.systemPrompt },
-          { role: 'user', content: prompt },
-        ],
+        system: agent.systemPrompt,
+        messages,
         temperature: 0.8,
       });
 
@@ -115,7 +142,9 @@ async function generateAgentResponse(
       if (stream) {
         const modelNote =
           currentModelId !== agent.modelId ? ` [${currentModelId}]` : '';
-        process.stdout.write(`   🎙️ ${agent.name}${modelNote} (spokesperson): `);
+        const label = isSpokesperson ? '🎙️' : '💬';
+        const suffix = isSpokesperson ? ' (spokesperson)' : '';
+        process.stdout.write(`   ${label} ${agent.name}${modelNote}${suffix}: `);
         for await (const chunk of result.textStream) {
           process.stdout.write(chunk);
           text += chunk;

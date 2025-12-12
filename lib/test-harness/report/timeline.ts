@@ -117,18 +117,22 @@ export function generateTimeline(
 }
 
 /**
- * Format timeline as markdown
+ * Format timeline as markdown - compact summary, not full content
  */
 export function formatTimelineMarkdown(timeline: TimelineEntry[]): string {
   const lines: string[] = [];
 
   for (const entry of timeline) {
-    lines.push(`### Turn ${entry.turn}: ${entry.title}\n`);
-    lines.push(`${entry.content}\n`);
-    if (entry.notes) {
-      lines.push(`*${entry.notes}*\n`);
+    if (entry.type === 'issue') {
+      // Issues get full description
+      lines.push(`- **Turn ${entry.turn}**: ${entry.title} — ${entry.content}`);
+    } else if (entry.type === 'private-moment') {
+      // Private moments noted
+      lines.push(`- **Turn ${entry.turn}**: ${entry.title}`);
+    } else {
+      // Pulses/tangents just get label
+      lines.push(`- **Turn ${entry.turn}**: ${entry.title}`);
     }
-    lines.push('');
   }
 
   return lines.join('\n');

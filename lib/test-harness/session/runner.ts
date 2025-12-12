@@ -7,19 +7,26 @@
 
 import { nanoid } from 'nanoid';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { streamText, type LanguageModelUsage } from 'ai';
+import {
+  streamText,
+  wrapLanguageModel,
+  extractReasoningMiddleware,
+  type LanguageModelUsage,
+  type UserModelMessage,
+  type AssistantModelMessage,
+} from 'ai';
 import type { ArchetypeId } from '../archetypes/types';
 import { ARCHETYPES } from '../archetypes/definitions';
 import { getNextFallbackModel } from '../archetypes/types';
 import type { PlayerAgent, StoryContext } from '../agents/player';
 import { createPlayerAgents } from '../agents/player';
 import type { NarratorConfig } from '../agents/narrator';
-import { NARRATOR_MODEL_MAP } from '../agents/narrator';
+import { NARRATOR_MODEL_MAP, THINK_TAG_MODELS } from '../agents/narrator';
 import type { Message } from './turn';
 import type { SessionConfig, Checkpoint } from '../checkpoint/schema';
 import { createCheckpoint } from '../checkpoint/schema';
 import { saveCheckpoint } from '../checkpoint/save';
-import { PrivateMomentTracker } from './private';
+import { PrivateMomentTracker, type PrivateMoment } from './private';
 import { CostTracker, type CostBreakdown } from './cost';
 import {
   TangentTracker,
@@ -36,9 +43,8 @@ import {
   type GameState,
   createInitialState,
   formatStateForInjection,
-  extractCharacterMappings,
   updateGameState,
-  commitCharacterToAgent,
+  tryExtractCharacters,
 } from './state';
 import {
   isGarbageOutput,
@@ -55,7 +61,7 @@ export interface SessionResult {
   finalTurn: number;
   duration: number;
   detectedPulses: number[];
-  privateMoments: any[];
+  privateMoments: PrivateMoment[];
   tangents: TangentMoment[];
   tangentAnalysis?: TangentAnalysis;
   costBreakdown?: CostBreakdown;
@@ -75,6 +81,7 @@ export interface SessionRunnerConfig {
   temperature?: number;
   maxTokens?: number;
   language?: string; // Output language (english, spanish, etc.)
+  promptStyle?: string; // Prompt variant (mechanical, philosophical, minimal)
 }
 
 /**
@@ -123,31 +130,20 @@ export function createSessionConfig(
     },
     maxTurns: config.maxTurns || 100,
     createdAt: Date.now(),
+    promptStyle: config.promptStyle,
   };
 }
 
 /**
  * Initialize narrator with system prompt
+ *
+ * Note: Story guide is already injected into the system prompt by the loader.
+ * We pass systemPrompt through unchanged - test exactly what ships.
  */
 function buildNarratorSystemPrompt(
   systemPrompt: string,
-  storyGuide: string,
-  playerNames: string[],
 ): string {
-  return `${systemPrompt}
-
-STORY GUIDE:
-${storyGuide}
-
-PLAYERS IN THIS SESSION:
-${playerNames.join(', ')}
-
-Remember:
-- Track story progress through ~20 pulses (story beats)
-- Handle tangents gracefully and return to narrative
-- Occasionally address individual players for private moments
-- Keep the story engaging and immersive
-- End the story when you reach a satisfying conclusion`;
+  return systemPrompt;
 }
 
 /**
@@ -156,9 +152,8 @@ Remember:
 async function generateNarratorResponse(
   conversationHistory: Message[],
   narratorConfig: NarratorConfig,
-  playerNames: string[],
   gameState: GameState | null,
-): Promise<{ text: string; usage: LanguageModelUsage }> {
+): Promise<{ text: string; reasoning?: string; usage: LanguageModelUsage }> {
   const modelId = NARRATOR_MODEL_MAP[narratorConfig.model];
 
   if (!modelId) {
@@ -167,56 +162,96 @@ async function generateNarratorResponse(
 
   const systemPrompt = buildNarratorSystemPrompt(
     narratorConfig.systemPrompt,
-    narratorConfig.storyGuide,
-    playerNames,
   );
 
-  const messages = conversationHistory.map((m) => ({
-    role: m.role === 'narrator' ? 'assistant' : 'user',
-    content:
-      m.role === 'player'
-        ? `${m.player}: ${m.content}`
-        : m.role === 'spokesperson'
-          ? `Spokesperson (${m.player}): ${m.content}`
-          : m.content,
-  }));
+  // Narrator only sees its own outputs and spokesperson syntheses
+  // Player discussions are private - narrator only hears what spokesperson relays
+  // Exclude turn 0 (pre-game chat - that's players talking before game starts)
+  const narratorHistory = conversationHistory.filter(
+    (m) => (m.role === 'narrator' || m.role === 'spokesperson') && m.turn > 0,
+  );
 
-  // Inject game state before narrator responds
+  const messages: Array<UserModelMessage | AssistantModelMessage> =
+    narratorHistory.map((m) => ({
+      role: (m.role === 'narrator' ? 'assistant' : 'user') as 'user' | 'assistant',
+      content:
+        m.role === 'spokesperson'
+          ? `Players: ${m.content}`
+          : m.content,
+    }));
+
+  // Inject game state into system prompt
   const stateInjection = gameState ? formatStateForInjection(gameState) : '';
+  const fullSystemPrompt = stateInjection
+    ? `${systemPrompt}\n\n${stateInjection}`
+    : systemPrompt;
 
   // All narrator models use OpenRouter
   const openrouter = createOpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY,
   });
 
-  const allMessages = [
-    { role: 'system', content: systemPrompt },
-    ...messages,
-  ];
-
-  // Add state injection as final system message if we have state
-  if (stateInjection) {
-    allMessages.push({ role: 'system', content: stateInjection });
-  }
+  // Wrap with reasoning middleware for models that use <think> tags
+  const needsThinkMiddleware = THINK_TAG_MODELS.includes(narratorConfig.model);
+  const baseModel = openrouter(modelId);
+  const model = needsThinkMiddleware
+    ? wrapLanguageModel({
+        model: baseModel,
+        middleware: extractReasoningMiddleware({ tagName: 'think' }),
+      })
+    : baseModel;
 
   const maxRetries = 3;
   let lastError: Error | null = null;
 
+  // For first turn (no messages), use a minimal user prompt to trigger narrator
+  // In production, user sends first message. Here we simulate that minimally.
+  const isFirstTurn = messages.length === 0;
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const result = streamText({
-        model: openrouter(modelId),
-        messages: allMessages as any,
+        model,
+        system: fullSystemPrompt,
+        // First turn: simulate user saying hi; subsequent turns: conversation history
+        ...(isFirstTurn
+          ? { prompt: 'Hi' }
+          : { messages }),
         temperature: narratorConfig.temperature,
+        // Enable reasoning for deepseek models
+        ...(needsThinkMiddleware && {
+          providerOptions: {
+            openrouter: {
+              reasoning: { enabled: true },
+            },
+          },
+        }),
       });
 
-      // Stream to console
+      // Stream output to console
       let fullText = '';
+      let reasoning = '';
       const retryNote = attempt > 1 ? ` [retry ${attempt}]` : '';
-      process.stdout.write(`\n📖 Narrator${retryNote}: `);
-      for await (const chunk of result.textStream) {
-        process.stdout.write(chunk);
-        fullText += chunk;
+      let hasStartedReasoning = false;
+      let hasStartedText = false;
+
+      for await (const part of result.fullStream) {
+        if (part.type === 'reasoning-delta') {
+          if (!hasStartedReasoning) {
+            process.stdout.write(`\n🧠 Narrator thinking${retryNote}:\n\x1b[2m`);
+            hasStartedReasoning = true;
+          }
+          process.stdout.write(part.text);
+          reasoning += part.text;
+        } else if (part.type === 'text-delta') {
+          if (!hasStartedText) {
+            if (hasStartedReasoning) process.stdout.write('\x1b[0m\n');
+            process.stdout.write(`\n📖 Narrator${retryNote}: `);
+            hasStartedText = true;
+          }
+          process.stdout.write(part.text);
+          fullText += part.text;
+        }
       }
       process.stdout.write('\n');
 
@@ -228,7 +263,7 @@ async function generateNarratorResponse(
       }
 
       const usage = await result.usage;
-      return { text: fullText, usage };
+      return { text: fullText, reasoning: reasoning || undefined, usage };
     } catch (error) {
       console.error(`Narrator generation error (attempt ${attempt}):`, error);
       lastError = error instanceof Error ? error : new Error(String(error));
@@ -252,15 +287,14 @@ async function generatePlayerResponse(
 
   const recentHistory = conversationHistory.slice(-10); // Last 10 messages for context
 
-  const messages = [
-    { role: 'system', content: agent.systemPrompt },
+  const messages: Array<UserModelMessage | AssistantModelMessage> = [
     ...recentHistory.map((m) => ({
-      role: m.role === 'narrator' ? 'assistant' : 'user',
+      role: (m.role === 'narrator' ? 'assistant' : 'user') as 'user' | 'assistant',
       content: m.content,
     })),
-    { role: 'assistant', content: narratorOutput },
+    { role: 'assistant' as const, content: narratorOutput },
     {
-      role: 'user',
+      role: 'user' as const,
       content: `${agent.name}, what is your reaction to this? Respond in character.`,
     },
   ];
@@ -275,7 +309,8 @@ async function generatePlayerResponse(
     try {
       const result = streamText({
         model: openrouter(currentModelId),
-        messages: messages as any,
+        system: agent.systemPrompt,
+        messages,
         temperature: 0.8,
       });
 
@@ -325,15 +360,14 @@ async function generateDirectedResponse(
 
   const recentHistory = conversationHistory.slice(-10);
 
-  const messages = [
-    { role: 'system', content: agent.systemPrompt },
+  const messages: Array<UserModelMessage | AssistantModelMessage> = [
     ...recentHistory.map((m) => ({
-      role: m.role === 'narrator' ? 'assistant' : 'user',
+      role: (m.role === 'narrator' ? 'assistant' : 'user') as 'user' | 'assistant',
       content: m.content,
     })),
-    { role: 'assistant', content: narratorOutput },
+    { role: 'assistant' as const, content: narratorOutput },
     {
-      role: 'user',
+      role: 'user' as const,
       content: `The narrator has asked YOU (${agent.name}) specific questions directly.
 
 Answer ONLY the questions addressed to you. Do not answer questions meant for other players.
@@ -352,7 +386,8 @@ Respond in character as ${agent.name}.`,
     try {
       const result = streamText({
         model: openrouter(currentModelId),
-        messages: messages as any,
+        system: agent.systemPrompt,
+        messages,
         temperature: 0.8,
       });
 
@@ -411,9 +446,8 @@ ${responsesText}
 
 As ${spokesperson.name}, synthesize these responses into a single coherent message to relay back to the narrator. Keep it concise and preserve important details.`;
 
-  const messages = [
-    { role: 'system', content: spokesperson.systemPrompt },
-    { role: 'user', content: synthesisPrompt },
+  const messages: Array<UserModelMessage> = [
+    { role: 'user' as const, content: synthesisPrompt },
   ];
 
   // Track tried models for fallback
@@ -426,7 +460,8 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
     try {
       const result = streamText({
         model: openrouter(currentModelId),
-        messages: messages as any,
+        system: spokesperson.systemPrompt,
+        messages,
         temperature: 0.7,
       });
 
@@ -461,6 +496,43 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
       throw error;
     }
   }
+}
+
+/**
+ * Run pre-game discussion
+ *
+ * Players chat as themselves BEFORE the narrator starts.
+ * Primes them with player-voice memories.
+ */
+async function runPreGameDiscussion(
+  playerAgents: PlayerAgent[],
+  spokesperson: PlayerAgent,
+  storyTitle: string,
+  costTracker: CostTracker,
+): Promise<Message[]> {
+  console.log('\n--- Pre-Game Discussion ---\n');
+
+  const preGamePrompt = `You're about to play "${storyTitle}" with your friends. Chat for a moment before starting.`;
+
+  const result = await runDiscussion(
+    preGamePrompt,
+    playerAgents,
+    spokesperson,
+    costTracker,
+    { skipSynthesis: true },
+  );
+
+  // Convert discussion messages to conversation history format
+  const messages: Message[] = result.messages.map(({ agent, message }) => ({
+    role: agent.name === spokesperson.name ? 'spokesperson' : 'player',
+    player: agent.name,
+    content: message,
+    turn: 0,
+    timestamp: Date.now(),
+  }));
+
+  console.log('');
+  return messages;
 }
 
 /**
@@ -520,11 +592,10 @@ export async function resumeSessionFromCheckpoint(
 
       try {
         // Generate narrator output (inject game state for character consistency)
-        const { text: narratorOutput, usage: narratorUsage } =
+        const { text: narratorOutput, reasoning: narratorReasoning, usage: narratorUsage } =
           await generateNarratorResponse(
             conversationHistory,
             sessionConfig.narratorConfig,
-            playerAgents.map((a) => a.name),
             gameState,
           );
 
@@ -561,6 +632,7 @@ export async function resumeSessionFromCheckpoint(
           turn,
           timestamp: Date.now(),
           classification: classification.type, // Legacy field for reports
+          reasoning: narratorReasoning,
         });
 
         // Update game state based on narrator response (location, items, NPCs)
@@ -582,13 +654,12 @@ export async function resumeSessionFromCheckpoint(
         // Route based on responseType (not mutually exclusive with isPulse)
         switch (classification.responseType) {
           case 'discussion': {
-            console.log(`🗣️  Discussion required`);
-
             const discussionResult = await runDiscussion(
               narratorOutput,
               playerAgents,
               spokesperson,
               costTracker,
+              { history: conversationHistory },
             );
 
             // Add spokesperson synthesis to history
@@ -600,32 +671,6 @@ export async function resumeSessionFromCheckpoint(
               timestamp: Date.now(),
             });
 
-            // Extract character mappings if not already populated
-            if (gameState.characters.length === 0) {
-              console.log('🎭 Extracting character mappings...');
-              const characters = await extractCharacterMappings(
-                discussionResult.spokespersonMessage,
-                playerAgents,
-                spokesperson.name,
-              );
-              if (characters.length > 0) {
-                gameState.characters = characters;
-                console.log(
-                  `   Mapped: ${characters.map((c) => `${c.odName}→${c.idName}`).join(', ')}`,
-                );
-
-                // Commit character names to each player agent's prompt
-                console.log('🔒 Committing characters to agent prompts...');
-                for (const character of characters) {
-                  const agent = playerAgents.find(
-                    (a) => a.name.toLowerCase() === character.odName.toLowerCase(),
-                  );
-                  if (agent) {
-                    commitCharacterToAgent(agent, character);
-                  }
-                }
-              }
-            }
             break;
           }
 
@@ -770,6 +815,17 @@ export async function resumeSessionFromCheckpoint(
             );
             break;
           }
+        }
+
+        // Extract character mappings until fulfilled
+        if (gameState.characters.length === 0) {
+          gameState = await tryExtractCharacters(
+            gameState,
+            conversationHistory,
+            turn,
+            playerAgents,
+            spokesperson,
+          );
         }
 
         // Save checkpoint
@@ -868,6 +924,8 @@ export async function runSession(
   config: SessionRunnerConfig,
 ): Promise<SessionResult> {
   const startTime = Date.now();
+  let sessionConfig: SessionConfig | undefined;
+  let sessionId = 'error';
 
   try {
     // 1. Generate group composition (use provided archetypes or random)
@@ -888,12 +946,12 @@ export async function runSession(
     }
 
     // 3. Create session config
-    const sessionConfig = createSessionConfig(
+    sessionConfig = createSessionConfig(
       config,
       playerAgents,
       spokesperson,
     );
-    const sessionId = sessionConfig.sessionId;
+    sessionId = sessionConfig.sessionId;
 
     console.log(`\n🎬 ${sessionId}`);
     console.log(`📖 ${config.story.storyTitle} | 🤖 ${config.narratorModel}`);
@@ -918,17 +976,25 @@ export async function runSession(
     let outcome: SessionOutcome = 'timeout';
     let gameState: GameState = createInitialState();
 
-    // 7. Main session loop
+    // 7. Pre-game discussion (players chat as themselves before story starts)
+    const preGameMessages = await runPreGameDiscussion(
+      playerAgents,
+      spokesperson,
+      config.story.storyTitle,
+      costTracker,
+    );
+    conversationHistory.push(...preGameMessages);
+
+    // 8. Main session loop
     for (let turn = 1; turn <= sessionConfig.maxTurns; turn++) {
       console.log(`\n--- Turn ${turn} ---`);
 
       try {
         // Generate narrator output (inject game state for character consistency)
-        const { text: narratorOutput, usage: narratorUsage } =
+        const { text: narratorOutput, reasoning: narratorReasoning, usage: narratorUsage } =
           await generateNarratorResponse(
             conversationHistory,
             sessionConfig.narratorConfig,
-            playerAgents.map((a) => a.name),
             gameState,
           );
 
@@ -965,6 +1031,7 @@ export async function runSession(
           turn,
           timestamp: Date.now(),
           classification: classification.type, // Legacy field for reports
+          reasoning: narratorReasoning,
         });
 
         // Update game state based on narrator response (location, items, NPCs)
@@ -986,13 +1053,12 @@ export async function runSession(
         // Route based on responseType (not mutually exclusive with isPulse)
         switch (classification.responseType) {
           case 'discussion': {
-            console.log(`🗣️  Discussion required`);
-
             const discussionResult = await runDiscussion(
               narratorOutput,
               playerAgents,
               spokesperson,
               costTracker,
+              { history: conversationHistory },
             );
 
             // Add spokesperson synthesis to history
@@ -1004,32 +1070,6 @@ export async function runSession(
               timestamp: Date.now(),
             });
 
-            // Extract character mappings from first discussion (character intro turn)
-            if (turn === 1 && gameState.characters.length === 0) {
-              console.log('🎭 Extracting character mappings...');
-              const characters = await extractCharacterMappings(
-                discussionResult.spokespersonMessage,
-                playerAgents,
-                spokesperson.name,
-              );
-              if (characters.length > 0) {
-                gameState.characters = characters;
-                console.log(
-                  `   Mapped: ${characters.map((c) => `${c.odName}→${c.idName}`).join(', ')}`,
-                );
-
-                // Commit character names to each player agent's prompt
-                console.log('🔒 Committing characters to agent prompts...');
-                for (const character of characters) {
-                  const agent = playerAgents.find(
-                    (a) => a.name.toLowerCase() === character.odName.toLowerCase(),
-                  );
-                  if (agent) {
-                    commitCharacterToAgent(agent, character);
-                  }
-                }
-              }
-            }
             break;
           }
 
@@ -1176,6 +1216,17 @@ export async function runSession(
           }
         }
 
+        // Extract character mappings until fulfilled
+        if (gameState.characters.length === 0) {
+          gameState = await tryExtractCharacters(
+            gameState,
+            conversationHistory,
+            turn,
+            playerAgents,
+            spokesperson,
+          );
+        }
+
         // Save checkpoint
         const checkpoint = createCheckpoint(
           sessionId,
@@ -1244,9 +1295,31 @@ export async function runSession(
     };
   } catch (error) {
     console.error('Session error:', error);
+
+    // Create minimal error config if session crashed before config was created
+    const errorConfig = sessionConfig ?? ({
+      sessionId,
+      story: config.story,
+      systemPrompt: '',
+      storyGuide: '',
+      narratorConfig: {
+        model: config.narratorModel,
+        systemPrompt: '',
+        storyGuide: '',
+        temperature: 0.7,
+      },
+      group: {
+        players: [],
+        spokesperson: null as unknown as PlayerAgent,
+        size: config.groupSize ?? 1,
+      },
+      maxTurns: config.maxTurns || 100,
+      createdAt: startTime,
+    } as SessionConfig);
+
     return {
-      sessionId: 'error',
-      config: null as any,
+      sessionId,
+      config: errorConfig,
       conversationHistory: [],
       outcome: 'failed',
       finalTurn: 0,

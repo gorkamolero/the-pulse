@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { faker } from '@faker-js/faker';
 import type { ArchetypeId } from '../archetypes/types';
 import { ARCHETYPE_BY_ID } from '../archetypes/definitions';
+import { withRetry } from '../utils/retry';
 
 /**
  * Generate a diverse pool of name suggestions using Faker
@@ -217,12 +218,27 @@ Make them feel like real friends with history, not strangers.${languageInstructi
   const spinner = createSpinner();
   spinner.start();
 
-  const result = await generateObject({
-    model: openrouter('x-ai/grok-4'),
-    schema: generatedGroupSchema,
-    prompt,
-    temperature: 0.8,
-  });
+  const result = await withRetry(
+    async () => {
+      return generateObject({
+        model: openrouter('x-ai/grok-4'),
+        schema: generatedGroupSchema,
+        prompt,
+        temperature: 0.8,
+      });
+    },
+    {
+      maxRetries: 3,
+      onRetry: (attempt, error) => {
+        spinner.stop();
+        console.warn(
+          `Character generation retry ${attempt}/3:`,
+          error.message.slice(0, 80),
+        );
+        spinner.start();
+      },
+    },
+  );
 
   spinner.stop();
 

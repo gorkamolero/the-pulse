@@ -16,7 +16,7 @@ import type { StoryContext } from '../agents/player';
 import type { NarratorModel } from '../agents/narrator';
 import type { ArchetypeId } from '../archetypes/types';
 import { getStory, listStoryIds } from '../stories/loader';
-import { getSystemPrompt } from '../prompts/loader';
+import { getSystemPrompt, PROMPT_STYLES, type PromptStyle } from '../prompts/loader';
 
 // Load environment variables from .env.local (Next.js convention)
 config({ path: '.env.local' });
@@ -59,6 +59,11 @@ program
     '--archetypes <ids>',
     'Comma-separated archetype IDs (e.g., director,contrarian,wildcard)',
   )
+  .option(
+    '--prompt <style>',
+    'Narrator prompt style (mechanical, philosophical, minimal)',
+    'mechanical',
+  )
   .option('--dry-run', 'Show config without executing')
   .parse();
 
@@ -99,8 +104,16 @@ async function main() {
     process.exit(1);
   }
 
-  // Get production system prompt
-  const systemPrompt = getSystemPrompt(storyGuide, options.language);
+  // Validate prompt style
+  const promptStyle = options.prompt as PromptStyle;
+  if (!PROMPT_STYLES.includes(promptStyle)) {
+    console.error(chalk.red(`Unknown prompt style: ${options.prompt}`));
+    console.log(chalk.yellow('Available styles:'), PROMPT_STYLES.join(', '));
+    process.exit(1);
+  }
+
+  // Get system prompt for selected style
+  const systemPrompt = getSystemPrompt(storyGuide, options.language, promptStyle);
 
   // Parse archetypes if provided
   const archetypes = options.archetypes
@@ -117,6 +130,7 @@ async function main() {
     maxTurns: options.maxTurns,
     temperature: options.temperature,
     language: options.language,
+    promptStyle,
   };
 
   if (options.dryRun) {
@@ -125,7 +139,7 @@ async function main() {
       : `${options.players || 'random'} players`;
     console.log(
       chalk.cyan(
-        `\n📋 ${story.storyTitle} | ${options.narrator} | ${playerInfo} | ${options.maxTurns} turns`,
+        `\n📋 ${story.storyTitle} | ${options.narrator} | ${promptStyle} prompt | ${playerInfo} | ${options.maxTurns} turns`,
       ),
     );
     console.log(chalk.yellow('[Dry run - not executing]\n'));

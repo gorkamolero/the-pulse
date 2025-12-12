@@ -104,7 +104,7 @@ export async function safeAPICall<T>(
 /**
  * Wrap async function with error boundary
  */
-export function withErrorBoundary<T extends any[], R>(
+export function withErrorBoundary<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
   errorHandler?: (error: Error) => R | Promise<R>,
 ) {

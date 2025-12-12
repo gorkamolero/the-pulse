@@ -8,6 +8,7 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject, type LanguageModelUsage } from 'ai';
 import { z } from 'zod';
+import { withRetryOrFallback } from '../utils/retry';
 
 /**
  * Response type determines HOW players should respond
@@ -138,7 +139,19 @@ function deriveLegacyType(
 }
 
 /**
- * Classify narrator output using LLM
+ * Default fallback classification when all retries fail
+ */
+const FALLBACK_CLASSIFICATION: Classification = {
+  isPulse: true, // Assume pulse to keep story moving
+  isEnding: false,
+  responseType: 'group',
+  confidence: 0,
+  reasoning: 'Classification failed - using fallback',
+  type: 'pulse',
+};
+
+/**
+ * Classify narrator output using LLM with retry logic
  */
 export async function classifyOutput(
   narratorOutput: string,
@@ -147,43 +160,65 @@ export async function classifyOutput(
     playerNames?: string[];
   },
 ): Promise<Classification> {
-  try {
-    const openrouter = createOpenRouter({
-      apiKey: process.env.OPENROUTER_API_KEY,
-    });
+  const openrouter = createOpenRouter({
+    apiKey: process.env.OPENROUTER_API_KEY,
+  });
 
-    const result = await generateObject({
-      model: openrouter('google/gemini-2.5-flash'),
-      schema: classificationSchema,
-      messages: [
-        {
-          role: 'system',
-          content: CLASSIFICATION_PROMPT,
-        },
-        {
-          role: 'user',
-          content: `Narrator output to classify:\n\n${narratorOutput}\n\nContext: ${context?.previousPulseCount ? `Previous pulse count: ${context.previousPulseCount}` : 'Unknown'}\nPlayer names: ${context?.playerNames?.join(', ') || 'Unknown'}`,
-        },
-      ],
-      temperature: 0.3,
-    });
+  const { result, usedFallback } = await withRetryOrFallback(
+    async () => {
+      const response = await generateObject({
+        model: openrouter('google/gemini-2.5-flash'),
+        schema: classificationSchema,
+        messages: [
+          {
+            role: 'system',
+            content: CLASSIFICATION_PROMPT,
+          },
+          {
+            role: 'user',
+            content: `Narrator output to classify:\n\n${narratorOutput}\n\nContext: ${context?.previousPulseCount ? `Previous pulse count: ${context.previousPulseCount}` : 'Unknown'}\nPlayer names: ${context?.playerNames?.join(', ') || 'Unknown'}`,
+          },
+        ],
+        temperature: 0.3,
+      });
 
-    const { isPulse, isEnding, responseType, targetPlayers, confidence, reasoning } = result.object;
+      const {
+        isPulse,
+        isEnding,
+        responseType,
+        targetPlayers,
+        confidence,
+        reasoning,
+      } = response.object;
 
-    return {
-      isPulse,
-      isEnding,
-      responseType,
-      targetPlayers,
-      confidence,
-      reasoning,
-      type: deriveLegacyType(isPulse, isEnding, responseType),
-      usage: result.usage,
-    };
-  } catch (error) {
-    console.error('Classification error:', error);
-    throw error;
+      return {
+        isPulse,
+        isEnding,
+        responseType,
+        targetPlayers,
+        confidence,
+        reasoning,
+        type: deriveLegacyType(isPulse, isEnding, responseType),
+        usage: response.usage,
+      } as Classification;
+    },
+    FALLBACK_CLASSIFICATION,
+    {
+      maxRetries: 3,
+      onRetry: (attempt, error) => {
+        console.warn(
+          `Classification retry ${attempt}/3:`,
+          error.message.slice(0, 100),
+        );
+      },
+    },
+  );
+
+  if (usedFallback) {
+    console.warn('Classification used fallback after all retries failed');
   }
+
+  return result;
 }
 
 /**

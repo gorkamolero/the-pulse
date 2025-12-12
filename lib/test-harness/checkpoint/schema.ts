@@ -10,16 +10,7 @@ import type { NarratorConfig } from '../agents/narrator';
 import type { StoryContext } from '../agents/player';
 import type { Message } from '../session/turn';
 import type { PrivateMoment } from '../session/private';
-
-export interface Tangent {
-  startTurn: number;
-  endTurn: number;
-  length: number;
-  initiator: string;
-  type: string;
-  recoveryMethod: string;
-  segueQuality: number;
-}
+import type { TangentMoment } from '../session/tangent';
 
 export interface GroupConfig {
   players: PlayerAgent[];
@@ -37,6 +28,7 @@ export interface SessionConfig {
   maxTurns: number;
   seed?: number;
   createdAt: number;
+  promptStyle?: string; // Prompt variant (mechanical, philosophical, minimal)
 }
 
 export interface Checkpoint {
@@ -49,7 +41,7 @@ export interface Checkpoint {
   spokespersonId: string;
   sessionConfig: SessionConfig;
   detectedPulses: number[];
-  detectedTangents: Tangent[];
+  detectedTangents: TangentMoment[];
   privateMoments: PrivateMoment[];
   metadata: {
     parentCheckpoint?: string; // For branching
@@ -70,7 +62,7 @@ export function createCheckpoint(
   spokesperson: PlayerAgent,
   sessionConfig: SessionConfig,
   detectedPulses: number[],
-  detectedTangents: Tangent[],
+  detectedTangents: TangentMoment[],
   privateMoments: PrivateMoment[],
   metadata?: {
     parentCheckpoint?: string;
@@ -96,20 +88,22 @@ export function createCheckpoint(
 /**
  * Validate checkpoint structure
  */
-export function validateCheckpoint(checkpoint: any): checkpoint is Checkpoint {
+export function validateCheckpoint(checkpoint: unknown): checkpoint is Checkpoint {
+  if (!checkpoint || typeof checkpoint !== 'object') return false;
+  const c = checkpoint as Record<string, unknown>;
   return (
-    checkpoint &&
-    typeof checkpoint.version === 'string' &&
-    typeof checkpoint.sessionId === 'string' &&
-    typeof checkpoint.turn === 'number' &&
-    typeof checkpoint.timestamp === 'number' &&
-    Array.isArray(checkpoint.conversationHistory) &&
-    Array.isArray(checkpoint.playerAgents) &&
-    typeof checkpoint.spokespersonId === 'string' &&
-    checkpoint.sessionConfig &&
-    Array.isArray(checkpoint.detectedPulses) &&
-    Array.isArray(checkpoint.detectedTangents) &&
-    Array.isArray(checkpoint.privateMoments)
+    typeof c.version === 'string' &&
+    typeof c.sessionId === 'string' &&
+    typeof c.turn === 'number' &&
+    typeof c.timestamp === 'number' &&
+    Array.isArray(c.conversationHistory) &&
+    Array.isArray(c.playerAgents) &&
+    typeof c.spokespersonId === 'string' &&
+    c.sessionConfig !== null &&
+    c.sessionConfig !== undefined &&
+    Array.isArray(c.detectedPulses) &&
+    Array.isArray(c.detectedTangents) &&
+    Array.isArray(c.privateMoments)
   );
 }
 
