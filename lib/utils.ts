@@ -1,6 +1,6 @@
 import type {
-  CoreAssistantMessage,
-  CoreToolMessage,
+  AssistantModelMessage,
+  ToolModelMessage,
   UIMessage,
   TextUIPart,
   ReasoningUIPart,
@@ -65,7 +65,7 @@ function addToolMessageToChat({
   toolMessage,
   messages,
 }: {
-  toolMessage: CoreToolMessage;
+  toolMessage: ToolModelMessage;
   messages: Array<LegacyMessage>;
 }): Array<LegacyMessage> {
   return messages.map((message) => {
@@ -74,14 +74,14 @@ function addToolMessageToChat({
         ...message,
         toolInvocations: message.toolInvocations.map((toolInvocation) => {
           const toolResult = toolMessage.content.find(
-            (tool) => tool.toolCallId === toolInvocation.toolCallId,
+            (tool) => 'toolCallId' in tool && tool.toolCallId === toolInvocation.toolCallId,
           );
 
-          if (toolResult) {
+          if (toolResult && 'toolCallId' in toolResult) {
             return {
               ...toolInvocation,
               state: 'result',
-              result: (toolResult as { output?: unknown }).output,
+              result: (toolResult as { result?: unknown }).result,
             };
           }
 
@@ -198,7 +198,7 @@ export function convertUIMessageToLegacyFormat(message: UIMessage): LegacyMessag
   };
 }
 
-type ResponseMessageWithoutId = CoreToolMessage | CoreAssistantMessage;
+type ResponseMessageWithoutId = ToolModelMessage | AssistantModelMessage;
 export type ResponseMessage = ResponseMessageWithoutId & { id: string };
 
 export function sanitizeResponseMessages({
