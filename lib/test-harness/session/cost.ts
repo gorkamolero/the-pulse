@@ -41,6 +41,7 @@ const MODEL_PRICING = {
 
   // Player models
   'qwen/qwen-2.5-72b-instruct': { input: 0.35, output: 0.4 },
+  'qwen/qwen3-32b': { input: 0.08, output: 0.24 },
   'moonshotai/kimi-k2': { input: 0.08, output: 0.08 },
 
   // Shared models (can be used as narrator or player)

@@ -43,6 +43,26 @@ function generateNameSuggestions(count: number): string[] {
   return shuffled.slice(0, count);
 }
 
+/**
+ * Generate backstory seeds using Faker for variety
+ * Prevents LLM from defaulting to story-themed origins
+ */
+interface BackstorySeed {
+  hometown: string;
+  state: string;
+  formerJob: string;
+  trait: string;
+}
+
+function generateBackstorySeeds(count: number): BackstorySeed[] {
+  return Array.from({ length: count }, () => ({
+    hometown: faker.location.city(),
+    state: faker.location.state(),
+    formerJob: faker.person.jobTitle(),
+    trait: faker.person.bio(),
+  }));
+}
+
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
@@ -180,10 +200,15 @@ export async function generateGroup(
   // Generate a fresh pool of name suggestions for variety
   const suggestedNames = generateNameSuggestions(archetypeIds.length * 4);
 
+  // Generate backstory seeds to prevent coastal-town defaults
+  const backstorySeeds = generateBackstorySeeds(archetypeIds.length);
+
   const archetypeDescriptions = archetypeIds
     .map((id, index) => {
       const archetype = ARCHETYPE_BY_ID[id];
-      return `Player ${index + 1} - ${archetype.name} (${id}): ${archetype.style}`;
+      const seed = backstorySeeds[index];
+      return `Player ${index + 1} - ${archetype.name} (${id}): ${archetype.style}
+   Origin: ${seed.hometown}, ${seed.state} | Former: ${seed.formerJob} | Vibe: ${seed.trait}`;
     })
     .join('\n');
 
@@ -204,14 +229,11 @@ ${archetypeDescriptions}
 NAME SUGGESTIONS (pick from these or use similar uncommon names):
 ${suggestedNames.join(', ')}
 
-Create a believable friend group where:
-- They have a clear shared history (how they met, how long ago)
-- They have a reason for tonight's session (game night, birthday, etc.)
-- One of them suggested this specific story for a reason
-- They have 2-3 shared memories/inside jokes
+Create a believable friend group:
+- Clear shared history (how they met, how long ago)
 - Each player has relationships with the OTHER players (use their actual names)
-- Each player's personality matches their archetype
-- The "organizer" field should contain one player's NAME (the one who suggested the game)
+- One of them suggested this specific story for a reason
+- The "organizer" field is one player's NAME
 
 Make them feel like real friends with history, not strangers.${languageInstruction}`;
 
