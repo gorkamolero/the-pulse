@@ -18,7 +18,7 @@ import {
 import type { ArchetypeId } from '../archetypes/types';
 import { ARCHETYPES } from '../archetypes/definitions';
 import { getNextFallbackModel } from '../archetypes/types';
-import type { PlayerAgent, StoryContext } from '../agents/player';
+import type { PlayerAgent, StoryContext, GeneratedGroup } from '../agents/player';
 import { createPlayerAgents } from '../agents/player';
 import type { NarratorConfig } from '../agents/narrator';
 import { NARRATOR_MODEL_MAP, THINK_TAG_MODELS } from '../agents/narrator';
@@ -77,6 +77,7 @@ export interface SessionRunnerConfig {
   narratorModel: NarratorConfig['model'];
   groupSize?: number; // If not specified, random 2-5
   archetypes?: ArchetypeId[]; // Specific archetypes to use (overrides groupSize)
+  preGeneratedGroup?: GeneratedGroup; // Pre-generated group for comparison tests
   maxTurns?: number;
   temperature?: number;
   maxTokens?: number;
@@ -935,6 +936,7 @@ export async function runSession(
       archetypeIds,
       config.story,
       config.language,
+      config.preGeneratedGroup,
     );
 
     // 2. Select random spokesperson

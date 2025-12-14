@@ -16,6 +16,9 @@ import {
   type GeneratedPlayer,
 } from './character-generator';
 
+// Re-export for use in compare.ts
+export { generateGroup, type GeneratedGroup };
+
 export interface PlayerAgent {
   archetype: ArchetypeId;
   name: string;
@@ -171,6 +174,7 @@ export async function createPlayerAgents(
   archetypeIds: ArchetypeId[],
   storyContext: StoryContext,
   language = 'english',
+  preGeneratedGroup?: GeneratedGroup,
 ): Promise<PlayerAgent[]> {
   // Convert to generator story context format
   const generatorContext: GeneratorStoryContext = {
@@ -182,8 +186,8 @@ export async function createPlayerAgents(
 
   console.log('\n--- Group Generation ---\n');
 
-  // Single LLM call generates everything
-  const generated = await generateGroup(
+  // Use pre-generated group or generate new one
+  const generated = preGeneratedGroup ?? await generateGroup(
     generatorContext,
     archetypeIds,
     language,
