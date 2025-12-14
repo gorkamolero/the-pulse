@@ -1,9 +1,13 @@
 import { getStoryById, stories } from "@/lib/ai/stories";
 import type { Session } from "next-auth";
 
+interface DataStream {
+  append: (data: { type: string; [key: string]: unknown }) => void;
+}
+
 interface SelectStoryParams {
   session: Session;
-  dataStream: any; // Using any for now as the exact type is not clear
+  dataStream: DataStream;
 }
 
 interface SelectStoryInput {

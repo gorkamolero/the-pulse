@@ -3,9 +3,11 @@ import { PreviewMessage, ThinkingMessage } from './message';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { memo } from 'react';
 import equal from 'fast-deep-equal';
+import { getUIMessageContent } from '@/lib/utils';
+import type { Attachment } from '@/lib/types/message';
 
 type ChatRequestOptions = {
-  experimental_attachments?: Array<any>;
+  experimental_attachments?: Attachment[];
 };
 
 interface MessagesProps {
@@ -44,7 +46,7 @@ function PureMessages({
     >
 
       {messages.map((message, index) => {
-        const isLastAssistantMessage = message?.content === lastAssistantMessage?.content
+        const isLastAssistantMessage = lastAssistantMessage && getUIMessageContent(message) === getUIMessageContent(lastAssistantMessage)
         return (
           <PreviewMessage
             key={message.id}

@@ -231,6 +231,9 @@ importers:
         specifier: ^4.1.13
         version: 4.1.13
     devDependencies:
+      '@ai-sdk/provider':
+        specifier: ^2.0.0
+        version: 2.0.0
       '@biomejs/biome':
         specifier: 1.9.4
         version: 1.9.4

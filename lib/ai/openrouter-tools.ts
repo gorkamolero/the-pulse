@@ -1,5 +1,5 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { type LanguageModelV1, streamText } from "ai";
+import { type LanguageModel, streamText, tool } from "ai";
 import { z } from "zod";
 
 /**
@@ -13,11 +13,11 @@ export const getRecipe = async (modelName: string) => {
   });
 
   const result = await streamText({
-    model: openrouter(modelName) as unknown as LanguageModelV1,
+    model: openrouter(modelName) as unknown as LanguageModel,
     prompt: "Write a vegetarian lasagna recipe for 4 people.",
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 };
 
 /**
@@ -35,12 +35,12 @@ export const getWeather = async (
   });
 
   const result = await streamText({
-    model: openrouter(modelName) as unknown as LanguageModelV1,
+    model: openrouter(modelName) as unknown as LanguageModel,
     prompt: `What is the weather in ${location} in Fahrenheit?`,
     tools: {
-      getCurrentWeather: {
+      getCurrentWeather: tool({
         description: "Get the current weather in a given location",
-        parameters: z.object({
+        inputSchema: z.object({
           location: z
             .string()
             .describe("The city and state, e.g. San Francisco, CA"),
@@ -84,11 +84,11 @@ export const getWeather = async (
 
           return `The current weather in ${location} is ${weather[unit]}.`;
         },
-      },
+      }),
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 };
 
 /**
@@ -103,13 +103,13 @@ export const generateCode = async (modelName: string, prompt: string) => {
   });
 
   const result = await streamText({
-    model: openrouter(modelName) as unknown as LanguageModelV1,
+    model: openrouter(modelName) as unknown as LanguageModel,
     prompt: prompt,
     tools: {
-      searchDocumentation: {
+      searchDocumentation: tool({
         description:
           "Search documentation for a specific programming language or framework",
-        parameters: z.object({
+        inputSchema: z.object({
           language: z
             .string()
             .describe("The programming language or framework to search for"),
@@ -128,9 +128,9 @@ export const generateCode = async (modelName: string, prompt: string) => {
           // In a real implementation, this would query documentation APIs
           return `Found documentation for ${query} in ${language}. Here's a sample usage...`;
         },
-      },
+      }),
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 };

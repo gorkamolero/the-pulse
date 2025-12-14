@@ -2,14 +2,19 @@
 
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
-import type { ChatRequestOptions, CreateMessage, Message } from "ai";
+import type { CreateUIMessage, UIMessage } from "ai";
+import type { Attachment } from "@/lib/types/message";
 import { memo } from "react";
 import { stories } from "../lib/ai/stories";
+
+type ChatRequestOptions = {
+  experimental_attachments?: Attachment[];
+};
 
 interface SuggestedActionsProps {
   chatId: string;
   append: (
-    message: Message | CreateMessage,
+    message: UIMessage | CreateUIMessage<UIMessage>,
     chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
   onSelectStory?: (storyId: string) => void;
@@ -49,7 +54,7 @@ function PureSuggestedActions({
 
               append({
                 role: "user",
-                content: storyAction.action,
+                parts: [{ type: "text", text: storyAction.action }],
               });
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto min-h-[120px] justify-start items-start"

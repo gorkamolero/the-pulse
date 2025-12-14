@@ -5,16 +5,22 @@
  * the main game and test harness.
  */
 
-import { streamText, type LanguageModelV1 } from 'ai';
+import {
+  streamText,
+  type LanguageModel,
+  type UserModelMessage,
+  type AssistantModelMessage,
+  type LanguageModelUsage,
+} from 'ai';
 import { isGarbageOutput, describeGarbageReason } from './validation';
 
 export interface NarratorStreamOptions {
   /** The language model to use */
-  model: LanguageModelV1;
+  model: LanguageModel;
   /** System prompt for the narrator */
   system: string;
   /** Conversation messages */
-  messages: Array<{ role: string; content: string }>;
+  messages: Array<UserModelMessage | AssistantModelMessage>;
   /** Temperature for generation */
   temperature?: number;
   /** Maximum retry attempts for garbage output */
@@ -29,11 +35,7 @@ export interface NarratorStreamResult {
   /** The generated text */
   text: string;
   /** Token usage statistics */
-  usage: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
+  usage: LanguageModelUsage;
   /** Number of attempts made */
   attempts: number;
 }
@@ -64,7 +66,7 @@ export async function generateNarratorStream(
       const result = streamText({
         model,
         system,
-        messages: messages as any,
+        messages,
         temperature,
       });
 
@@ -91,11 +93,7 @@ export async function generateNarratorStream(
 
       return {
         text: fullText,
-        usage: {
-          promptTokens: usage.promptTokens,
-          completionTokens: usage.completionTokens,
-          totalTokens: usage.totalTokens,
-        },
+        usage,
         attempts: attempt,
       };
     } catch (error) {
@@ -136,7 +134,7 @@ export async function createNarratorStreamResponse(
       const result = streamText({
         model,
         system,
-        messages: messages as any,
+        messages,
         temperature,
       });
 

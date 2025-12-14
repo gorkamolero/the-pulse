@@ -1,5 +1,6 @@
 import { compare } from 'bcrypt-ts';
 import NextAuth, { type User, type Session } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 import Credentials from 'next-auth/providers/credentials';
 
 import { getUser } from '@/lib/db/queries';
@@ -8,6 +9,11 @@ import { authConfig } from './auth.config';
 
 interface ExtendedSession extends Session {
   user: User;
+}
+
+interface CredentialsInput {
+  email: string;
+  password: string;
 }
 
 export const {
@@ -20,13 +26,14 @@ export const {
   providers: [
     Credentials({
       credentials: {},
-      async authorize({ email, password }: any) {
+      async authorize(credentials) {
+        const { email, password } = credentials as CredentialsInput;
         const users = await getUser(email);
         if (users.length === 0) return null;
         // biome-ignore lint: Forbidden non-null assertion.
         const passwordsMatch = await compare(password, users[0].password!);
         if (!passwordsMatch) return null;
-        return users[0] as any;
+        return users[0] as User;
       },
     }),
   ],
@@ -43,7 +50,7 @@ export const {
       token,
     }: {
       session: ExtendedSession;
-      token: any;
+      token: JWT;
     }) {
       if (session.user) {
         session.user.id = token.id as string;

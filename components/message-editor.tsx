@@ -1,16 +1,21 @@
 'use client';
 
-import type { ChatRequestOptions, Message } from 'ai';
+import type { UIMessage } from 'ai';
+import type { LegacyMessage, Attachment } from '@/lib/types/message';
 import { Button } from './ui/button';
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
 import { Textarea } from './ui/textarea';
 import { deleteTrailingMessages } from '@/app/(chat)/actions';
 
+type ChatRequestOptions = {
+  experimental_attachments?: Attachment[];
+};
+
 export type MessageEditorProps = {
-  message: Message;
+  message: LegacyMessage;
   setMode: Dispatch<SetStateAction<'view' | 'edit'>>;
   setMessages: (
-    messages: Message[] | ((messages: Message[]) => Message[]),
+    messages: UIMessage[] | ((messages: UIMessage[]) => UIMessage[]),
   ) => void;
   reload: (
     chatRequestOptions?: ChatRequestOptions,
@@ -80,9 +85,11 @@ export function MessageEditor({
               const index = messages.findIndex((m) => m.id === message.id);
 
               if (index !== -1) {
-                const updatedMessage = {
-                  ...message,
-                  content: draftContent,
+                const originalMessage = messages[index];
+                // Update the UIMessage by replacing text parts with new content
+                const updatedMessage: UIMessage = {
+                  ...originalMessage,
+                  parts: [{ type: 'text', text: draftContent }],
                 };
 
                 return [...messages.slice(0, index), updatedMessage];

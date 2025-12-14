@@ -1,20 +1,24 @@
-declare module "ai" {
-  interface Message {
-    imageUrl?: string | null;
-  }
-}
-
 import type {
   CoreAssistantMessage,
   CoreToolMessage,
-  Message,
-  ToolInvocation,
   UIMessage,
+  TextUIPart,
+  ReasoningUIPart,
 } from 'ai';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 import type { Message as DBMessage, Document } from '@/lib/db/schema';
+import type { LegacyMessage } from '@/lib/types/message';
+
+// Local ToolInvocation type (UIToolInvocation in SDK v5)
+interface ToolInvocation {
+  toolCallId: string;
+  toolName: string;
+  args: Record<string, unknown>;
+  state: 'call' | 'result' | 'partial-call';
+  result?: unknown;
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -62,8 +66,8 @@ function addToolMessageToChat({
   messages,
 }: {
   toolMessage: CoreToolMessage;
-  messages: Array<Message>;
-}): Array<Message> {
+  messages: Array<LegacyMessage>;
+}): Array<LegacyMessage> {
   return messages.map((message) => {
     if (message.toolInvocations) {
       return {
@@ -77,7 +81,7 @@ function addToolMessageToChat({
             return {
               ...toolInvocation,
               state: 'result',
-              result: toolResult.result,
+              result: (toolResult as { output?: unknown }).output,
             };
           }
 
@@ -99,7 +103,7 @@ export function convertToUIMessages(
       return chatMessages;
     }
 
-    const parts: Array<any> = [];
+    const parts: UIMessage['parts'] = [];
 
     if (typeof message.content === 'string') {
       if (message.content) {
@@ -116,15 +120,14 @@ export function convertToUIMessages(
             text: content.text,
           });
         } else if (content.type === 'tool-call') {
+          // SDK v5: tool invocation properties are flattened, not nested
           parts.push({
-            type: 'tool-invocation',
-            toolInvocation: {
-              state: 'call',
-              toolCallId: content.toolCallId,
-              toolName: content.toolName,
-              args: content.args,
-            },
-          });
+            type: `tool-${content.toolName}`,
+            toolCallId: content.toolCallId,
+            toolName: content.toolName,
+            state: 'input-available',
+            input: content.args,
+          } as UIMessage['parts'][number]);
         } else if (content.type === 'reasoning') {
           parts.push({
             type: 'reasoning',
@@ -147,35 +150,56 @@ export function convertToUIMessages(
 // Helper functions to work with UIMessage
 export function getUIMessageContent(message: UIMessage): string {
   return message.parts
-    .filter((part) => part.type === 'text')
-    .map((part: any) => part.text)
+    .filter((part): part is TextUIPart => part.type === 'text')
+    .map((part) => part.text)
     .join('');
 }
 
 export function getUIMessageReasoning(message: UIMessage): string | undefined {
-  const reasoningPart = message.parts.find((part) => part.type === 'reasoning');
-  return reasoningPart ? (reasoningPart as any).text : undefined;
+  const reasoningPart = message.parts.find((part): part is ReasoningUIPart => part.type === 'reasoning');
+  return reasoningPart?.text;
+}
+
+// Type for tool invocation parts in SDK v5 (properties are flattened)
+interface ToolInvocationPart {
+  type: string;
+  toolCallId: string;
+  toolName?: string;
+  input?: unknown;
+  output?: unknown;
+  state: string;
 }
 
 export function getUIMessageToolInvocations(message: UIMessage): Array<ToolInvocation> {
   return message.parts
-    .filter((part) => part.type === 'tool-invocation')
-    .map((part: any) => part.toolInvocation);
+    .filter((part) => part.type.startsWith('tool-') || part.type === 'tool-invocation')
+    .map((part) => {
+      // Cast to access SDK v5 flattened properties
+      const toolPart = part as unknown as ToolInvocationPart;
+      return {
+        toolCallId: toolPart.toolCallId,
+        toolName: toolPart.toolName ?? toolPart.type.replace('tool-', ''),
+        args: (toolPart.input ?? {}) as Record<string, unknown>,
+        state: toolPart.state === 'output-available' ? 'result' as const :
+               toolPart.state === 'input-available' ? 'call' as const : 'partial-call' as const,
+        result: toolPart.output,
+      };
+    });
 }
 
-// Create a Message-like interface for backward compatibility
-export function convertUIMessageToLegacyFormat(message: UIMessage): Message {
+// Create a LegacyMessage-like interface for backward compatibility
+export function convertUIMessageToLegacyFormat(message: UIMessage): LegacyMessage {
   return {
     id: message.id,
     role: message.role,
     content: getUIMessageContent(message),
     reasoning: getUIMessageReasoning(message),
     toolInvocations: getUIMessageToolInvocations(message),
-  } as Message;
+  };
 }
 
 type ResponseMessageWithoutId = CoreToolMessage | CoreAssistantMessage;
-type ResponseMessage = ResponseMessageWithoutId & { id: string };
+export type ResponseMessage = ResponseMessageWithoutId & { id: string };
 
 export function sanitizeResponseMessages({
   messages,
@@ -225,7 +249,7 @@ export function sanitizeResponseMessages({
   );
 }
 
-export function sanitizeUIMessages(messages: Array<Message>): Array<Message> {
+export function sanitizeUIMessages(messages: Array<LegacyMessage>): Array<LegacyMessage> {
   const messagesBySanitizedToolInvocations = messages.map((message) => {
     if (message.role !== 'assistant') return message;
 
@@ -258,7 +282,7 @@ export function sanitizeUIMessages(messages: Array<Message>): Array<Message> {
   );
 }
 
-export function getMostRecentUserMessage(messages: Array<Message>) {
+export function getMostRecentUserMessage(messages: Array<UIMessage>) {
   const userMessages = messages.filter((message) => message.role === 'user');
   return userMessages.at(-1);
 }

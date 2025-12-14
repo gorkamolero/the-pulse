@@ -1,4 +1,4 @@
-import type { Message } from "ai";
+import type { LegacyMessage } from "@/lib/types/message";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -21,7 +21,7 @@ export function PureMessageActions({
   autoplay
 }: {
   chatId: string;
-  message: Message;
+  message: LegacyMessage;
   isLoading: boolean;
   autoplay?: boolean
 }) {

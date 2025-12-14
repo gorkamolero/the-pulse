@@ -76,7 +76,7 @@
         "noUselessElse": "off" // Stylistic opinion
       },
       "suspicious": {
-        "noExplicitAny": "off" // We trust Vercelians to use any only when necessary
+        "noExplicitAny": "error" // Disallow 'any' type - use proper SDK types
       },
       "nursery": {
         "noStaticElementInteractions": "warn",

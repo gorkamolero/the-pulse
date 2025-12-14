@@ -1,12 +1,7 @@
 "use client";
 
-import type { UIMessage } from "ai";
-
-type Attachment = {
-  url: string;
-  name?: string;
-  contentType?: string;
-};
+import type { UIMessage, CreateUIMessage } from "ai";
+import type { Attachment } from "@/lib/types/message";
 
 type ChatRequestOptions = {
   experimental_attachments?: Array<Attachment>;
@@ -25,8 +20,6 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
-
-import { sanitizeUIMessages } from "@/lib/utils";
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
 import { PreviewAttachment } from "./preview-attachment";
@@ -60,7 +53,7 @@ function PureMultimodalInput({
   messages: Array<UIMessage>;
   setMessages: Dispatch<SetStateAction<Array<UIMessage>>>;
   append: (
-    message: UIMessage,
+    message: UIMessage | CreateUIMessage<UIMessage>,
     chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
   handleSubmit: (
@@ -345,7 +338,7 @@ function PureStopButton({
   setMessages,
 }: {
   stop: () => void;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
+  setMessages: Dispatch<SetStateAction<Array<UIMessage>>>;
 }) {
   return (
     <Button
@@ -353,7 +346,8 @@ function PureStopButton({
       onClick={(event) => {
         event.preventDefault();
         stop();
-        setMessages((messages) => sanitizeUIMessages(messages));
+        // UIMessages are already sanitized through SDK
+        setMessages((messages) => messages);
       }}
     >
       <StopIcon size={14} />

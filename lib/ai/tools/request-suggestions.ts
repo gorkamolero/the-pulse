@@ -1,28 +1,30 @@
 import { z } from 'zod';
 import type { Session } from 'next-auth';
-import { type DataStreamWriter, streamObject, tool } from 'ai';
+import { streamObject, tool } from 'ai';
 import { getDocumentById, saveSuggestions } from '@/lib/db/queries';
 import type { Suggestion } from '@/lib/db/schema';
 import { generateUUID } from '@/lib/utils';
 import { myProvider } from '../models';
 
+// Note: DataStreamWriter was removed in SDK v5. This tool needs refactoring
+// to use the new streaming patterns if it's needed.
 interface RequestSuggestionsProps {
   session: Session;
-  dataStream: DataStreamWriter;
+  onSuggestion?: (suggestion: Omit<Suggestion, 'userId' | 'createdAt' | 'documentCreatedAt'>) => void;
 }
 
 export const requestSuggestions = ({
   session,
-  dataStream,
+  onSuggestion,
 }: RequestSuggestionsProps) =>
   tool({
     description: 'Request suggestions for a document',
-    parameters: z.object({
+    inputSchema: z.object({
       documentId: z
         .string()
         .describe('The ID of the document to request edits'),
     }),
-    execute: async ({ documentId }) => {
+    execute: async ({ documentId }: { documentId: string }) => {
       const document = await getDocumentById({ id: documentId });
 
       if (!document || !document.content) {
@@ -58,10 +60,8 @@ export const requestSuggestions = ({
           isResolved: false,
         };
 
-        dataStream.writeData({
-          type: 'suggestion',
-          content: suggestion,
-        });
+        // Call the optional callback for streaming updates
+        onSuggestion?.(suggestion);
 
         suggestions.push(suggestion);
       }

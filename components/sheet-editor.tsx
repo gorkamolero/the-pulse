@@ -16,6 +16,13 @@ type SheetEditorProps = {
   currentVersionIndex: number;
 };
 
+// Row type with dynamic column keys
+type RowData = {
+  id: number;
+  rowNumber: number;
+  [key: string]: string | number;
+};
+
 const MIN_ROWS = 50;
 const MIN_COLS = 26;
 
@@ -75,7 +82,7 @@ const PureSpreadsheetEditor = ({
 
   const initialRows = useMemo(() => {
     return parseData.map((row, rowIndex) => {
-      const rowData: any = {
+      const rowData: RowData = {
         id: rowIndex,
         rowNumber: rowIndex + 1,
       };
@@ -94,11 +101,11 @@ const PureSpreadsheetEditor = ({
     setLocalRows(initialRows);
   }, [initialRows]);
 
-  const generateCsv = (data: any[][]) => {
+  const generateCsv = (data: (string | number)[][]) => {
     return unparse(data);
   };
 
-  const handleRowsChange = (newRows: any[]) => {
+  const handleRowsChange = (newRows: RowData[]) => {
     setLocalRows(newRows);
 
     const updatedData = newRows.map((row) => {

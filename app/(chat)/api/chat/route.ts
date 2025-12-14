@@ -1,6 +1,7 @@
 import {
-  type Message,
+  type UIMessage,
   streamText,
+  convertToModelMessages,
 } from "ai";
 
 import { auth } from "@/app/(auth)/auth";
@@ -16,6 +17,8 @@ import {
 import {
   getMostRecentUserMessage,
   sanitizeResponseMessages,
+  getUIMessageContent,
+  type ResponseMessage,
 } from "@/lib/utils";
 import {
   isGarbageOutput,
@@ -36,7 +39,7 @@ export async function POST(request: Request) {
     language = "en",
   }: {
     id: string;
-    messages: Array<Message>;
+    messages: Array<UIMessage>;
     selectedChatModel: string;
     selectedStoryId?: string;
     language?: string;
@@ -72,7 +75,9 @@ export async function POST(request: Request) {
 
   await saveMessages({
     messages: [{
-      ...(userMessage as any),
+      id: userMessage.id,
+      role: userMessage.role,
+      content: getUIMessageContent(userMessage),
       createdAt: new Date(),
       chatId: id,
       imageUrl: null
@@ -85,19 +90,10 @@ export async function POST(request: Request) {
     language: language === "es" ? "spanish" : "english",
   })
 
-  // Extract player names from conversation for garbage detection
-  const playerNames: string[] = [];
-  for (const msg of messages) {
-    if (msg.role === 'user' && typeof msg.content === 'string') {
-      // Look for common player name patterns in early messages
-      const nameMatch = msg.content.match(/(?:I'm|I am|name is|call me)\s+(\w+)/i);
-      if (nameMatch?.[1]) {
-        playerNames.push(nameMatch[1]);
-      }
-    }
-  }
-
   const maxRetries = 3;
+
+  // Convert UIMessages to ModelMessages for the AI SDK
+  const modelMessages = convertToModelMessages(messages);
 
   // Generate with retry - collect full text first, then stream if valid
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -105,7 +101,7 @@ export async function POST(request: Request) {
       const result = streamText({
         model: myProvider.languageModel(selectedChatModel),
         system: getSystemPromptForLanguage(language),
-        messages: messages as any,
+        messages: modelMessages,
         experimental_telemetry: {
           isEnabled: true,
           functionId: "stream-text",
@@ -115,8 +111,8 @@ export async function POST(request: Request) {
       // Collect full text to check for garbage before returning
       const fullText = await result.text;
 
-      if (isGarbageOutput(fullText, playerNames)) {
-        const reason = describeGarbageReason(fullText, playerNames);
+      if (isGarbageOutput(fullText)) {
+        const reason = describeGarbageReason(fullText);
         console.warn(`Narrator garbage detected (attempt ${attempt}/${maxRetries}): ${reason}`);
         if (attempt < maxRetries) {
           continue; // Retry
@@ -130,9 +126,11 @@ export async function POST(request: Request) {
 
       if (session.user?.id) {
         try {
+          // Convert reasoning array to string for sanitization
+          const reasoningText = reasoning?.map(r => r.text).join('\n');
           const sanitizedResponseMessages = sanitizeResponseMessages({
-            messages: response.messages as any,
-            reasoning: reasoning as any,
+            messages: response.messages as unknown as Array<ResponseMessage>,
+            reasoning: reasoningText,
           });
 
           const lastAssistantMessage = sanitizedResponseMessages.filter(m => m.role === 'assistant').pop()

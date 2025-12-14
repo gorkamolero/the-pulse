@@ -4,13 +4,19 @@ import type { UIMessage } from "ai";
 import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useState, useMemo } from "react";
-import { convertUIMessageToLegacyFormat } from "@/lib/utils";
+import {
+  convertUIMessageToLegacyFormat,
+  getUIMessageContent,
+  getUIMessageReasoning,
+  getUIMessageToolInvocations,
+} from "@/lib/utils";
+import type { Attachment } from "@/lib/types/message";
 
 import { PencilEditIcon, SparklesIcon } from "./icons";
 import { Markdown } from "./markdown";
 import { MessageActions } from "./message-actions";
 import { PreviewAttachment } from "./preview-attachment";
-import { Weather } from "./weather";
+import { Weather, type WeatherAtLocation } from "./weather";
 import equal from "fast-deep-equal";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -19,7 +25,7 @@ import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 
 type ChatRequestOptions = {
-  experimental_attachments?: Array<any>;
+  experimental_attachments?: Attachment[];
 };
 
 const PurePreviewMessage = ({
@@ -148,7 +154,7 @@ const PurePreviewMessage = ({
                     return (
                       <div key={toolCallId}>
                         {toolName === "getWeather" ? (
-                          <Weather weatherAtLocation={result} />
+                          <Weather weatherAtLocation={result as WeatherAtLocation} />
                         ) : toolName === "generatePulseImage" ? (
                           null
                         ) : (
@@ -193,13 +199,13 @@ export const PreviewMessage = memo(
   PurePreviewMessage,
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
-    if (prevProps.message.reasoning !== nextProps.message.reasoning)
+    if (getUIMessageReasoning(prevProps.message) !== getUIMessageReasoning(nextProps.message))
       return false;
-    if (prevProps.message.content !== nextProps.message.content) return false;
+    if (getUIMessageContent(prevProps.message) !== getUIMessageContent(nextProps.message)) return false;
     if (
       !equal(
-        prevProps.message.toolInvocations,
-        nextProps.message.toolInvocations
+        getUIMessageToolInvocations(prevProps.message),
+        getUIMessageToolInvocations(nextProps.message)
       )
     )
       return false;

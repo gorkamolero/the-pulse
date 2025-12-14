@@ -1,6 +1,6 @@
 "use client";
 
-import type { UIMessage } from "ai";
+import type { UIMessage, CreateUIMessage } from "ai";
 import { useChat } from "@ai-sdk/react";
 
 type Attachment = {
@@ -112,8 +112,8 @@ export function Chat({
   );
 
   const append = useCallback(
-    async (message: UIMessage, chatRequestOptions?: { experimental_attachments?: Array<Attachment> }) => {
-      const textContent = getUIMessageContent(message);
+    async (message: UIMessage | CreateUIMessage<UIMessage>, chatRequestOptions?: { experimental_attachments?: Array<Attachment> }) => {
+      const textContent = getUIMessageContent(message as UIMessage);
       await sendMessage({
         text: textContent,
       });

@@ -1,6 +1,6 @@
 "use server";
 
-import { generateText, type Message } from "ai";
+import { generateText, type UIMessage } from "ai";
 import { cookies } from "next/headers";
 
 import {
@@ -10,6 +10,7 @@ import {
 } from "@/lib/db/queries";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { myProvider } from "@/lib/ai/models";
+import { getUIMessageContent } from "@/lib/utils";
 
 export async function saveChatModelAsCookie(model: string) {
   const cookieStore = await cookies();
@@ -19,8 +20,9 @@ export async function saveChatModelAsCookie(model: string) {
 export async function generateTitleFromUserMessage({
   message,
 }: {
-  message: Message;
+  message: UIMessage;
 }) {
+  const messageContent = getUIMessageContent(message);
   const { text: title } = await generateText({
     model: myProvider.languageModel("title-model"),
     system: `\n
@@ -28,7 +30,7 @@ export async function generateTitleFromUserMessage({
     - ensure it is not more than 80 characters long
     - the title should be a summary of the user's message
     - do not use quotes or colons`,
-    prompt: JSON.stringify(message),
+    prompt: messageContent,
   });
 
   return title;
