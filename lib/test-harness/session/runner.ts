@@ -6,11 +6,11 @@
  */
 
 import { nanoid } from 'nanoid';
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import {
   streamText,
   wrapLanguageModel,
   extractReasoningMiddleware,
+  gateway,
   type LanguageModelUsage,
   type UserModelMessage,
   type AssistantModelMessage,
@@ -187,20 +187,14 @@ async function generateNarratorResponse(
     ? `${systemPrompt}\n\n${stateInjection}`
     : systemPrompt;
 
-  // All narrator models use OpenRouter
-  const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
-
   // Wrap with reasoning middleware for models that use <think> tags
   const needsThinkMiddleware = THINK_TAG_MODELS.includes(narratorConfig.model);
-  const baseModel = openrouter(modelId);
   const model = needsThinkMiddleware
     ? wrapLanguageModel({
-        model: baseModel,
+        model: gateway(modelId),
         middleware: extractReasoningMiddleware({ tagName: 'think' }),
       })
-    : baseModel;
+    : gateway(modelId);
 
   const maxRetries = 3;
   let lastError: Error | null = null;
@@ -222,7 +216,7 @@ async function generateNarratorResponse(
         // Enable reasoning for deepseek models
         ...(needsThinkMiddleware && {
           providerOptions: {
-            openrouter: {
+            deepseek: {
               reasoning: { enabled: true },
             },
           },
@@ -282,10 +276,6 @@ async function generatePlayerResponse(
   narratorOutput: string,
   conversationHistory: Message[],
 ): Promise<{ text: string; usage: LanguageModelUsage }> {
-  const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
-
   const recentHistory = conversationHistory.slice(-10); // Last 10 messages for context
 
   const messages: Array<UserModelMessage | AssistantModelMessage> = [
@@ -309,7 +299,7 @@ async function generatePlayerResponse(
 
     try {
       const result = streamText({
-        model: openrouter(currentModelId),
+        model: currentModelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
@@ -355,10 +345,6 @@ async function generateDirectedResponse(
   narratorOutput: string,
   conversationHistory: Message[],
 ): Promise<{ text: string; usage: LanguageModelUsage }> {
-  const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
-
   const recentHistory = conversationHistory.slice(-10);
 
   const messages: Array<UserModelMessage | AssistantModelMessage> = [
@@ -386,7 +372,7 @@ Respond in character as ${agent.name}.`,
 
     try {
       const result = streamText({
-        model: openrouter(currentModelId),
+        model: currentModelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
@@ -431,10 +417,6 @@ async function generateSpokespersonSynthesis(
   playerResponses: Array<{ agent: PlayerAgent; response: string }>,
   narratorOutput: string,
 ): Promise<{ text: string; usage: LanguageModelUsage }> {
-  const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
-
   const responsesText = playerResponses
     .map((r) => `${r.agent.name}: "${r.response}"`)
     .join('\n');
@@ -460,7 +442,7 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
 
     try {
       const result = streamText({
-        model: openrouter(currentModelId),
+        model: currentModelId,
         system: spokesperson.systemPrompt,
         messages,
         temperature: 0.7,

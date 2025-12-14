@@ -5,7 +5,6 @@
  * Use subjective feedback to improve narrator behavior, pacing, and story design.
  */
 
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
@@ -151,17 +150,13 @@ async function collectAgentFeedback(
   conversationHistory: Message[],
   costTracker: CostTracker,
 ): Promise<PlayerFeedback> {
-  const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
-
   const feedbackPrompt = buildFeedbackPrompt(agent, conversationHistory);
 
   try {
     const result = await withRetry(
       async () => {
         return generateObject({
-          model: openrouter(FEEDBACK_MODEL),
+          model: FEEDBACK_MODEL,
           schema: feedbackSchema,
           messages: [
             { role: 'system', content: agent.systemPrompt },

@@ -1,25 +1,25 @@
 import { generateText, experimental_generateImage } from "ai";
 import { replicate } from "@ai-sdk/replicate";
 import { getStoryById } from "../stories";
-import { myProvider } from "../models";
+import { TITLE_MODEL } from "../models";
 import { put } from '@vercel/blob';
 
 // Server action for generating images
-export async function generatePulseImage({ 
-  storyId, 
-  pulse, 
-  messageId 
-}: { 
-  storyId: string, 
+export async function generatePulseImage({
+  storyId,
+  pulse,
+  messageId
+}: {
+  storyId: string,
   pulse: string,
   messageId: string
 }) {
   const story = getStoryById(storyId);
-  
+
   try {
     // Generate image prompt using title-model
     const { text: imagePrompt } = await generateText({
-      model: myProvider.languageModel('title-model'),
+      model: TITLE_MODEL,
       prompt: `You are creating a prompt for an AI image generator that will visualize a moment from an interactive story.
 
 Story Title: "${story?.title || 'Interactive Story'}"

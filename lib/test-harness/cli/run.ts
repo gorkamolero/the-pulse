@@ -32,7 +32,7 @@ program
   )
   .option(
     '--narrator <model>',
-    'Narrator model (deepseek-v3.2, opus-4.5, grok-4)',
+    'Narrator model (deepseek-v3.2, kimi-k2-thinking, opus-4.5, grok-4)',
     'deepseek-v3.2',
   )
   .option('--players <number>', 'Group size (2-5)', (v) =>
@@ -62,7 +62,7 @@ program
   .option(
     '--prompt <style>',
     'Narrator prompt style (mechanical, philosophical, minimal)',
-    'mechanical',
+    'minimal',
   )
   .option('--dry-run', 'Show config without executing')
   .parse();

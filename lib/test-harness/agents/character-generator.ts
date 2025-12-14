@@ -7,7 +7,6 @@
  */
 
 import { generateObject } from 'ai';
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { z } from 'zod';
 import { faker } from '@faker-js/faker';
 import type { ArchetypeId } from '../archetypes/types';
@@ -62,10 +61,6 @@ function generateBackstorySeeds(count: number): BackstorySeed[] {
     trait: faker.person.bio(),
   }));
 }
-
-const openrouter = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
 
 /**
  * Story context for character generation
@@ -243,7 +238,7 @@ Make them feel like real friends with history, not strangers.${languageInstructi
   const result = await withRetry(
     async () => {
       return generateObject({
-        model: openrouter('x-ai/grok-4'),
+        model: 'xai/grok-4.1-fast-reasoning',
         schema: generatedGroupSchema,
         prompt,
         temperature: 0.8,

@@ -4,7 +4,6 @@
  * Detect contradictions, loops, forced segues, stuck moments.
  */
 
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { Message } from '../session/turn';
@@ -240,14 +239,10 @@ List any contradictions found. For each, provide:
 
 If no contradictions found, return an empty array.`;
 
-    const openrouter = createOpenRouter({
-      apiKey: process.env.OPENROUTER_API_KEY,
-    });
-
     const result = await withRetry(
       async () => {
         return generateObject({
-          model: openrouter('google/gemini-2.5-flash'),
+          model: 'google/gemini-2.5-flash',
           schema: contradictionsArraySchema,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.2,

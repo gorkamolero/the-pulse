@@ -5,7 +5,7 @@ import {
 } from "ai";
 
 import { auth } from "@/app/(auth)/auth";
-import { myProvider } from "@/lib/ai/models";
+import { NARRATOR_MODEL } from "@/lib/ai/models";
 import { systemPrompt } from "@/lib/ai/prompts/system";
 import { getStoryById, DEFAULT_STORY_ID } from "@/lib/ai/stories";
 import {
@@ -34,13 +34,11 @@ export async function POST(request: Request) {
   const {
     id,
     messages,
-    selectedChatModel,
     selectedStoryId = DEFAULT_STORY_ID,
     language = "en",
   }: {
     id: string;
     messages: Array<UIMessage>;
-    selectedChatModel: string;
     selectedStoryId?: string;
     language?: string;
   } = await request.json();
@@ -99,7 +97,7 @@ export async function POST(request: Request) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const result = streamText({
-        model: myProvider.languageModel(selectedChatModel),
+        model: NARRATOR_MODEL,
         system: getSystemPromptForLanguage(language),
         messages: modelMessages,
         experimental_telemetry: {

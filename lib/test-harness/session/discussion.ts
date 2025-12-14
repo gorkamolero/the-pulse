@@ -5,7 +5,6 @@
  * Agents discuss amongst themselves, then spokesperson synthesizes for narrator.
  */
 
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import {
   streamText,
   type LanguageModelUsage,
@@ -116,10 +115,6 @@ async function generateAgentResponse(
   stream = false,
   isSpokesperson = false,
 ): Promise<{ text: string; usage: LanguageModelUsage }> {
-  const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
-
   const triedModels: string[] = [];
   let currentModelId = agent.modelId;
 
@@ -132,7 +127,7 @@ async function generateAgentResponse(
       ];
 
       const result = streamText({
-        model: openrouter(currentModelId),
+        model: currentModelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,

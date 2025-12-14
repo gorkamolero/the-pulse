@@ -5,7 +5,6 @@
  * Bypasses spokesperson for private interactions.
  */
 
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
@@ -115,12 +114,8 @@ Evaluate:
 2. Narrative Appropriateness (0-1): Is this the right time in the narrative for this revelation?
 3. Feedback: Brief explanation of your scores`;
 
-    const openrouter = createOpenRouter({
-      apiKey: process.env.OPENROUTER_API_KEY,
-    });
-
     const result = await generateObject({
-      model: openrouter('google/gemini-2.5-flash'),
+      model: 'google/gemini-2.5-flash',
       schema: privateMomentValidationSchema,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
@@ -216,12 +211,8 @@ Consider:
 
 Answer with ONLY: true or false`;
 
-      const openrouter = createOpenRouter({
-        apiKey: process.env.OPENROUTER_API_KEY,
-      });
-
       const { text } = await generateText({
-        model: openrouter('google/gemini-2.5-flash'),
+        model: 'google/gemini-2.5-flash',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
       });

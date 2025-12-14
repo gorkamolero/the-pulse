@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { History, Plus } from 'lucide-react';
 import { useState } from 'react';
 
-import { ModelSelector } from '@/components/model-selector';
 import { StorySelector } from '@/components/story-selector';
 import { SidebarHistory } from '@/components/sidebar-history';
 import { SidebarUserNav } from '@/components/sidebar-user-nav';
@@ -22,7 +21,6 @@ import type { VisibilityType } from './visibility-selector';
 export function ChatHeader({
   user,
   chatId,
-  selectedModelId,
   selectedVisibilityType,
   isReadonly,
   selectedStoryId,
@@ -30,7 +28,6 @@ export function ChatHeader({
 }: {
   user?: User;
   chatId?: string;
-  selectedModelId?: string;
   selectedVisibilityType?: VisibilityType;
   isReadonly?: boolean;
   selectedStoryId?: string;
@@ -46,15 +43,12 @@ export function ChatHeader({
         <span className="font-bold text-xl tracking-tight">The Pulse</span>
       </Link>
 
-      {/* Center: Selectors */}
-      {selectedModelId && selectedStoryId && onSelectStory && (
-        <div className="flex items-center gap-2">
-          <ModelSelector selectedModelId={selectedModelId} />
-          <StorySelector
-            selectedStoryId={selectedStoryId}
-            onSelectStory={onSelectStory}
-          />
-        </div>
+      {/* Center: Story Selector */}
+      {selectedStoryId && onSelectStory && (
+        <StorySelector
+          selectedStoryId={selectedStoryId}
+          onSelectStory={onSelectStory}
+        />
       )}
 
       {/* Right: Actions */}

@@ -30,12 +30,11 @@ export interface Archetype {
 }
 
 /**
- * OpenRouter model identifiers for player agents
- * All models accessed through OpenRouter
+ * AI Gateway model identifiers for player agents
  */
 export const ARCHETYPE_MODEL_MAP: Record<PlayerModel, string> = {
-  grok: 'x-ai/grok-4.1-fast',
-  qwen: 'qwen/qwen3-32b',
+  grok: 'xai/grok-4.1-fast-reasoning',
+  qwen: 'alibaba/qwen-3-32b',
   deepseek: 'deepseek/deepseek-v3.2',
   'kimi-k2': 'moonshotai/kimi-k2',
 };
@@ -46,8 +45,8 @@ export const ARCHETYPE_MODEL_MAP: Record<PlayerModel, string> = {
  */
 export const MODEL_FALLBACK_POOL: string[] = [
   'deepseek/deepseek-v3.2',
-  'qwen/qwen3-32b',
-  'x-ai/grok-4.1-fast',
+  'alibaba/qwen-3-32b',
+  'xai/grok-4.1-fast-reasoning',
   'google/gemini-2.5-flash',
 ];
 

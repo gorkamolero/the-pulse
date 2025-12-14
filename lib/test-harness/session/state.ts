@@ -5,7 +5,6 @@
  * Injected before each narrator turn for consistency.
  */
 
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
@@ -126,10 +125,6 @@ export async function extractCharacterMappings(
   players: PlayerAgent[],
   spokespersonName: string,
 ): Promise<CharacterMapping[]> {
-  const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
-
   const schema = z.object({
     characters: z.array(
       z.object({
@@ -162,7 +157,7 @@ For each player, identify:
 
     try {
       const result = await generateObject({
-        model: openrouter(currentModelId),
+        model: currentModelId,
         schema,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
@@ -231,10 +226,6 @@ export async function updateGameState(
   currentState: GameState,
   narratorResponse: string,
 ): Promise<GameState> {
-  const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
-
   const schema = z.object({
     locationChanged: z.string().nullable(),
     newItems: z.array(
@@ -274,7 +265,7 @@ Be conservative - only extract clear, explicit changes.`;
 
     try {
       const result = await generateObject({
-        model: openrouter(currentModelId),
+        model: currentModelId,
         schema,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,

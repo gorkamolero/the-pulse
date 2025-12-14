@@ -27,7 +27,7 @@ export const PROMPT_DESCRIPTIONS: Record<PromptStyle, string> = {
 export function getSystemPrompt(
   storyGuide: string,
   language = 'english',
-  style: PromptStyle = 'mechanical',
+  style: PromptStyle = 'minimal',
 ): string {
   switch (style) {
     case 'production':

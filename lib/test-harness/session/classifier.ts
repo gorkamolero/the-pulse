@@ -2,10 +2,9 @@
  * Output Classification
  *
  * Classifies narrator output into types: pulse, tangent-response, private-moment,
- * clarification, recap. Uses Gemini 2.0 Flash Lite via OpenRouter for classification.
+ * clarification, recap. Uses Gemini 2.0 Flash Lite via AI Gateway for classification.
  */
 
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject, type LanguageModelUsage } from 'ai';
 import { z } from 'zod';
 import { withRetryOrFallback } from '../utils/retry';
@@ -160,14 +159,10 @@ export async function classifyOutput(
     playerNames?: string[];
   },
 ): Promise<Classification> {
-  const openrouter = createOpenRouter({
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
-
   const { result, usedFallback } = await withRetryOrFallback(
     async () => {
       const response = await generateObject({
-        model: openrouter('google/gemini-2.5-flash'),
+        model: 'google/gemini-2.5-flash',
         schema: classificationSchema,
         messages: [
           {

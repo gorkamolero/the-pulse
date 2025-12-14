@@ -30,14 +30,12 @@ import {
 export function Chat({
   id,
   initialMessages,
-  selectedChatModel,
   selectedVisibilityType,
   isReadonly,
   user,
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
-  selectedChatModel: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
   user?: {
@@ -144,7 +142,6 @@ export function Chat({
         <ChatHeader
           user={user}
           chatId={id}
-          selectedModelId={selectedChatModel}
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
           selectedStoryId={selectedStoryId}

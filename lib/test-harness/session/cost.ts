@@ -33,7 +33,7 @@ export interface CostBreakdown {
 
 /**
  * Model pricing per 1M tokens (input / output)
- * All models accessed through OpenRouter
+ * All models accessed through AI Gateway
  */
 const MODEL_PRICING = {
   // Narrator models
