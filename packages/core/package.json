@@ -1,0 +1,33 @@
+{
+  "name": "@pulse/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./ai": "./ai/index.ts",
+    "./ai/models": "./ai/models.ts",
+    "./ai/stories": "./ai/stories.ts",
+    "./ai/stories/*": "./ai/stories/*.ts",
+    "./ai/prompts/*": "./ai/prompts/*.ts",
+    "./ai/tools/get-weather": "./ai/tools/get-weather.ts",
+    "./narrator": "./narrator/index.ts",
+    "./narrator/prompts": "./narrator/prompts.ts",
+    "./narrator/validation": "./narrator/validation.ts",
+    "./narrator/stream": "./narrator/stream.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint ."
+  },
+  "dependencies": {
+    "ai": "6.0.0-beta.150",
+    "@ai-sdk/fireworks": "2.0.0-beta.48",
+    "nanoid": "^5.0.8",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@ai-sdk/provider": "3.0.0-beta.26",
+    "@types/node": "^22.8.6",
+    "typescript": "^5.6.3"
+  }
+}

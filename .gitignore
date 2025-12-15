@@ -32,6 +32,9 @@ yarn-error.log*
 # turbo
 .turbo
 
+# package builds
+dist/
+
 .env
 .vercel
 .vscode
