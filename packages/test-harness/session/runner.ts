@@ -261,6 +261,15 @@ async function generateNarratorResponse(
     lastRole = newRole;
   }
 
+  // If the last message is assistant (narrator), we need a user message before generating
+  // This happens when directed/private responses aren't visible to narrator (role='player' not 'spokesperson')
+  if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+    messages.push({
+      role: 'user',
+      content: '[The players consider their response.]',
+    });
+  }
+
   // Inject game state into system prompt
   const stateInjection = gameState ? formatStateForInjection(gameState) : '';
   const fullSystemPrompt = stateInjection
