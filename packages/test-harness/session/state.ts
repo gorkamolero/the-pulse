@@ -232,7 +232,13 @@ export async function updateGameState(
       }),
     ),
     newNPCs: z.array(z.string()),
-    plotFlags: z.record(z.string(), z.boolean()),
+    // Use array instead of record - Gemini doesn't support z.record()
+    plotFlags: z.array(
+      z.object({
+        flag: z.string(),
+        value: z.boolean(),
+      }),
+    ),
   });
 
   const characterNames = currentState.characters.map((c) => c.idName).join(', ');
@@ -288,7 +294,10 @@ Be conservative - only extract clear, explicit changes.`;
       npcsEncountered: [
         ...new Set([...currentState.npcsEncountered, ...updates.newNPCs]),
       ],
-      plotFlags: { ...currentState.plotFlags, ...updates.plotFlags },
+      plotFlags: {
+        ...currentState.plotFlags,
+        ...Object.fromEntries(updates.plotFlags.map((p) => [p.flag, p.value])),
+      },
     };
   } catch {
     console.error('All models failed for state update, keeping current state');
