@@ -16,6 +16,7 @@ import {
 import { saveHTMLReport } from './html';
 import { saveEvaluationLogs, saveTranscript } from './evaluation';
 import { evaluateWithGemini, saveGeminiEvaluation } from './gemini-eval';
+import { DEFAULTS } from '../cli/shared-options';
 
 export interface SessionReport {
   config: {
@@ -114,7 +115,7 @@ ${result.playerFeedback ? formatPlayerFeedback(result.playerFeedback) : ''}
 }
 
 export interface SaveReportOptions {
-  /** Run Gemini Pro evaluation (requires large context, slower) */
+  /** Run Gemini Pro evaluation (default: DEFAULTS.geminiEval) */
   geminiEval?: boolean;
 }
 
@@ -126,6 +127,7 @@ export async function saveSessionReport(
   filename?: string,
   options: SaveReportOptions = {},
 ): Promise<string> {
+  const geminiEval = options.geminiEval ?? DEFAULTS.geminiEval;
   const report = await generateSessionReport(result);
   const sessionDir = `sessions/${result.sessionId}`;
   const filepath = filename || `${sessionDir}/report.md`;
@@ -150,8 +152,8 @@ export async function saveSessionReport(
     console.warn('Failed to save transcript:', error);
   }
 
-  // Run Gemini Pro evaluation if requested
-  if (options.geminiEval) {
+  // Run Gemini Pro evaluation (default: on)
+  if (geminiEval) {
     try {
       console.log('  🤖 Running Gemini Pro evaluation...');
       const evaluation = await evaluateWithGemini(

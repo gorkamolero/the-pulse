@@ -18,6 +18,7 @@ export const DEFAULTS = {
   language: 'english',
   narrator: 'deepseek-v3.2' as NarratorModel,
   promptStyle: 'mechanical',
+  geminiEval: true,
 } as const;
 
 // ============================================================================
