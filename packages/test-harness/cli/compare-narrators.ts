@@ -23,6 +23,15 @@ import { generateGroup } from '../agents/player';
 import type { StoryContext as GeneratorStoryContext } from '../agents/character-generator';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  DEFAULTS,
+  withStoryRequired,
+  withPromptStyle,
+  withPlayers,
+  withArchetypes,
+  withMaxTurns,
+  withLanguage,
+} from './shared-options';
 
 config({ path: '.env.local' });
 
@@ -30,24 +39,19 @@ const program = new Command();
 
 const AVAILABLE_NARRATORS = Object.keys(NARRATOR_MODEL_MAP).join(', ');
 
-program
-  .name('test-compare-narrators')
-  .description('Compare narrator models with identical config')
-  .requiredOption('--story <id>', 'Story ID')
-  .requiredOption(
-    '--narrators <models>',
-    `Comma-separated narrator models to compare (${AVAILABLE_NARRATORS})`,
-  )
-  .option(
-    '--prompt <style>',
-    'Prompt style (mechanical, philosophical, minimal)',
-    'minimal',
-  )
-  .option('--players <number>', 'Group size (2-5)', (v) => Number.parseInt(v, 10))
-  .option('--archetypes <ids>', 'Comma-separated archetype IDs (locked for all runs)')
-  .option('--max-turns <number>', 'Maximum turns', (v) => Number.parseInt(v, 10), 100)
-  .option('--language <lang>', 'Output language', 'english')
-  .parse();
+program.name('test-compare-narrators').description('Compare narrator models with identical config');
+
+withStoryRequired(program);
+program.requiredOption(
+  '--narrators <models>',
+  `Comma-separated narrator models to compare (${AVAILABLE_NARRATORS})`,
+);
+withPromptStyle(program);
+withPlayers(program);
+withArchetypes(program);
+withMaxTurns(program);
+withLanguage(program);
+program.parse();
 
 const options = program.opts();
 
@@ -105,7 +109,7 @@ async function runComparison() {
     archetypes = options.archetypes.split(',').map((s: string) => s.trim()) as ArchetypeId[];
   }
 
-  const playerCount = options.players || archetypes?.length || 4;
+  const playerCount = options.players || archetypes?.length || DEFAULTS.players;
 
   console.log(chalk.bold.cyan('\n🔬 Narrator Model Comparison Test\n'));
   console.log(chalk.gray('━'.repeat(50)));

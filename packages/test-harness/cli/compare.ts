@@ -19,26 +19,38 @@ import type { NarratorModel } from '../agents/narrator';
 import type { ArchetypeId } from '../archetypes/types';
 import { getStory, listStoryIds } from '../stories/loader';
 import { getSystemPrompt, PROMPT_STYLES, type PromptStyle } from '../prompts/loader';
-import { generateGroup, } from '../agents/player';
+import { generateGroup } from '../agents/player';
 import type { StoryContext as GeneratorStoryContext } from '../agents/character-generator';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  DEFAULTS,
+  withStoryRequired,
+  withNarrator,
+  withPlayers,
+  withArchetypes,
+  withMaxTurns,
+  withLanguage,
+} from './shared-options';
 
 config({ path: '.env.local' });
 
 const program = new Command();
 
-program
-  .name('test-compare')
-  .description('Compare prompt styles with identical config')
-  .requiredOption('--story <id>', 'Story ID')
-  .option('--narrator <model>', 'Narrator model', 'deepseek-v3.2')
-  .option('--players <number>', 'Group size (2-5)', (v) => Number.parseInt(v, 10))
-  .option('--archetypes <ids>', 'Comma-separated archetype IDs (locked for all runs)')
-  .option('--prompts <styles>', 'Comma-separated prompt styles to compare (default: mechanical,philosophical,minimal)', 'mechanical,philosophical,minimal')
-  .option('--max-turns <number>', 'Maximum turns', (v) => Number.parseInt(v, 10), 100)
-  .option('--language <lang>', 'Output language', 'english')
-  .parse();
+program.name('test-compare').description('Compare prompt styles with identical config');
+
+withStoryRequired(program);
+withNarrator(program);
+withPlayers(program);
+withArchetypes(program);
+withMaxTurns(program);
+withLanguage(program);
+program.option(
+  '--prompts <styles>',
+  'Comma-separated prompt styles to compare',
+  'mechanical,philosophical,minimal',
+);
+program.parse();
 
 const options = program.opts();
 
@@ -96,7 +108,7 @@ async function runComparison() {
     }
   }
 
-  const playerCount = options.players || archetypes?.length || 4;
+  const playerCount = options.players || archetypes?.length || DEFAULTS.players;
 
   console.log(chalk.bold.cyan('\n🔬 Prompt Comparison Test\n'));
   console.log(chalk.gray('━'.repeat(50)));

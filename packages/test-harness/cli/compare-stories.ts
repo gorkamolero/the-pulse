@@ -23,6 +23,16 @@ import { generateGroup } from '../agents/player';
 import type { StoryContext as GeneratorStoryContext } from '../agents/character-generator';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  DEFAULTS,
+  withNarrator,
+  withPlayers,
+  withArchetypes,
+  withMaxTurns,
+  withLanguage,
+  withPromptStyle,
+  withGeminiEval,
+} from './shared-options';
 
 config({ path: '.env.local' });
 
@@ -31,33 +41,18 @@ const program = new Command();
 const AVAILABLE_STORIES = listStoryIds().join(', ');
 const AVAILABLE_NARRATORS = Object.keys(NARRATOR_MODEL_MAP).join(', ');
 
-program
-  .name('test-compare-stories')
-  .description('Compare two story versions with the same group')
-  .requiredOption(
-    '--story1 <id>',
-    `First story ID (${AVAILABLE_STORIES})`,
-  )
-  .requiredOption(
-    '--story2 <id>',
-    `Second story ID (${AVAILABLE_STORIES})`,
-  )
-  .option(
-    '--narrator <model>',
-    `Narrator model (${AVAILABLE_NARRATORS})`,
-    'deepseek-v3.2',
-  )
-  .option(
-    '--prompt <style>',
-    'Prompt style (mechanical, philosophical, minimal)',
-    'minimal',
-  )
-  .option('--players <number>', 'Group size (2-5)', (v) => Number.parseInt(v, 10))
-  .option('--archetypes <ids>', 'Comma-separated archetype IDs')
-  .option('--max-turns <number>', 'Maximum turns', (v) => Number.parseInt(v, 10), 50)
-  .option('--language <lang>', 'Output language', 'english')
-  .option('--no-gemini-eval', 'Skip Gemini Pro evaluation after each session')
-  .parse();
+program.name('test-compare-stories').description('Compare two story versions with the same group');
+
+program.requiredOption('--story1 <id>', `First story ID (${AVAILABLE_STORIES})`);
+program.requiredOption('--story2 <id>', `Second story ID (${AVAILABLE_STORIES})`);
+withNarrator(program);
+withPromptStyle(program);
+withPlayers(program);
+withArchetypes(program);
+withMaxTurns(program);
+withLanguage(program);
+withGeminiEval(program);
+program.parse();
 
 const options = program.opts();
 
@@ -119,7 +114,7 @@ async function runComparison() {
     archetypes = options.archetypes.split(',').map((s: string) => s.trim()) as ArchetypeId[];
   }
 
-  const playerCount = options.players || archetypes?.length || 4;
+  const playerCount = options.players || archetypes?.length || DEFAULTS.players;
 
   console.log(chalk.bold.cyan('\n📚 Story Comparison Test\n'));
   console.log(chalk.gray('━'.repeat(50)));

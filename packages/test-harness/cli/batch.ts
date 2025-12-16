@@ -17,6 +17,12 @@ import { getStory, listStoryIds } from '../stories/loader';
 import { getSystemPrompt } from '../prompts/loader';
 import type { NarratorModel } from '../agents/narrator';
 import type { SessionResult } from '../session/runner';
+import {
+  withStory,
+  withNarrator,
+  withPlayers,
+  withMaxTurns,
+} from './shared-options';
 
 // Load environment variables
 loadEnv();
@@ -38,28 +44,19 @@ export interface BatchConfig {
   outputDir?: string;
 }
 
-program
-  .name('test-batch')
-  .description('Run multiple test sessions for batch analysis')
-  .requiredOption(
-    '--sessions <number>',
-    'Number of sessions to run per configuration',
-    Number.parseInt,
-  )
-  .option('--story <id>', `Story ID (${listStoryIds().join(', ')})`)
-  .option(
-    '--narrator <model>',
-    'Narrator model (opus-4.5, grok-4, deepseek-v3.2)',
-  )
-  .option(
-    '--max-parallel <number>',
-    'Maximum parallel sessions',
-    Number.parseInt,
-    3,
-  )
-  .option('--players <number>', 'Group size (2-5)', Number.parseInt)
-  .option('--max-turns <number>', 'Maximum turns', Number.parseInt, 100)
-  .parse();
+program.name('test-batch').description('Run multiple test sessions for batch analysis');
+
+program.requiredOption(
+  '--sessions <number>',
+  'Number of sessions to run per configuration',
+  Number.parseInt,
+);
+withStory(program);
+withNarrator(program, true); // required for batch
+program.option('--max-parallel <number>', 'Maximum parallel sessions', Number.parseInt, 3);
+withPlayers(program);
+withMaxTurns(program);
+program.parse();
 
 const options = program.opts();
 

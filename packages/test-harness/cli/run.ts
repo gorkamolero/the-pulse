@@ -17,55 +17,33 @@ import type { NarratorModel } from '../agents/narrator';
 import type { ArchetypeId } from '../archetypes/types';
 import { getStory, listStoryIds } from '../stories/loader';
 import { getSystemPrompt, PROMPT_STYLES, type PromptStyle } from '../prompts/loader';
+import {
+  withStoryRequired,
+  withNarrator,
+  withPlayers,
+  withArchetypes,
+  withMaxTurns,
+  withLanguage,
+  withPromptStyle,
+} from './shared-options';
 
 // Load environment variables from .env.local (Next.js convention)
 config({ path: '.env.local' });
 
 const program = new Command();
 
-program
-  .name('test-run')
-  .description('Run a test harness session')
-  .requiredOption(
-    '--story <id>',
-    'Story ID (shadow-over-innsmouth, innsmouth-nonlinear, the-hollow-choir, whispering-pines, siren-of-the-red-dust, endless-path)',
-  )
-  .option(
-    '--narrator <model>',
-    'Narrator model (deepseek-v3.2, kimi-k2-thinking, opus-4.5, grok-4)',
-    'deepseek-v3.2',
-  )
-  .option('--players <number>', 'Group size (2-5)', (v) =>
-    Number.parseInt(v, 10),
-  )
-  .option(
-    '--max-turns <number>',
-    'Maximum turns',
-    (v) => Number.parseInt(v, 10),
-    100,
-  )
-  .option(
-    '--temperature <number>',
-    'Temperature',
-    (v) => Number.parseFloat(v),
-    0.7,
-  )
-  .option(
-    '--language <lang>',
-    'Output language (english, spanish, etc.)',
-    'english',
-  )
-  .option(
-    '--archetypes <ids>',
-    'Comma-separated archetype IDs (e.g., director,contrarian,wildcard)',
-  )
-  .option(
-    '--prompt <style>',
-    'Narrator prompt style (mechanical, philosophical, minimal)',
-    'minimal',
-  )
-  .option('--dry-run', 'Show config without executing')
-  .parse();
+program.name('test-run').description('Run a test harness session');
+
+withStoryRequired(program);
+withNarrator(program);
+withPlayers(program);
+withMaxTurns(program);
+program.option('--temperature <number>', 'Temperature', (v) => Number.parseFloat(v), 0.7);
+withLanguage(program);
+withArchetypes(program);
+withPromptStyle(program);
+program.option('--dry-run', 'Show config without executing');
+program.parse();
 
 const options = program.opts();
 
