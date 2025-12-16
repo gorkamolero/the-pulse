@@ -27,7 +27,7 @@ const dimensionSchema = z.object({
 });
 
 /**
- * Evaluation result schema - 9 dimensions from philosophical framework
+ * Evaluation result schema - 12 dimensions from philosophical framework
  */
 const evaluationSchema = z.object({
   // Overall assessment
@@ -63,6 +63,25 @@ const evaluationSchema = z.object({
 
   // 9. Pacing & Breath
   pacingBreath: dimensionSchema.describe('Does the session breathe, or is it a plot sprint? Look for atmospheric moments, space for tangents'),
+
+  // 10. Declaration vs Acknowledgment (Critical)
+  declarationVsAcknowledgment: dimensionSchema.describe('When players make decisions, does the Narrator acknowledge (set up the world and wait) or declare (summarize as fact and move forward)? Look for "The decision is made", "You have chosen X", "The group moves toward Y"'),
+
+  // 11. Branching Persistence
+  branchingPersistence: dimensionSchema.describe('Once an objective is established, do meaningful alternatives remain? Can players deviate? Are unexpected approaches incorporated or redirected?'),
+
+  // 12. Actionable vs Atmospheric
+  actionableVsAtmospheric: dimensionSchema.describe('Are descriptions translatable to player action? Look for sensory details that suggest interaction, clear spatial relationships, stakes that invite response. Red flags: purely conceptual descriptions, atmosphere without objects to interact with'),
+
+  // Experiential Smell Test
+  smellTest: z.object({
+    railroadedReported: z.boolean().describe('Did any player explicitly report feeling railroaded?'),
+    linearLanguageUsed: z.boolean().describe('Did any player use words like "linear", "prescriptive", or "predetermined"?'),
+    declarationPhrases: z.boolean().describe('Did the Narrator ever use phrases like "The decision is made" or "You have chosen"?'),
+    experientiallyWrong: z.boolean().describe('Were there moments where technically correct narration felt experientially wrong?'),
+    cappedScore: z.boolean().describe('Should overall score be capped at 8.5 due to smell test failures?'),
+    notes: z.string().optional().describe('Explanation if any smell test failed'),
+  }).describe('Final check: if ANY answer is yes, cap overall score at 8.5'),
 
   // Critical issues (agency violations)
   agencyViolations: z.array(z.object({
@@ -261,17 +280,20 @@ ${eval_.overall.summary}
 
 ## Scores
 
-| Dimension | Score |
-|-----------|-------|
-| Agency Respect | ${eval_.agencyRespect.score}/10 |
-| Equipment Engagement | ${eval_.equipmentEngagement.score}/10 |
-| NPC Dialogue | ${eval_.npcDialogue.score}/10 |
-| Spatial Consistency | ${eval_.spatialConsistency.score}/10 |
-| Character Creation | ${eval_.characterCreation.score}/10 |
-| Invitation Architecture | ${eval_.invitationArchitecture.score}/10 |
-| Atmosphere & Feeling | ${eval_.atmosphere.score}/10 |
-| Curiosity Following | ${eval_.curiosityFollowing.score}/10 |
-| Pacing & Breath | ${eval_.pacingBreath.score}/10 |
+| Dimension | Score | Weight |
+|-----------|-------|--------|
+| Agency Respect | ${eval_.agencyRespect.score}/10 | 2.0x |
+| Declaration vs Acknowledgment | ${eval_.declarationVsAcknowledgment.score}/10 | 1.5x |
+| Invitation Architecture | ${eval_.invitationArchitecture.score}/10 | 1.5x |
+| Branching Persistence | ${eval_.branchingPersistence.score}/10 | 1.5x |
+| Equipment Engagement | ${eval_.equipmentEngagement.score}/10 | 1.0x |
+| NPC Dialogue | ${eval_.npcDialogue.score}/10 | 1.0x |
+| Spatial Consistency | ${eval_.spatialConsistency.score}/10 | 1.0x |
+| Character Creation | ${eval_.characterCreation.score}/10 | 1.0x |
+| Atmosphere & Feeling | ${eval_.atmosphere.score}/10 | 1.0x |
+| Curiosity Following | ${eval_.curiosityFollowing.score}/10 | 1.0x |
+| Pacing & Breath | ${eval_.pacingBreath.score}/10 | 1.0x |
+| Actionable vs Atmospheric | ${eval_.actionableVsAtmospheric.score}/10 | 1.0x |
 
 ---
 
@@ -294,6 +316,25 @@ ${formatDimension('Atmosphere & Feeling', eval_.atmosphere)}
 ${formatDimension('Curiosity Following', eval_.curiosityFollowing)}
 
 ${formatDimension('Pacing & Breath', eval_.pacingBreath)}
+
+${formatDimension('Declaration vs Acknowledgment (Critical)', eval_.declarationVsAcknowledgment)}
+
+${formatDimension('Branching Persistence', eval_.branchingPersistence)}
+
+${formatDimension('Actionable vs Atmospheric', eval_.actionableVsAtmospheric)}
+
+---
+
+## Experiential Smell Test
+
+${eval_.smellTest.cappedScore ? '⚠️ **SCORE CAPPED AT 8.5** due to smell test failure\n\n' : ''}| Question | Result |
+|----------|--------|
+| Player reported feeling railroaded? | ${eval_.smellTest.railroadedReported ? '⚠️ YES' : '✓ No'} |
+| Used "linear/prescriptive/predetermined"? | ${eval_.smellTest.linearLanguageUsed ? '⚠️ YES' : '✓ No'} |
+| Narrator used "decision is made" phrases? | ${eval_.smellTest.declarationPhrases ? '⚠️ YES' : '✓ No'} |
+| Technically correct but experientially wrong? | ${eval_.smellTest.experientiallyWrong ? '⚠️ YES' : '✓ No'} |
+
+${eval_.smellTest.notes ? `**Notes**: ${eval_.smellTest.notes}` : ''}
 
 ---
 

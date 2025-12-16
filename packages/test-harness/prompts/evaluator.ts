@@ -177,6 +177,111 @@ Score 4-6: Some breathing room
 Score 7-9: Good rhythm with intentional pauses
 Score 10: Perfect pacing for the story's needs
 
+### 10. DECLARATION VS ACKNOWLEDGMENT (Critical)
+
+When players make decisions, does the Narrator acknowledge or declare?
+
+**Declaration (problematic):**
+- "The decision is made." — Narrator announces finality
+- "You have chosen X." — Narrator states what happened
+- "The group moves toward Y." — Narrator narrates player action
+
+**Acknowledgment (good):**
+- "The stones await Mabel's first step. The shore path lies dark before Hank."
+- Restating player intent as world-state, then stopping for execution
+
+**The test:** After players state a plan, does the Narrator:
+a) Summarize it as fact and move forward? (Declaration)
+b) Set up the world to receive the action and wait? (Acknowledgment)
+
+Score 1-3: Frequently declares player decisions as fait accompli
+Score 4-6: Mixed — some declarations, some acknowledgments
+Score 7-9: Consistently acknowledges without declaring
+Score 10: Every player decision creates space, never closes it
+
+### 11. BRANCHING PERSISTENCE
+
+Once an objective is established, do meaningful alternatives remain?
+
+**Look for:**
+- Are there explicit choice points after the main goal is set?
+- Can players deviate from the established path?
+- Does the Narrator offer alternatives, or just variations on the same path?
+- When players suggest unexpected approaches, are they incorporated or redirected?
+
+**Red flags:**
+- "The only way forward is..."
+- All paths converging to the same outcome
+- Player creativity acknowledged but not materially changing the story
+
+Score 1-3: Single path with no meaningful deviation possible
+Score 4-6: Some flexibility within a predetermined structure
+Score 7-9: Multiple genuine paths with different consequences
+Score 10: Story genuinely shaped by player choices throughout
+
+### 12. ACTIONABLE VS ATMOSPHERIC
+
+Are descriptions translatable to player action?
+
+**Atmospheric only:**
+> "The deep's bureaucracy operates on both specialization and synthesis."
+
+**Actionable:**
+> "Three passages branch from the chamber. The left smells of brine, the center hums with a low vibration, the right shows scratch marks on the walls."
+
+**The test:** After each Narrator description, could a player reasonably say "I do X" based on concrete details provided?
+
+**Look for:**
+- Sensory details that suggest interaction (sounds, objects, NPCs present)
+- Clear spatial relationships (where things are relative to players)
+- Stakes or tensions that invite response
+
+**Red flags:**
+- Purely conceptual descriptions with no physical anchors
+- Atmosphere without objects or NPCs to interact with
+- Beautiful prose that doesn't advance player options
+
+Score 1-3: Descriptions frequently lack actionable elements
+Score 4-6: Mix of atmospheric and actionable
+Score 7-9: Most descriptions provide clear interaction opportunities
+Score 10: Every description gives players something concrete to respond to
+
+## Scoring Weights
+
+Some dimensions matter more than others. Apply these weights:
+
+| Dimension | Weight | Rationale |
+|-----------|--------|-----------|
+| Agency Respect | 2.0x | Core contract |
+| Declaration vs Acknowledgment | 1.5x | Experiential agency |
+| Invitation Architecture | 1.5x | Structural agency |
+| Branching Persistence | 1.5x | Meaningful choice |
+| Equipment Engagement | 1.0x | Quality metric |
+| NPC Dialogue | 1.0x | Quality metric |
+| Spatial Consistency | 1.0x | Quality metric |
+| Character Creation | 1.0x | Quality metric |
+| Atmosphere & Feeling | 1.0x | Quality metric |
+| Curiosity Following | 1.0x | Quality metric |
+| Pacing & Breath | 1.0x | Quality metric |
+| Actionable vs Atmospheric | 1.0x | Quality metric |
+
+**Weighted formula:**
+((Agency × 2) + (Declaration × 1.5) + (Invitation × 1.5) + (Branching × 1.5) +
+ Equipment + NPC + Spatial + CharCreation + Atmosphere + Curiosity + Pacing + Actionable) / 15.5
+
+## Experiential Smell Test
+
+After scoring all dimensions, answer these yes/no questions:
+
+1. Did any player explicitly report feeling railroaded?
+2. Did any player use words like "linear," "prescriptive," or "predetermined"?
+3. Did the Narrator ever use phrases like "The decision is made" or "You have chosen"?
+4. Were there moments where technically correct narration felt experientially wrong?
+
+**If ANY answer is yes, cap the overall score at 8.5 regardless of dimension scores.** Note the specific issue in CRITICAL ISSUES.
+
+This prevents a session from scoring 9.8 when players report feeling constrained.
+
 ## Instructions
 
 1. Read the full transcript
