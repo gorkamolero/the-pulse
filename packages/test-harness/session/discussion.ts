@@ -13,6 +13,7 @@ import {
 import type { PlayerAgent } from '../agents/player';
 import type { CostTracker } from './cost';
 import { getNextFallbackModel } from '../archetypes/types';
+import { withModelFallback } from '../utils/retry';
 
 export interface DiscussionResult {
   /** What each agent said during discussion */
@@ -138,19 +139,19 @@ async function generateAgentResponse(
   stream = false,
   isSpokesperson = false,
 ): Promise<{ text: string; usage: LanguageModelUsage }> {
-  const triedModels: string[] = [];
-  let currentModelId = agent.modelId;
+  const messages: Array<UserModelMessage> = [
+    { role: 'user' as const, content: prompt },
+  ];
 
-  while (true) {
-    triedModels.push(currentModelId);
+  const label = isSpokesperson
+    ? `${agent.name} (spokesperson)`
+    : agent.name;
 
-    try {
-      const messages: Array<UserModelMessage> = [
-        { role: 'user' as const, content: prompt },
-      ];
-
+  const { result, modelUsed } = await withModelFallback(
+    agent.modelId,
+    async (modelId) => {
       const result = streamText({
-        model: currentModelId,
+        model: modelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
@@ -158,11 +159,10 @@ async function generateAgentResponse(
 
       let text = '';
       if (stream) {
-        const modelNote =
-          currentModelId !== agent.modelId ? ` [${currentModelId}]` : '';
-        const label = isSpokesperson ? '🎙️' : '💬';
+        const modelNote = modelId !== agent.modelId ? ` [${modelId}]` : '';
+        const icon = isSpokesperson ? '🎙️' : '💬';
         const suffix = isSpokesperson ? ' (spokesperson)' : '';
-        process.stdout.write(`   ${label} ${agent.name}${modelNote}${suffix}: `);
+        process.stdout.write(`   ${icon} ${agent.name}${modelNote}${suffix}: `);
         for await (const chunk of result.textStream) {
           process.stdout.write(chunk);
           text += chunk;
@@ -175,22 +175,14 @@ async function generateAgentResponse(
       }
 
       const usage = await result.usage;
-      costTracker.recordPlayerUsage(usage);
-
       return { text, usage };
-    } catch (error) {
-      console.warn(
-        `   ⚠ ${agent.name} model failed (${currentModelId}), trying fallback...`,
-      );
+    },
+    {
+      getNextModel: getNextFallbackModel,
+      label,
+    },
+  );
 
-      const nextModel = getNextFallbackModel(triedModels);
-      if (nextModel) {
-        currentModelId = nextModel;
-        continue;
-      }
-
-      console.error(`   ✗ All models failed for ${agent.name}`);
-      throw error;
-    }
-  }
+  costTracker.recordPlayerUsage(result.usage);
+  return result;
 }

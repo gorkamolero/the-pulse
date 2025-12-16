@@ -9,7 +9,6 @@ import type { PrivateMoment } from '../session/private';
 import type { Issue } from './issues';
 
 export type TimelineEntryType =
-  | 'pulse'
   | 'tangent'
   | 'recovery'
   | 'private-moment'
@@ -29,7 +28,6 @@ export interface TimelineEntry {
  */
 export function generateTimeline(
   messages: Message[],
-  pulses: number[],
   privateMoments: PrivateMoment[],
   issues: Issue[],
 ): TimelineEntry[] {
@@ -57,21 +55,10 @@ export function generateTimeline(
   );
 
   for (const message of narratorMessages) {
-    const isPulse = pulses.includes(message.turn);
     const hasPrivateMoment = privateMoments.some(
       (pm) => pm.turn === message.turn,
     );
     const hasIssue = issues.some((i) => i.turn === message.turn);
-
-    if (isPulse) {
-      const pulseNumber = pulses.indexOf(message.turn) + 1;
-      timeline.push({
-        turn: message.turn,
-        type: 'pulse',
-        title: `Pulse ${pulseNumber} - Story Beat`,
-        content: message.content,
-      });
-    }
 
     if (hasPrivateMoment) {
       const pm = privateMoments.find((p) => p.turn === message.turn);
@@ -161,14 +148,12 @@ export function groupTimelineByType(
  */
 export function getTimelineSummary(timeline: TimelineEntry[]): {
   totalEntries: number;
-  pulses: number;
   privateMoments: number;
   issues: number;
   tangents: number;
 } {
   return {
     totalEntries: timeline.length,
-    pulses: timeline.filter((e) => e.type === 'pulse').length,
     privateMoments: timeline.filter((e) => e.type === 'private-moment').length,
     issues: timeline.filter((e) => e.type === 'issue').length,
     tangents: timeline.filter((e) => e.type === 'recovery').length,

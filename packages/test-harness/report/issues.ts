@@ -13,7 +13,6 @@ export type IssueType =
   | 'contradiction'
   | 'loop'
   | 'forced-segue'
-  | 'stuck'
   | 'confusion';
 
 export type IssueSeverity = 'warning' | 'error';
@@ -93,41 +92,6 @@ export function detectForcedSegues(messages: Message[]): Issue[] {
           relatedContent: message.content,
         });
         break;
-      }
-    }
-  }
-
-  return issues;
-}
-
-/**
- * Detect stuck moments (no pulse progress)
- */
-export function detectStuckMoments(
-  messages: Message[],
-  pulses: number[],
-): Issue[] {
-  const issues: Issue[] = [];
-  const narratorMessages = messages.filter((m) => m.role === 'narrator');
-
-  // Check for long stretches without pulses
-  let lastPulseTurn = 0;
-
-  for (const message of narratorMessages) {
-    const isPulse = pulses.includes(message.turn);
-
-    if (isPulse) {
-      lastPulseTurn = message.turn;
-    } else {
-      const turnsSinceLastPulse = message.turn - lastPulseTurn;
-
-      if (turnsSinceLastPulse > 10) {
-        issues.push({
-          turn: message.turn,
-          type: 'stuck',
-          description: `No pulse progress for ${turnsSinceLastPulse} turns`,
-          severity: 'warning',
-        });
       }
     }
   }
@@ -281,18 +245,14 @@ If no contradictions found, return an empty array.`;
 /**
  * Detect all issues in a session
  */
-export async function detectAllIssues(
-  messages: Message[],
-  pulses: number[],
-): Promise<Issue[]> {
-  const [loops, segues, stuck, contradictions] = await Promise.all([
+export async function detectAllIssues(messages: Message[]): Promise<Issue[]> {
+  const [loops, segues, contradictions] = await Promise.all([
     Promise.resolve(detectLoops(messages)),
     Promise.resolve(detectForcedSegues(messages)),
-    Promise.resolve(detectStuckMoments(messages, pulses)),
     detectContradictions(messages),
   ]);
 
-  return [...loops, ...segues, ...stuck, ...contradictions].sort(
+  return [...loops, ...segues, ...contradictions].sort(
     (a, b) => a.turn - b.turn,
   );
 }

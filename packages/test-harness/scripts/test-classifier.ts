@@ -94,7 +94,6 @@ async function runTests() {
 
   for (const testCase of testCases) {
     const result = await classifyOutput(testCase.input, {
-      previousPulseCount: 0,
       playerNames: ['Esther', 'Neal', 'Priscilla'],
     });
 

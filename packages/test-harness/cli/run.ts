@@ -151,7 +151,7 @@ async function main() {
 
     console.log(
       chalk.green(
-        `\n✔ ${result.outcome} | ${result.finalTurn} turns | ${result.detectedPulses.length}/~20 pulses | ${Math.round(result.duration / 1000)}s`,
+        `\n✔ ${result.outcome} | ${result.finalTurn} turns | ${Math.round(result.duration / 1000)}s`,
       ),
     );
 

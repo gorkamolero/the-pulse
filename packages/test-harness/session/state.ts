@@ -9,6 +9,7 @@ import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
 import { getNextFallbackModel } from '../archetypes/types';
+import { withModelFallback } from '../utils/retry';
 
 /**
  * Commit character to player agent's system prompt
@@ -149,39 +150,35 @@ For each player, identify:
 - Brief description if given
 - Any items/equipment mentioned`;
 
-  const triedModels: string[] = [];
-  let currentModelId = 'google/gemini-2.5-flash';
+  try {
+    const { result } = await withModelFallback(
+      'google/gemini-2.5-flash',
+      async (modelId) => {
+        const result = await generateObject({
+          model: modelId,
+          schema,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+        });
 
-  while (true) {
-    triedModels.push(currentModelId);
+        return result.object.characters.map((c): CharacterMapping => ({
+          odName: c.playerName,
+          idName: c.characterName,
+          idDescription: c.description,
+          items: c.items,
+          role: c.playerName === spokespersonName ? 'spokesperson' : 'player',
+        }));
+      },
+      {
+        getNextModel: getNextFallbackModel,
+        label: 'Character extraction',
+      },
+    );
 
-    try {
-      const result = await generateObject({
-        model: currentModelId,
-        schema,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
-      });
-
-      return result.object.characters.map((c) => ({
-        odName: c.playerName,
-        idName: c.characterName,
-        idDescription: c.description,
-        items: c.items,
-        role: c.playerName === spokespersonName ? 'spokesperson' : 'player',
-      }));
-    } catch (error) {
-      console.warn(`State extraction failed (${currentModelId}), trying fallback...`);
-
-      const nextModel = getNextFallbackModel(triedModels);
-      if (nextModel) {
-        currentModelId = nextModel;
-        continue;
-      }
-
-      console.error('All models failed for state extraction');
-      return [];
-    }
+    return result;
+  } catch {
+    console.error('All models failed for state extraction');
+    return [];
   }
 }
 
@@ -257,50 +254,44 @@ Extract any:
 
 Be conservative - only extract clear, explicit changes.`;
 
-  const triedModels: string[] = [];
-  let currentModelId = 'google/gemini-2.5-flash';
+  try {
+    const { result: updates } = await withModelFallback(
+      'google/gemini-2.5-flash',
+      async (modelId) => {
+        const result = await generateObject({
+          model: modelId,
+          schema,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+        });
 
-  while (true) {
-    triedModels.push(currentModelId);
+        return result.object;
+      },
+      {
+        getNextModel: getNextFallbackModel,
+        label: 'State update',
+      },
+    );
 
-    try {
-      const result = await generateObject({
-        model: currentModelId,
-        schema,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
-      });
-
-      const updates = result.object;
-
-      return {
-        ...currentState,
-        location: updates.locationChanged ?? currentState.location,
-        characters: currentState.characters.map((c) => ({
-          ...c,
-          items: [
-            ...c.items,
-            ...updates.newItems
-              .filter((i) => i.character.toLowerCase() === c.idName.toLowerCase())
-              .map((i) => i.item),
-          ],
-        })),
-        npcsEncountered: [
-          ...new Set([...currentState.npcsEncountered, ...updates.newNPCs]),
+    return {
+      ...currentState,
+      location: updates.locationChanged ?? currentState.location,
+      characters: currentState.characters.map((c) => ({
+        ...c,
+        items: [
+          ...c.items,
+          ...updates.newItems
+            .filter((i) => i.character.toLowerCase() === c.idName.toLowerCase())
+            .map((i) => i.item),
         ],
-        plotFlags: { ...currentState.plotFlags, ...updates.plotFlags },
-      };
-    } catch (error) {
-      console.warn(`State update failed (${currentModelId}), trying fallback...`);
-
-      const nextModel = getNextFallbackModel(triedModels);
-      if (nextModel) {
-        currentModelId = nextModel;
-        continue;
-      }
-
-      console.error('All models failed for state update, keeping current state');
-      return currentState;
-    }
+      })),
+      npcsEncountered: [
+        ...new Set([...currentState.npcsEncountered, ...updates.newNPCs]),
+      ],
+      plotFlags: { ...currentState.plotFlags, ...updates.plotFlags },
+    };
+  } catch {
+    console.error('All models failed for state update, keeping current state');
+    return currentState;
   }
 }

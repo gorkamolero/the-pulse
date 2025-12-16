@@ -125,11 +125,6 @@ async function main() {
       console.log(chalk.white(`Turns: ${chalk.bold(result.finalTurn)}`));
       console.log(
         chalk.white(
-          `Pulses: ${chalk.bold(`${result.detectedPulses.length}/~20`)}`,
-        ),
-      );
-      console.log(
-        chalk.white(
           `Duration: ${chalk.bold(`${Math.round(result.duration / 1000)}s`)}`,
         ),
       );

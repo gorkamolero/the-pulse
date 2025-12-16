@@ -6,7 +6,6 @@
 
 import { writeFile } from 'node:fs/promises';
 import type { SessionResult } from '../session/runner';
-import type { Message } from '../session/turn';
 import type { SessionFeedback } from '../session/feedback';
 import { detectAllIssues } from './issues';
 import {
@@ -15,6 +14,8 @@ import {
   getTimelineSummary,
 } from './timeline';
 import { saveHTMLReport } from './html';
+import { saveEvaluationLogs, saveTranscript } from './evaluation';
+import { evaluateWithGemini, saveGeminiEvaluation } from './gemini-eval';
 
 export interface SessionReport {
   config: {
@@ -46,13 +47,9 @@ export interface SessionReport {
 export async function generateSessionReport(
   result: SessionResult,
 ): Promise<string> {
-  const issues = await detectAllIssues(
-    result.conversationHistory,
-    result.detectedPulses,
-  );
+  const issues = await detectAllIssues(result.conversationHistory);
   const timeline = generateTimeline(
     result.conversationHistory,
-    result.detectedPulses,
     result.privateMoments,
     issues,
   );
@@ -84,7 +81,6 @@ ${result.config.group.players
 ## Summary
 
 - **Turns**: ${result.finalTurn} (total exchanges)
-- **Pulses**: ${result.detectedPulses.length}/~20 (story beats that advanced narrative)
 - **Tangents**: ${timelineSummary.tangents}
 - **Private Moments**: ${timelineSummary.privateMoments}
 - **Issues Detected**: ${issues.length}
@@ -109,12 +105,17 @@ ${formatTimelineMarkdown(timeline)}
 
 ${result.playerFeedback ? formatPlayerFeedback(result.playerFeedback) : ''}
 
-## Transcript
+---
 
-${formatTranscript(result.conversationHistory)}
+*Full transcript available in \`transcript.md\`. Evaluation data in \`narrator-log.md\`, \`pulse-log.jsonl\`, and \`issues.md\`.*
 `;
 
   return report;
+}
+
+export interface SaveReportOptions {
+  /** Run Gemini Pro evaluation (requires large context, slower) */
+  geminiEval?: boolean;
 }
 
 /**
@@ -123,11 +124,52 @@ ${formatTranscript(result.conversationHistory)}
 export async function saveSessionReport(
   result: SessionResult,
   filename?: string,
+  options: SaveReportOptions = {},
 ): Promise<string> {
   const report = await generateSessionReport(result);
-  const filepath = filename || `sessions/${result.sessionId}/report.md`;
+  const sessionDir = `sessions/${result.sessionId}`;
+  const filepath = filename || `${sessionDir}/report.md`;
 
   await writeFile(filepath, report, 'utf-8');
+
+  // Generate evaluation logs
+  const issues = await detectAllIssues(result.conversationHistory);
+
+  try {
+    await saveEvaluationLogs(result, issues, sessionDir);
+    console.log(`  📊 Evaluation logs saved to ${sessionDir}/`);
+  } catch (error) {
+    console.warn('Failed to generate evaluation logs:', error);
+  }
+
+  // Save transcript separately
+  try {
+    await saveTranscript(result.conversationHistory, sessionDir);
+    console.log(`  📝 Transcript saved to ${sessionDir}/transcript.md`);
+  } catch (error) {
+    console.warn('Failed to save transcript:', error);
+  }
+
+  // Run Gemini Pro evaluation if requested
+  if (options.geminiEval) {
+    try {
+      console.log('  🤖 Running Gemini Pro evaluation...');
+      const evaluation = await evaluateWithGemini(
+        result,
+        result.config.systemPrompt,
+        result.config.storyGuide,
+      );
+      await saveGeminiEvaluation(evaluation, sessionDir, {
+        outcome: result.outcome,
+        finalTurn: result.finalTurn,
+        maxTurns: result.config.maxTurns,
+        error: result.error,
+      });
+      console.log(`  ✅ Gemini evaluation saved: ${evaluation.overall.score}/10 (${evaluation.overall.verdict})`);
+    } catch (error) {
+      console.warn('Failed to run Gemini evaluation:', error);
+    }
+  }
 
   // Also generate HTML report
   try {
@@ -232,25 +274,4 @@ ${playerFeedbackSections}
 `;
 }
 
-/**
- * Format transcript for markdown
- */
-function formatTranscript(messages: Message[]): string {
-  return messages
-    .map((m) => {
-      const speaker =
-        m.role === 'narrator'
-          ? '**Narrator**'
-          : m.role === 'spokesperson'
-            ? `**${m.player}** (to narrator)`
-            : `**${m.player}**`;
-
-      // Include reasoning if present (for thinking models)
-      const reasoningBlock = m.reasoning
-        ? `<details>\n<summary>🧠 Thinking</summary>\n\n${m.reasoning}\n\n</details>\n\n`
-        : '';
-
-      return `### Turn ${m.turn} - ${speaker}\n\n${reasoningBlock}${m.content}`;
-    })
-    .join('\n\n---\n\n');
-}
+// formatTranscript moved to evaluation.ts

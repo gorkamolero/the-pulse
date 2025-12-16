@@ -18,6 +18,7 @@ import {
 import type { ArchetypeId } from '../archetypes/types';
 import { ARCHETYPES } from '../archetypes/definitions';
 import { getNextFallbackModel } from '../archetypes/types';
+import { sleep, getFallbackDelay, withModelFallback } from '../utils/retry';
 import type { PlayerAgent, StoryContext, GeneratedGroup } from '../agents/player';
 import { createPlayerAgents } from '../agents/player';
 import type { NarratorConfig } from '../agents/narrator';
@@ -87,7 +88,6 @@ export interface SessionResult {
   outcome: SessionOutcome;
   finalTurn: number;
   duration: number;
-  detectedPulses: number[];
   privateMoments: PrivateMoment[];
   tangents: TangentMoment[];
   tangentAnalysis?: TangentAnalysis;
@@ -107,8 +107,7 @@ export type SessionProgressEvent =
   | { type: 'narrator-turn'; turn: number; content: string }
   | { type: 'player-turn'; turn: number; player: string; content: string }
   | { type: 'spokesperson-turn'; turn: number; player: string; content: string }
-  | { type: 'pulse'; turn: number; pulseCount: number }
-  | { type: 'completed'; turn: number; pulses: number }
+  | { type: 'completed'; turn: number }
   | { type: 'failed'; error: string };
 
 export interface SessionRunnerConfig {
@@ -138,7 +137,6 @@ interface TurnExecutionContext {
   playerAgents: PlayerAgent[];
   spokesperson: PlayerAgent;
   conversationHistory: Message[];
-  detectedPulses: number[];
   gameState: GameState;
   costTracker: CostTracker;
   privateMomentTracker: PrivateMomentTracker;
@@ -285,6 +283,13 @@ async function generateNarratorResponse(
   const isFirstTurn = messages.length === 0;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    // Add delay before retry (not on first attempt)
+    if (attempt > 1) {
+      const delay = getFallbackDelay(attempt - 2); // attempt 2 → delay 0, attempt 3 → delay 1
+      console.log(`   ↻ Retrying narrator in ${(delay / 1000).toFixed(1)}s...`);
+      await sleep(delay);
+    }
+
     try {
       const result = streamText({
         model,
@@ -335,8 +340,9 @@ async function generateNarratorResponse(
 
       return { text: fullText, reasoning: reasoning || undefined, usage };
     } catch (error) {
-      console.error(`Narrator generation error (attempt ${attempt}):`, error);
       lastError = error instanceof Error ? error : new Error(String(error));
+      const errorMsg = lastError.message.slice(0, 80);
+      console.error(`   ⚠ Narrator error (attempt ${attempt}/${maxRetries}): ${errorMsg}`);
     }
   }
 
@@ -389,21 +395,17 @@ async function generatePlayerResponse(
     content: `${agent.name}, what is your reaction to this? Respond in character.`,
   });
 
-  const triedModels: string[] = [];
-  let currentModelId = agent.modelId;
-
-  while (true) {
-    triedModels.push(currentModelId);
-
-    try {
+  const { result, modelUsed } = await withModelFallback(
+    agent.modelId,
+    async (modelId) => {
       const result = streamText({
-        model: currentModelId,
+        model: modelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
       });
 
-      const modelNote = currentModelId !== agent.modelId ? ` [${currentModelId}]` : '';
+      const modelNote = modelId !== agent.modelId ? ` [${modelId}]` : '';
       let fullText = '';
       process.stdout.write(`\n👤 ${agent.name}${modelNote}: `);
       for await (const chunk of result.textStream) {
@@ -414,19 +416,14 @@ async function generatePlayerResponse(
 
       const usage = await extractUsage(result);
       return { text: fullText, usage };
-    } catch (error) {
-      console.warn(`   ⚠ ${agent.name} model failed (${currentModelId}), trying fallback...`);
+    },
+    {
+      getNextModel: getNextFallbackModel,
+      label: agent.name,
+    },
+  );
 
-      const nextModel = getNextFallbackModel(triedModels);
-      if (nextModel) {
-        currentModelId = nextModel;
-        continue;
-      }
-
-      console.error(`   ✗ All models failed for ${agent.name}`);
-      throw error;
-    }
-  }
+  return result;
 }
 
 /**
@@ -477,21 +474,17 @@ Answer ONLY the questions addressed to you. Do not answer questions meant for ot
 Respond in character as ${agent.name}.`,
   });
 
-  const triedModels: string[] = [];
-  let currentModelId = agent.modelId;
-
-  while (true) {
-    triedModels.push(currentModelId);
-
-    try {
+  const { result } = await withModelFallback(
+    agent.modelId,
+    async (modelId) => {
       const result = streamText({
-        model: currentModelId,
+        model: modelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
       });
 
-      const modelNote = currentModelId !== agent.modelId ? ` [${currentModelId}]` : '';
+      const modelNote = modelId !== agent.modelId ? ` [${modelId}]` : '';
       let fullText = '';
       process.stdout.write(`\n👤 ${agent.name}${modelNote}: `);
       for await (const chunk of result.textStream) {
@@ -502,19 +495,14 @@ Respond in character as ${agent.name}.`,
 
       const usage = await extractUsage(result);
       return { text: fullText, usage };
-    } catch (error) {
-      console.warn(`   ⚠ ${agent.name} model failed (${currentModelId}), trying fallback...`);
+    },
+    {
+      getNextModel: getNextFallbackModel,
+      label: `${agent.name} (directed)`,
+    },
+  );
 
-      const nextModel = getNextFallbackModel(triedModels);
-      if (nextModel) {
-        currentModelId = nextModel;
-        continue;
-      }
-
-      console.error(`   ✗ All models failed for ${agent.name}`);
-      throw error;
-    }
-  }
+  return result;
 }
 
 /**
@@ -541,21 +529,17 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
     { role: 'user' as const, content: synthesisPrompt },
   ];
 
-  const triedModels: string[] = [];
-  let currentModelId = spokesperson.modelId;
-
-  while (true) {
-    triedModels.push(currentModelId);
-
-    try {
+  const { result } = await withModelFallback(
+    spokesperson.modelId,
+    async (modelId) => {
       const result = streamText({
-        model: currentModelId,
+        model: modelId,
         system: spokesperson.systemPrompt,
         messages,
         temperature: 0.7,
       });
 
-      const modelNote = currentModelId !== spokesperson.modelId ? ` [${currentModelId}]` : '';
+      const modelNote = modelId !== spokesperson.modelId ? ` [${modelId}]` : '';
       let fullText = '';
       process.stdout.write(`\n🎙️ ${spokesperson.name}${modelNote} (spokesperson): `);
       for await (const chunk of result.textStream) {
@@ -566,19 +550,14 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
 
       const usage = await extractUsage(result);
       return { text: fullText, usage };
-    } catch (error) {
-      console.warn(`   ⚠ Spokesperson model failed (${currentModelId}), trying fallback...`);
+    },
+    {
+      getNextModel: getNextFallbackModel,
+      label: `${spokesperson.name} (spokesperson)`,
+    },
+  );
 
-      const nextModel = getNextFallbackModel(triedModels);
-      if (nextModel) {
-        currentModelId = nextModel;
-        continue;
-      }
-
-      console.error(`   ✗ All models failed for spokesperson`);
-      throw error;
-    }
-  }
+  return result;
 }
 
 /**
@@ -632,7 +611,6 @@ async function executeTurn(
     playerAgents,
     spokesperson,
     conversationHistory,
-    detectedPulses,
     costTracker,
     privateMomentTracker,
     tangentTracker,
@@ -659,7 +637,6 @@ async function executeTurn(
   // Classify output
   const { classifyOutput } = await import('./classifier');
   const classification = await classifyOutput(narratorOutput, {
-    previousPulseCount: detectedPulses.length,
     playerNames: playerAgents.map((a) => a.name),
   });
 
@@ -668,16 +645,8 @@ async function executeTurn(
   }
 
   // Log classification
-  const pulseTag = classification.isPulse ? ' [PULSE]' : '';
   const endTag = classification.isEnding ? ' [END]' : '';
-  console.log(`🏷️  ${classification.responseType}${pulseTag}${endTag}`);
-
-  // Track pulse
-  if (classification.isPulse) {
-    detectedPulses.push(turn);
-    console.log(`💓 Pulse ${detectedPulses.length}/~20`);
-    onProgress?.({ type: 'pulse', turn, pulseCount: detectedPulses.length });
-  }
+  console.log(`🏷️  ${classification.responseType}${endTag}`);
 
   // Add narrator message
   conversationHistory.push({
@@ -872,7 +841,6 @@ async function executeTurn(
     playerAgents,
     spokesperson,
     sessionConfig,
-    detectedPulses,
     tangentTracker.getAnalysis().moments,
     privateMomentTracker.getAll(),
     checkpointMetadata,
@@ -886,7 +854,7 @@ async function executeTurn(
   if (shouldEnd) {
     const outcome: SessionOutcome = classification.isEnding ? 'completed' : 'timeout';
     console.log(`\n✅ Session ended: ${outcome}`);
-    onProgress?.({ type: 'completed', turn, pulses: detectedPulses.length });
+    onProgress?.({ type: 'completed', turn });
     return { shouldEnd: true, outcome };
   }
 
@@ -957,7 +925,6 @@ async function finalizeSession(
     outcome,
     finalTurn: ctx.conversationHistory[ctx.conversationHistory.length - 1]?.turn || 0,
     duration,
-    detectedPulses: ctx.detectedPulses,
     privateMoments: ctx.privateMomentTracker.getAll(),
     tangents: tangentAnalysis.moments,
     tangentAnalysis,
@@ -1013,7 +980,6 @@ export async function resumeSessionFromCheckpoint(
       playerAgents,
       spokesperson,
       conversationHistory: [...checkpoint.conversationHistory],
-      detectedPulses: [...checkpoint.detectedPulses],
       gameState: createInitialState(),
       costTracker,
       privateMomentTracker,
@@ -1037,7 +1003,6 @@ export async function resumeSessionFromCheckpoint(
       outcome: 'failed',
       finalTurn: checkpoint.turn,
       duration: Date.now() - startTime,
-      detectedPulses: checkpoint.detectedPulses,
       privateMoments: checkpoint.privateMoments,
       tangents: checkpoint.detectedTangents,
       error: error instanceof Error ? error.message : String(error),
@@ -1122,7 +1087,6 @@ export async function runSession(
       playerAgents,
       spokesperson,
       conversationHistory: [...preGameMessages],
-      detectedPulses: [],
       gameState: createInitialState(),
       costTracker,
       privateMomentTracker,
@@ -1164,7 +1128,6 @@ export async function runSession(
       outcome: 'failed',
       finalTurn: 0,
       duration: Date.now() - startTime,
-      detectedPulses: [],
       privateMoments: [],
       tangents: [],
       error: error instanceof Error ? error.message : String(error),

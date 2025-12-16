@@ -46,7 +46,6 @@ interface ComparisonResult {
   promptStyle: PromptStyle;
   sessionId: string;
   turns: number;
-  pulses: number;
   narratorScore: number;
   cost: number;
   duration: string;
@@ -160,7 +159,6 @@ async function runComparison() {
         promptStyle,
         sessionId: result.sessionId,
         turns: result.finalTurn,
-        pulses: result.detectedPulses.length,
         narratorScore: Math.round(narratorScore * 10) / 10,
         cost: totalCost,
         duration: formatDuration(result.duration),
@@ -171,7 +169,6 @@ async function runComparison() {
         promptStyle,
         sessionId: 'FAILED',
         turns: 0,
-        pulses: 0,
         narratorScore: 0,
         cost: 0,
         duration: 'N/A',
@@ -198,10 +195,10 @@ function generateComparisonReport(results: ComparisonResult[], storyId: string, 
   // Table header
   console.log(
     chalk.bold(
-      `  ${'Prompt'.padEnd(14)} ${'Score'.padEnd(8)} ${'Pulses'.padEnd(8)} ${'Turns'.padEnd(8)} ${'Cost'.padEnd(10)} ${'Duration'.padEnd(10)}`
+      `  ${'Prompt'.padEnd(14)} ${'Score'.padEnd(8)} ${'Turns'.padEnd(8)} ${'Cost'.padEnd(10)} ${'Duration'.padEnd(10)}`
     )
   );
-  console.log(chalk.gray('─'.repeat(70)));
+  console.log(chalk.gray('─'.repeat(60)));
 
   // Sort by score descending
   const sorted = [...results].sort((a, b) => b.narratorScore - a.narratorScore);
@@ -210,11 +207,11 @@ function generateComparisonReport(results: ComparisonResult[], storyId: string, 
     const scoreColor = r.narratorScore >= 8.5 ? chalk.green : r.narratorScore >= 7 ? chalk.yellow : chalk.red;
 
     console.log(
-      `  ${r.promptStyle.padEnd(14)} ${scoreColor(r.narratorScore.toFixed(1).padEnd(8))} ${String(r.pulses).padEnd(8)} ${String(r.turns).padEnd(8)} $${r.cost.toFixed(4).padEnd(9)} ${r.duration.padEnd(10)}`
+      `  ${r.promptStyle.padEnd(14)} ${scoreColor(r.narratorScore.toFixed(1).padEnd(8))} ${String(r.turns).padEnd(8)} $${r.cost.toFixed(4).padEnd(9)} ${r.duration.padEnd(10)}`
     );
   }
 
-  console.log(chalk.gray('━'.repeat(70)));
+  console.log(chalk.gray('━'.repeat(60)));
 
   // Winner
   const winner = sorted[0];
@@ -235,9 +232,9 @@ function generateComparisonReport(results: ComparisonResult[], storyId: string, 
 
 ## Results
 
-| Prompt | Score | Pulses | Turns | Cost | Duration | Session |
-|--------|-------|--------|-------|------|----------|---------|
-${results.map(r => `| ${r.promptStyle} | ${r.narratorScore}/10 | ${r.pulses} | ${r.turns} | $${r.cost.toFixed(4)} | ${r.duration} | ${r.sessionId} |`).join('\n')}
+| Prompt | Score | Turns | Cost | Duration | Session |
+|--------|-------|-------|------|----------|---------|
+${results.map(r => `| ${r.promptStyle} | ${r.narratorScore}/10 | ${r.turns} | $${r.cost.toFixed(4)} | ${r.duration} | ${r.sessionId} |`).join('\n')}
 
 ## Winner
 

@@ -216,9 +216,9 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
           <div class="metric-subtitle">of {{maxTurns}} maximum</div>
         </div>
         <div class="metric-card success">
-          <div class="metric-label">Story Pulses</div>
-          <div class="metric-value">{{pulseCount}}</div>
-          <div class="metric-subtitle">{{pulsePercentage}}% completion</div>
+          <div class="metric-label">Outcome</div>
+          <div class="metric-value">{{outcome}}</div>
+          <div class="metric-subtitle">session result</div>
         </div>
         <div class="metric-card warning">
           <div class="metric-label">Tangents</div>
@@ -232,14 +232,6 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
         </div>
       </div>
 
-      <div style="margin-top: 2rem;">
-        <h3 style="margin-bottom: 1rem;">Pulse Progress</h3>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: {{pulsePercentage}}%">
-            {{pulseCount}} / 20 pulses
-          </div>
-        </div>
-      </div>
     </div>
 
     {{costSection}}
@@ -264,8 +256,6 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
 export async function generateHTMLReport(
   result: SessionResult,
 ): Promise<string> {
-  const pulseCount = result.detectedPulses.length;
-  const pulsePercentage = Math.round((pulseCount / 20) * 100);
   const tangentCount = result.tangentAnalysis?.totalTangents || 0;
   const tangentRate =
     result.finalTurn > 0
@@ -415,17 +405,13 @@ export async function generateHTMLReport(
     .filter((msg: Message) => msg.role === 'narrator')
     .slice(0, 30) // Limit to first 30 for performance
     .map((msg: Message) => {
-      const isPulse = result.detectedPulses.includes(msg.turn);
       const isTangent = msg.classification === 'tangent-response';
       const isPrivate = msg.classification === 'private-moment';
 
       let markerClass = '';
       let typeLabel = 'Narrative';
 
-      if (isPulse) {
-        markerClass = 'pulse';
-        typeLabel = 'Pulse';
-      } else if (isTangent) {
+      if (isTangent) {
         markerClass = 'tangent';
         typeLabel = 'Tangent';
       } else if (isPrivate) {
@@ -453,8 +439,6 @@ export async function generateHTMLReport(
     .replace(/{{duration}}/g, `${Math.round(result.duration / 1000)}s`)
     .replace(/{{finalTurn}}/g, result.finalTurn.toString())
     .replace(/{{maxTurns}}/g, result.config.maxTurns.toString())
-    .replace(/{{pulseCount}}/g, pulseCount.toString())
-    .replace(/{{pulsePercentage}}/g, pulsePercentage.toString())
     .replace(/{{tangentCount}}/g, tangentCount.toString())
     .replace(/{{tangentRate}}/g, tangentRate)
     .replace(/{{privateMomentCount}}/g, privateMomentCount.toString())

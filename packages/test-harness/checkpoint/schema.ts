@@ -40,7 +40,6 @@ export interface Checkpoint {
   playerAgents: PlayerAgent[];
   spokespersonId: string;
   sessionConfig: SessionConfig;
-  detectedPulses: number[];
   detectedTangents: TangentMoment[];
   privateMoments: PrivateMoment[];
   metadata: {
@@ -61,7 +60,6 @@ export function createCheckpoint(
   playerAgents: PlayerAgent[],
   spokesperson: PlayerAgent,
   sessionConfig: SessionConfig,
-  detectedPulses: number[],
   detectedTangents: TangentMoment[],
   privateMoments: PrivateMoment[],
   metadata?: {
@@ -78,7 +76,6 @@ export function createCheckpoint(
     playerAgents,
     spokespersonId: spokesperson.archetype,
     sessionConfig,
-    detectedPulses,
     detectedTangents,
     privateMoments,
     metadata: metadata || {},
@@ -101,7 +98,6 @@ export function validateCheckpoint(checkpoint: unknown): checkpoint is Checkpoin
     typeof c.spokespersonId === 'string' &&
     c.sessionConfig !== null &&
     c.sessionConfig !== undefined &&
-    Array.isArray(c.detectedPulses) &&
     Array.isArray(c.detectedTangents) &&
     Array.isArray(c.privateMoments)
   );

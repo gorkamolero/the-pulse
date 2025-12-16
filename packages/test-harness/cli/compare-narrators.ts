@@ -55,7 +55,6 @@ interface ComparisonResult {
   narrator: NarratorModel;
   sessionId: string;
   turns: number;
-  pulses: number;
   narratorScore: number;
   cost: number;
   duration: string;
@@ -173,7 +172,6 @@ async function runComparison() {
         narrator: narratorModel,
         sessionId: result.sessionId,
         turns: result.finalTurn,
-        pulses: result.detectedPulses.length,
         narratorScore: Math.round(narratorScore * 10) / 10,
         cost: totalCost,
         duration: formatDuration(result.duration),
@@ -184,7 +182,6 @@ async function runComparison() {
         narrator: narratorModel,
         sessionId: 'FAILED',
         turns: 0,
-        pulses: 0,
         narratorScore: 0,
         cost: 0,
         duration: 'N/A',
@@ -215,10 +212,10 @@ function generateComparisonReport(
   // Table header
   console.log(
     chalk.bold(
-      `  ${'Narrator'.padEnd(18)} ${'Score'.padEnd(8)} ${'Pulses'.padEnd(8)} ${'Turns'.padEnd(8)} ${'Cost'.padEnd(10)} ${'Duration'.padEnd(10)}`,
+      `  ${'Narrator'.padEnd(18)} ${'Score'.padEnd(8)} ${'Turns'.padEnd(8)} ${'Cost'.padEnd(10)} ${'Duration'.padEnd(10)}`,
     ),
   );
-  console.log(chalk.gray('─'.repeat(70)));
+  console.log(chalk.gray('─'.repeat(60)));
 
   // Sort by score descending
   const sorted = [...results].sort((a, b) => b.narratorScore - a.narratorScore);
@@ -228,7 +225,7 @@ function generateComparisonReport(
       r.narratorScore >= 8.5 ? chalk.green : r.narratorScore >= 7 ? chalk.yellow : chalk.red;
 
     console.log(
-      `  ${r.narrator.padEnd(18)} ${scoreColor(r.narratorScore.toFixed(1).padEnd(8))} ${String(r.pulses).padEnd(8)} ${String(r.turns).padEnd(8)} $${r.cost.toFixed(4).padEnd(9)} ${r.duration.padEnd(10)}`,
+      `  ${r.narrator.padEnd(18)} ${scoreColor(r.narratorScore.toFixed(1).padEnd(8))} ${String(r.turns).padEnd(8)} $${r.cost.toFixed(4).padEnd(9)} ${r.duration.padEnd(10)}`,
     );
   }
 
@@ -253,9 +250,9 @@ function generateComparisonReport(
 
 ## Results
 
-| Narrator | Score | Pulses | Turns | Cost | Duration | Session |
-|----------|-------|--------|-------|------|----------|---------|
-${results.map((r) => `| ${r.narrator} | ${r.narratorScore}/10 | ${r.pulses} | ${r.turns} | $${r.cost.toFixed(4)} | ${r.duration} | ${r.sessionId} |`).join('\n')}
+| Narrator | Score | Turns | Cost | Duration | Session |
+|----------|-------|-------|------|----------|---------|
+${results.map((r) => `| ${r.narrator} | ${r.narratorScore}/10 | ${r.turns} | $${r.cost.toFixed(4)} | ${r.duration} | ${r.sessionId} |`).join('\n')}
 
 ## Winner
 

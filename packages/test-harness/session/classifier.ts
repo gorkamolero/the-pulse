@@ -41,8 +41,6 @@ export type OutputType =
   | 'ending';
 
 export interface Classification {
-  // Multi-label flags (not mutually exclusive)
-  isPulse: boolean;           // Did narrative advance?
   isEnding: boolean;          // Is the story over?
   responseType: ResponseType; // How should players respond?
 
@@ -58,7 +56,6 @@ export interface Classification {
 }
 
 const classificationSchema = z.object({
-  isPulse: z.boolean(),
   isEnding: z.boolean(),
   responseType: z.enum(['group', 'discussion', 'directed', 'private', 'none']),
   targetPlayers: z.array(z.string()).optional(),
@@ -68,26 +65,9 @@ const classificationSchema = z.object({
 
 const CLASSIFICATION_PROMPT = `You are analyzing narrator output from an interactive fiction game.
 
-You must answer TWO INDEPENDENT questions:
+You must answer TWO questions:
 
-## QUESTION 1: isPulse - Did the narrative ADVANCE?
-
-A **PULSE** (isPulse: true) means the STORY MOVED FORWARD:
-- New revelation, challenge, location change, or plot development
-- Introduces new information that changes the situation
-- Escalates stakes or presents new obstacles
-- Examples: discovering a clue, entering a dangerous room, NPC reveals plot info
-
-**NOT a pulse** (isPulse: false):
-- Responding to player jokes/banter without advancing plot
-- Answering world questions that don't change anything
-- Atmospheric filler that doesn't move story
-- Clarifications or recaps
-- Pure questions without narrative content
-
-IMPORTANT: A pulse can ALSO require discussion. "You enter the crypt and find two passages—left or right?" is BOTH a pulse (new location) AND requires discussion (choice). These are NOT mutually exclusive.
-
-## QUESTION 2: responseType - HOW should players respond?
+## QUESTION 1: responseType - HOW should players respond?
 
 **discussion** - Players need to deliberate together
 - Character creation: "Who are you?", "What's your backstory?"
@@ -117,7 +97,7 @@ IMPORTANT: A pulse can ALSO require discussion. "You enter the crypt and find tw
 - Story ending/epilogue
 - Pure narration that doesn't invite response
 
-## QUESTION 3: isEnding - Is the story OVER?
+## QUESTION 2: isEnding - Is the story OVER?
 
 **isEnding: true** only when:
 - Explicit ending: "The End", "Fin", story concludes
@@ -125,14 +105,13 @@ IMPORTANT: A pulse can ALSO require discussion. "You enter the crypt and find tw
 - Narrator explicitly ends session
 - NOT just a dramatic moment
 
-Analyze the narrator output and provide isPulse, responseType, isEnding, and targetPlayers (if applicable).`;
+Analyze the narrator output and provide responseType, isEnding, and targetPlayers (if applicable).`;
 
 /**
- * Derive legacy type from multi-label classification
+ * Derive legacy type from classification
  * For backwards compatibility with reports/checkpoints
  */
 function deriveLegacyType(
-  isPulse: boolean,
   isEnding: boolean,
   responseType: ResponseType,
 ): OutputType {
@@ -140,16 +119,14 @@ function deriveLegacyType(
   if (responseType === 'private') return 'private-moment';
   if (responseType === 'directed') return 'directed-questions';
   if (responseType === 'discussion') return 'requires-discussion';
-  if (isPulse) return 'pulse';
-  // For non-pulse group responses, default to tangent-response
-  return 'tangent-response';
+  // Default to pulse for regular group responses
+  return 'pulse';
 }
 
 /**
  * Default fallback classification when all retries fail
  */
 const FALLBACK_CLASSIFICATION: Classification = {
-  isPulse: true, // Assume pulse to keep story moving
   isEnding: false,
   responseType: 'group',
   confidence: 0,
@@ -163,11 +140,10 @@ const FALLBACK_CLASSIFICATION: Classification = {
 export async function classifyOutput(
   narratorOutput: string,
   context?: {
-    previousPulseCount?: number;
     playerNames?: string[];
   },
 ): Promise<Classification> {
-  const userContent = `Narrator output to classify:\n\n${narratorOutput}\n\nContext: ${context?.previousPulseCount ? `Previous pulse count: ${context.previousPulseCount}` : 'Unknown'}\nPlayer names: ${context?.playerNames?.join(', ') || 'Unknown'}`;
+  const userContent = `Narrator output to classify:\n\n${narratorOutput}\n\nPlayer names: ${context?.playerNames?.join(', ') || 'Unknown'}`;
 
   // Try each model in the fallback chain
   for (let i = 0; i < CLASSIFICATION_MODELS.length; i++) {
@@ -186,7 +162,6 @@ export async function classifyOutput(
       });
 
       const {
-        isPulse,
         isEnding,
         responseType,
         targetPlayers,
@@ -195,13 +170,12 @@ export async function classifyOutput(
       } = response.object;
 
       return {
-        isPulse,
         isEnding,
         responseType,
         targetPlayers,
         confidence,
         reasoning,
-        type: deriveLegacyType(isPulse, isEnding, responseType),
+        type: deriveLegacyType(isEnding, responseType),
         usage: response.usage,
       } as Classification;
     } catch (error) {
@@ -247,27 +221,3 @@ export function detectPrivateMoment(output: string): {
   return { isPrivate: false };
 }
 
-/**
- * Quick check if output is likely a pulse (story beat)
- */
-export function isProbablyPulse(output: string): boolean {
-  // Pulses are typically longer and contain scene-setting or action
-  if (output.length < 50) return false;
-
-  const pulseIndicators = [
-    'you find yourself',
-    'you arrive',
-    'suddenly',
-    'you notice',
-    'before you',
-    'in front of you',
-    'you hear',
-    'you see',
-    'the room',
-    'the door',
-    'ahead of you',
-  ];
-
-  const lower = output.toLowerCase();
-  return pulseIndicators.some((indicator) => lower.includes(indicator));
-}

@@ -167,17 +167,11 @@ async function main() {
 
     const avgTurns =
       results.reduce((sum, r) => sum + r.finalTurn, 0) / results.length;
-    const avgPulses =
-      results.reduce((sum, r) => sum + r.detectedPulses.length, 0) /
-      results.length;
     const avgDuration =
       results.reduce((sum, r) => sum + r.duration, 0) / results.length;
 
     console.log(
       chalk.white(`\nAverage Turns: ${chalk.bold(avgTurns.toFixed(1))}`),
-    );
-    console.log(
-      chalk.white(`Average Pulses: ${chalk.bold(avgPulses.toFixed(1))} / ~20`),
     );
     console.log(
       chalk.white(

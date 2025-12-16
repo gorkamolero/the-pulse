@@ -56,6 +56,7 @@ program
   .option('--archetypes <ids>', 'Comma-separated archetype IDs')
   .option('--max-turns <number>', 'Maximum turns', (v) => Number.parseInt(v, 10), 50)
   .option('--language <lang>', 'Output language', 'english')
+  .option('--no-gemini-eval', 'Skip Gemini Pro evaluation after each session')
   .parse();
 
 const options = program.opts();
@@ -66,7 +67,6 @@ interface ComparisonResult {
   sessionId: string;
   outcome: string;
   turns: number;
-  pulses: number;
   narratorScore: number;
   pacing: string;
   tangents: number;
@@ -179,7 +179,9 @@ async function runComparison() {
       });
 
       // Save individual report
-      const reportPath = await saveSessionReport(result);
+      const reportPath = await saveSessionReport(result, undefined, {
+        geminiEval: options.geminiEval,
+      });
       console.log(chalk.green(`\n✓ ${label} (${storyId}) complete: ${reportPath}`));
 
       // Extract metrics
@@ -194,7 +196,6 @@ async function runComparison() {
         sessionId: result.sessionId,
         outcome: result.outcome,
         turns: result.finalTurn,
-        pulses: result.detectedPulses.length,
         narratorScore: Math.round(narratorScore * 10) / 10,
         pacing,
         tangents: result.tangents.length,
@@ -211,7 +212,6 @@ async function runComparison() {
         sessionId: 'FAILED',
         outcome: 'failed',
         turns: 0,
-        pulses: 0,
         narratorScore: 0,
         pacing: 'N/A',
         tangents: 0,
@@ -253,7 +253,6 @@ function generateComparisonReport(
     { label: 'Story ID', val1: story1Id, val2: story2Id },
     { label: 'Outcome', val1: result1?.outcome || 'N/A', val2: result2?.outcome || 'N/A' },
     { label: 'Turns', val1: String(result1?.turns || 0), val2: String(result2?.turns || 0) },
-    { label: 'Pulses', val1: String(result1?.pulses || 0), val2: String(result2?.pulses || 0) },
     { label: 'Narrator Score', val1: `${result1?.narratorScore || 0}/10`, val2: `${result2?.narratorScore || 0}/10` },
     { label: 'Pacing', val1: result1?.pacing || 'N/A', val2: result2?.pacing || 'N/A' },
     { label: 'Tangents', val1: String(result1?.tangents || 0), val2: String(result2?.tangents || 0) },
@@ -299,13 +298,7 @@ function generateComparisonReport(
   // Analysis
   console.log(chalk.bold('Analysis:'));
   if (result1 && result2) {
-    const pulseDiff = result2.pulses - result1.pulses;
     const turnDiff = result2.turns - result1.turns;
-
-    if (pulseDiff !== 0) {
-      const more = pulseDiff > 0 ? 'Story 2' : 'Story 1';
-      console.log(`  • ${more} had ${Math.abs(pulseDiff)} more pulses (story beats)`);
-    }
 
     if (Math.abs(turnDiff) > 3) {
       const longer = turnDiff > 0 ? 'Story 2' : 'Story 1';
@@ -352,7 +345,6 @@ ${score1 > score2 ? `**Story 1** (${story1Id}) - ${score1}/10` : score2 > score1
 ## Analysis
 
 ${result1 && result2 ? `
-- Pulse difference: ${result2.pulses - result1.pulses > 0 ? '+' : ''}${result2.pulses - result1.pulses} (Story 2 vs Story 1)
 - Turn difference: ${result2.turns - result1.turns > 0 ? '+' : ''}${result2.turns - result1.turns}
 - Private moments: Story 1 (${result1.privateMoments}), Story 2 (${result2.privateMoments})
 - Tangents: Story 1 (${result1.tangents}), Story 2 (${result2.tangents})

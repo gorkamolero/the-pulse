@@ -29,7 +29,9 @@
     "cli:compare-narrators": "tsx cli/compare-narrators.ts",
     "cli:replay": "tsx cli/replay.ts",
     "cli:batch": "tsx cli/batch.ts",
-    "cli:compare-stories": "tsx cli/compare-stories.ts"
+    "cli:compare-stories": "tsx cli/compare-stories.ts",
+    "cli:metrics": "tsx cli/metrics.ts",
+    "cli:eval": "tsx cli/eval.ts"
   },
   "dependencies": {
     "@pulse/core": "workspace:*",
