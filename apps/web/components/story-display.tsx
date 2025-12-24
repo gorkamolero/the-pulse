@@ -105,8 +105,8 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
             <Image
               src={displayImageUrl}
               alt="Story visualization"
-              className="rounded-lg shadow-2xl object-contain max-h-[90vh] max-w-[85%]"
-              width={450}
+              className="rounded-lg shadow-2xl object-contain max-h-[90vh] max-w-[70%]"
+              width={360}
               height={960}
               quality={85}
             />
