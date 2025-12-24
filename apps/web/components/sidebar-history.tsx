@@ -67,7 +67,7 @@ const PureChatItem = ({
   return (
     <div className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent text-sm">
       <Link
-        href={`/chat/${chat.id}`}
+        href={`/pulse/${chat.id}`}
         onClick={() => onClose?.()}
         className={`flex-1 truncate ${isActive ? 'font-medium' : ''}`}
       >
@@ -160,7 +160,7 @@ export function SidebarHistory({ user, onClose }: { user: User | undefined; onCl
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const router = useRouter();
   const handleDelete = async () => {
-    const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
+    const deletePromise = fetch(`/api/pulse?id=${deleteId}`, {
       method: 'DELETE',
     });
 

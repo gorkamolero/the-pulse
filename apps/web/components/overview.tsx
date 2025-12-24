@@ -66,7 +66,7 @@ export const Overview = ({ chatId, append, onSelectStory }: OverviewProps) => {
   const handleStartStory = () => {
     if (!selectedStory) return;
 
-    window.history.replaceState({}, "", `/chat/${chatId}`);
+    window.history.replaceState({}, "", `/pulse/${chatId}`);
 
     if (onSelectStory) {
       onSelectStory(selectedStory.id);

@@ -5,9 +5,9 @@ export default auth;
 export const config = {
   matcher: [
     '/',
-    '/chat/:path*',
+    '/pulse/:path*',
     '/settings',
-    '/api/chat/:path*',
+    '/api/pulse/:path*',
     '/api/files/:path*',
     '/api/history/:path*',
     '/api/suggestions/:path*',

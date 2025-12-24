@@ -46,7 +46,7 @@ function PureSuggestedActions({
           <Button
             variant="ghost"
             onClick={async () => {
-              window.history.replaceState({}, "", `/chat/${chatId}`);
+              window.history.replaceState({}, "", `/pulse/${chatId}`);
 
               if (onSelectStory) {
                 onSelectStory(storyAction.id);
