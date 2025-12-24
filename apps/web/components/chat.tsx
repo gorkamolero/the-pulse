@@ -166,7 +166,7 @@ export function Chat({
           <ResizableHandle />
 
           <ResizablePanel defaultSize={50}>
-            <div className='flex flex-col items-center justify-center h-full'>
+            <div className='flex flex-col items-center justify-center h-full overflow-hidden'>
               <StoryDisplay currentMessageId={currentMessageId} />
             </div>
           </ResizablePanel>
