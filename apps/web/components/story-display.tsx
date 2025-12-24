@@ -45,7 +45,7 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
     <div className="flex flex-col items-center justify-center h-full w-full p-4 relative overflow-hidden">
       {/* Blurred background image overlay - fills entire screen */}
       {displayImageUrl && (
-        <div className="story-background-overlay fixed inset-0 z-0 overflow-hidden">
+        <div className="story-background-overlay fixed inset-0 z-0 overflow-hidden pointer-events-none">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={displayImageUrl}
