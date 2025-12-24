@@ -21,16 +21,16 @@ export function SidebarUserNav({ user }: { user: User }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5">
           <Image
             src={`https://avatar.vercel.sh/${user.email}`}
             alt={user.email ?? 'User Avatar'}
-            width={20}
-            height={20}
+            width={18}
+            height={18}
             className="rounded-full"
           />
-          <span className="hidden sm:inline truncate max-w-[100px]">{user?.email}</span>
-          <ChevronDown className="w-4 h-4" />
+          <span className="hidden sm:inline truncate max-w-[80px] text-xs">{user?.email}</span>
+          <ChevronDown className="w-3 h-3" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

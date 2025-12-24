@@ -23,19 +23,19 @@ export function ChatHeader({
   const [historyOpen, setHistoryOpen] = useState(false);
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       {/* Left: Logo */}
-      <Link href="/" className="flex items-center gap-2 group">
-        <span className="font-bold text-xl tracking-tight">The Pulse</span>
+      <Link href="/" className="flex items-center group">
+        <span className="font-semibold text-sm tracking-tight">The Pulse</span>
       </Link>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {/* History Popover */}
         <Popover open={historyOpen} onOpenChange={setHistoryOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <History className="w-4 h-4 mr-2" />
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+              <History className="w-3.5 h-3.5 mr-1.5" />
               <span className="hidden sm:inline">History</span>
             </Button>
           </PopoverTrigger>
@@ -61,7 +61,7 @@ export function ChatHeader({
         {/* User Menu */}
         {user && (
           <>
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-4" />
             <SidebarUserNav user={user} />
           </>
         )}
