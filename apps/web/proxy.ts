@@ -4,6 +4,7 @@ export default auth;
 
 export const config = {
   matcher: [
+    '/',
     '/chat/:path*',
     '/settings',
     '/api/chat/:path*',
