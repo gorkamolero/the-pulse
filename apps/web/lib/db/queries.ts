@@ -114,6 +114,42 @@ export async function saveMessages({ messages }: { messages: Array<Message> }) {
   }
 }
 
+export async function updateMessageImageUrl({
+  id,
+  imageUrl,
+}: {
+  id: string;
+  imageUrl: string;
+}) {
+  try {
+    return await db
+      .update(message)
+      .set({ imageUrl })
+      .where(eq(message.id, id));
+  } catch (error) {
+    console.error('Failed to update message image URL in database', error);
+    throw error;
+  }
+}
+
+export async function updateMessageAudioUrl({
+  id,
+  audioUrl,
+}: {
+  id: string;
+  audioUrl: string;
+}) {
+  try {
+    return await db
+      .update(message)
+      .set({ audioUrl })
+      .where(eq(message.id, id));
+  } catch (error) {
+    console.error('Failed to update message audio URL in database', error);
+    throw error;
+  }
+}
+
 export async function getMessagesByChatId({ id }: { id: string }) {
   try {
     return await db

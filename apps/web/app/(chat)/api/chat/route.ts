@@ -4,6 +4,7 @@ import {
   streamText,
   convertToModelMessages,
 } from "ai";
+import { after } from "next/server";
 
 import { auth } from "@/app/(auth)/auth";
 import { NARRATOR_MODEL } from "@pulse/core/ai/models";
@@ -14,15 +15,15 @@ import {
   getChatById,
   saveChat,
   saveMessages,
+  updateMessageImageUrl,
+  updateMessageAudioUrl,
   startFreeStory,
   addMisuseWarning,
   getUserSettings,
 } from "@/lib/db/queries";
 import {
   getMostRecentUserMessage,
-  sanitizeResponseMessages,
   getUIMessageContent,
-  type ResponseMessage,
 } from "@/lib/utils";
 import {
   isGarbageOutput,
@@ -37,6 +38,7 @@ import {
 
 import { generateTitleFromUserMessage } from "../../actions";
 import { generatePulseImage } from "@/lib/ai/tools/generate-image";
+import { generatePulseAudio } from "@/lib/ai/tools/generate-audio";
 
 export const maxDuration = 60;
 
@@ -107,7 +109,6 @@ export async function POST(request: Request) {
 
   // Periodic misuse sampling (only for server key users)
   const messageCount = messages.filter((m) => m.role === "user").length;
-  let misuseWarning = false;
 
   if (!usingUserKey && shouldSampleMessage(messageCount)) {
     const story = getStoryById(selectedStoryId);
@@ -129,7 +130,6 @@ export async function POST(request: Request) {
       console.warn(
         `Misuse detected for user ${userId}: ${evaluation.reason} (warning ${warnings})`
       );
-      misuseWarning = warnings === 1; // Only warn on first offense
     }
   }
 
@@ -149,6 +149,7 @@ export async function POST(request: Request) {
     await saveChat({ id, userId, title });
   }
 
+  // Save user message
   await saveMessages({
     messages: [
       {
@@ -158,6 +159,7 @@ export async function POST(request: Request) {
         createdAt: new Date(),
         chatId: id,
         imageUrl: null,
+        audioUrl: null,
       },
     ],
   });
@@ -169,111 +171,106 @@ export async function POST(request: Request) {
       language: language === "es" ? "spanish" : "english",
     });
 
-  const maxRetries = 3;
-
   // Convert UIMessages to ModelMessages for the AI SDK
   const modelMessages = convertToModelMessages(messages);
 
-  // Generate with retry - collect full text first, then stream if valid
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const result = streamText({
-        model,
-        system: getSystemPromptForLanguage(language),
-        messages: modelMessages,
-        experimental_telemetry: {
-          isEnabled: true,
-          functionId: "stream-text",
-        },
-      });
+  // Stream the response
+  const result = streamText({
+    model,
+    system: getSystemPromptForLanguage(language),
+    messages: modelMessages,
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: "stream-text",
+    },
+    onError: ({ error }) => {
+      console.error("Narrator streaming error:", error);
+    },
+  });
 
-      // Collect full text to check for garbage before returning
-      const fullText = await result.text;
+  // Return streaming response with AI SDK v6 best practices
+  return result.toUIMessageStreamResponse({
+    // Use UUIDs for message IDs so they match database format
+    generateMessageId: () => crypto.randomUUID(),
+    // Pass original messages to prevent duplicates
+    originalMessages: messages,
+    // Persist message after streaming completes
+    onFinish: async ({ responseMessage }) => {
+      const messageId = responseMessage.id;
+      const text = responseMessage.parts
+        .filter((p): p is { type: "text"; text: string } => p.type === "text")
+        .map((p) => p.text)
+        .join("");
 
-      if (isGarbageOutput(fullText)) {
-        const reason = describeGarbageReason(fullText);
-        console.warn(
-          `Narrator garbage detected (attempt ${attempt}/${maxRetries}): ${reason}`
-        );
-        if (attempt < maxRetries) {
-          continue; // Retry
-        }
-        // Last attempt - return anyway with warning logged
+      // Check for garbage output
+      if (isGarbageOutput(text)) {
+        const reason = describeGarbageReason(text);
+        console.warn(`Narrator garbage detected: ${reason}`);
       }
 
-      // Valid response - save and return
-      const response = await result.response;
-      const reasoning = await result.reasoning;
+      // Save the assistant message
+      try {
+        await saveMessages({
+          messages: [
+            {
+              id: messageId,
+              chatId: id,
+              role: "assistant",
+              content: text,
+              createdAt: new Date(),
+              imageUrl: null,
+              audioUrl: null,
+            },
+          ],
+        });
 
-      if (session.user?.id) {
-        try {
-          // Convert reasoning array to string for sanitization
-          const reasoningText = reasoning?.map((r) => r.text).join("\n");
-          const sanitizedResponseMessages = sanitizeResponseMessages({
-            messages: response.messages as unknown as Array<ResponseMessage>,
-            reasoning: reasoningText,
-          });
-
-          const lastAssistantMessage = sanitizedResponseMessages
-            .filter((m) => m.role === "assistant")
-            .pop();
-
-          let imageResult = null;
-
-          if (
-            sanitizedResponseMessages[0].role === "assistant" &&
-            lastAssistantMessage?.id
-          ) {
-            imageResult = await generatePulseImage({
+        // Schedule image and audio generation to run AFTER response is sent
+        after(async () => {
+          // Generate image
+          try {
+            const imageResult = await generatePulseImage({
               storyId: selectedStoryId,
-              pulse: lastAssistantMessage.content as string,
-              messageId: lastAssistantMessage.id,
+              pulse: text,
+              messageId,
             });
+
+            if (imageResult?.url) {
+              await updateMessageImageUrl({
+                id: messageId,
+                imageUrl: imageResult.url,
+              });
+              console.log(`[After] Image saved for message ${messageId}`);
+            }
+          } catch (error) {
+            console.error("[After] Failed to generate image:", error);
           }
 
-          await saveMessages({
-            messages: sanitizedResponseMessages.map((message) => {
-              return {
-                id: crypto.randomUUID(),
-                chatId: id,
-                role: message.role,
-                content: message.content,
-                createdAt: new Date(),
-                imageUrl: imageResult?.url ?? null,
-              };
-            }),
-          });
-        } catch (error) {
-          console.error("Failed to save chat", error);
-        }
+          // Generate audio
+          try {
+            const audioResult = await generatePulseAudio({
+              text,
+              messageId,
+            });
+
+            if (audioResult?.url) {
+              await updateMessageAudioUrl({
+                id: messageId,
+                audioUrl: audioResult.url,
+              });
+              console.log(`[After] Audio saved for message ${messageId}`);
+            }
+          } catch (error) {
+            console.error("[After] Failed to generate audio:", error);
+          }
+        });
+      } catch (error) {
+        console.error("Failed to save assistant message:", error);
       }
-
-      // Build response headers
-      const headers: HeadersInit = {
-        "Content-Type": "text/plain; charset=utf-8",
-      };
-
-      // Add warning header if misuse was detected
-      if (misuseWarning) {
-        headers["X-Misuse-Warning"] = "true";
-      }
-
-      // Add degraded mode indicator
-      if (isDegraded) {
-        headers["X-Degraded-Mode"] = "true";
-      }
-
-      // Return as text response (already collected)
-      return new Response(fullText, { headers });
-    } catch (error) {
-      console.error(`Narrator generation error (attempt ${attempt}):`, error);
-      if (attempt >= maxRetries) {
-        throw error;
-      }
-    }
-  }
-
-  throw new Error("Narrator generation failed after retries");
+    },
+    headers: {
+      ...(isDegraded && { "X-Degraded-Mode": "true" }),
+    },
+  });
 }
 
 export async function DELETE(request: Request) {

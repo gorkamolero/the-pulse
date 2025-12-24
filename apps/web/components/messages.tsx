@@ -37,7 +37,6 @@ function PureMessages({
     useScrollToBottom<HTMLDivElement>();
 
   const lastAssistantMessage = messages.filter(m => m.role==='assistant').pop()
-  console.log('LAST ASSISTANT MESSAGE', lastAssistantMessage)
 
   return (
     <div

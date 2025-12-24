@@ -44,7 +44,7 @@ Make this prompt in English.
 Visual Prompt:`
     });
 
-    // Generate image using Fireworks model
+    // Generate image using Replicate model
     const { image } = await experimental_generateImage({
       model: replicate.image('black-forest-labs/flux-schnell'),
       prompt: imagePrompt,

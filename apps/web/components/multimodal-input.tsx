@@ -25,7 +25,6 @@ import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
 import { PreviewAttachment } from "./preview-attachment";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { SuggestedActions } from "./suggested-actions";
 import { RecordButton } from "./record-button";
 
 function PureMultimodalInput({
@@ -41,7 +40,6 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
-  onSelectStory,
 }: {
   chatId: string;
   input: string;
@@ -63,7 +61,6 @@ function PureMultimodalInput({
     chatRequestOptions?: ChatRequestOptions
   ) => void;
   className?: string;
-  onSelectStory?: (storyId: string) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -206,16 +203,6 @@ function PureMultimodalInput({
 
   return (
     <div className="relative w-full flex flex-col gap-4">
-      {messages.length === 0 &&
-        attachments.length === 0 &&
-        uploadQueue.length === 0 && (
-          <SuggestedActions
-            append={append}
-            chatId={chatId}
-            onSelectStory={onSelectStory}
-          />
-        )}
-
       <input
         type="file"
         className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
@@ -254,7 +241,7 @@ function PureMultimodalInput({
         <div className="relative grow">
           <Textarea
             ref={textareaRef}
-            placeholder="Send a message..."
+            placeholder="What do you do?"
             value={input}
             onChange={handleInput}
             className={cx(

@@ -97,9 +97,11 @@ const remarkPlugins = [remarkGfm];
 
 const NonMemoizedMarkdown = ({ children }: { children: string }) => {
   return (
-    <ReactMarkdown remarkPlugins={remarkPlugins} components={components}>
-      {children}
-    </ReactMarkdown>
+    <div className="font-serif leading-relaxed">
+      <ReactMarkdown remarkPlugins={remarkPlugins} components={components}>
+        {children}
+      </ReactMarkdown>
+    </div>
   );
 };
 
