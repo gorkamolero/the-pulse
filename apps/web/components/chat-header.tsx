@@ -2,11 +2,9 @@
 
 import type { User } from 'next-auth';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { History, Plus } from 'lucide-react';
+import { History } from 'lucide-react';
 import { useState } from 'react';
 
-import { StorySelector } from '@/components/story-selector';
 import { SidebarHistory } from '@/components/sidebar-history';
 import { SidebarUserNav } from '@/components/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
@@ -16,24 +14,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import type { VisibilityType } from './visibility-selector';
 
 export function ChatHeader({
   user,
-  chatId,
-  selectedVisibilityType,
-  isReadonly,
-  selectedStoryId,
-  onSelectStory,
 }: {
   user?: User;
-  chatId?: string;
-  selectedVisibilityType?: VisibilityType;
-  isReadonly?: boolean;
-  selectedStoryId?: string;
-  onSelectStory?: (storyId: string) => void;
 }) {
-  const router = useRouter();
   const [historyOpen, setHistoryOpen] = useState(false);
 
   return (
@@ -43,29 +29,8 @@ export function ChatHeader({
         <span className="font-bold text-xl tracking-tight">The Pulse</span>
       </Link>
 
-      {/* Center: Story Selector */}
-      {selectedStoryId && onSelectStory && (
-        <StorySelector
-          selectedStoryId={selectedStoryId}
-          onSelectStory={onSelectStory}
-        />
-      )}
-
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
-        {/* New Chat Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            router.push('/');
-            router.refresh();
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">New</span>
-        </Button>
-
         {/* History Popover */}
         <Popover open={historyOpen} onOpenChange={setHistoryOpen}>
           <PopoverTrigger asChild>

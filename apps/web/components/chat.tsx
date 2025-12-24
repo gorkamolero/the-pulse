@@ -139,17 +139,16 @@ export function Chat({
   return (
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
-        <ChatHeader
-          user={user}
-          chatId={id}
-          selectedVisibilityType={selectedVisibilityType}
-          isReadonly={isReadonly}
-          selectedStoryId={selectedStoryId}
-          onSelectStory={handleStorySelection}
-        />
+        <ChatHeader user={user} />
 
         
-      {messages.length === 0 ? <Overview /> : (<ResizablePanelGroup direction="horizontal" className=" h-full" >
+      {messages.length === 0 ? (
+        <Overview
+          chatId={id}
+          append={append}
+          onSelectStory={handleStorySelection}
+        />
+      ) : (<ResizablePanelGroup direction="horizontal" className=" h-full" >
           <ResizablePanel  defaultSize={50}>
             <div className="overflow-y-scroll h-full">
             <Messages
@@ -175,14 +174,13 @@ export function Chat({
 
         
 
-        <form 
-          className="flex mx-auto bg-background p-4 md:p-6 gap-2 w-full md:max-w-3xl"
-          onSubmit={(e) => {
-            // Prevent default form submission
-            e.preventDefault();
-          }}
-        >
-          {!isReadonly && (
+        {messages.length > 0 && !isReadonly && (
+          <form
+            className="flex mx-auto bg-background p-4 md:p-6 gap-2 w-full md:max-w-3xl"
+            onSubmit={(e) => {
+              e.preventDefault();
+            }}
+          >
             <MultimodalInput
               chatId={id}
               input={input}
@@ -197,8 +195,8 @@ export function Chat({
               append={append}
               onSelectStory={handleStorySelection}
             />
-          )}
-        </form>
+          </form>
+        )}
       </div>
     </>
   );

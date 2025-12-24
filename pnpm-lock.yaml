@@ -41,7 +41,7 @@ importers:
     devDependencies:
       '@types/bun':
         specifier: latest
-        version: 1.3.4
+        version: 1.3.5
       '@types/react':
         specifier: ^18
         version: 18.3.27
@@ -84,6 +84,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.35.3
         version: 6.39.4
+      '@openrouter/ai-sdk-provider':
+        specifier: ^1.5.4
+        version: 1.5.4(ai@6.0.0-beta.150(zod@4.1.13))(zod@4.1.13)
       '@pulse/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -161,7 +164,7 @@ importers:
         version: 16.6.1
       drizzle-orm:
         specifier: ^0.34.0
-        version: 0.34.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@types/react@18.3.27)(@vercel/postgres@0.10.0(utf-8-validate@5.0.10))(bun-types@1.3.4)(postgres@3.4.7)(react@19.0.0-rc.1)
+        version: 0.34.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@types/react@18.3.27)(@vercel/postgres@0.10.0(utf-8-validate@5.0.10))(bun-types@1.3.5)(postgres@3.4.7)(react@19.0.0-rc.1)
       fast-deep-equal:
         specifier: ^3.1.3
         version: 3.1.3
@@ -1351,6 +1354,16 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@openrouter/ai-sdk-provider@1.5.4':
+    resolution: {integrity: sha512-xrSQPUIH8n9zuyYZR0XK7Ba0h2KsjJcMkxnwaYfmv13pKs3sDkjPzVPPhlhzqBGddHb5cFEwJ9VFuFeDcxCDSw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      ai: ^5.0.0
+      zod: ^3.24.1 || ^v4
+
+  '@openrouter/sdk@0.1.27':
+    resolution: {integrity: sha512-RH//L10bSmc81q25zAZudiI4kNkLgxF2E+WU42vghp3N6TEvZ6F0jK7uT3tOxkEn91gzmMw9YVmDENy7SJsajQ==}
+
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
@@ -1922,8 +1935,8 @@ packages:
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
-  '@types/bun@1.3.4':
-    resolution: {integrity: sha512-EEPTKXHP+zKGPkhRLv+HI0UEX8/o+65hqARxLy8Ov5rIxMBPNTjeZww00CIihrIQGEQBYg+0roO5qOnS/7boGA==}
+  '@types/bun@1.3.5':
+    resolution: {integrity: sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w==}
 
   '@types/cookie@0.6.0':
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
@@ -2096,8 +2109,8 @@ packages:
     peerDependencies:
       typescript: ^5
 
-  bun-types@1.3.4:
-    resolution: {integrity: sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ==}
+  bun-types@1.3.5:
+    resolution: {integrity: sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw==}
 
   bun-webgpu-darwin-arm64@0.1.4:
     resolution: {integrity: sha512-eDgLN9teKTfmvrCqgwwmWNsNszxYs7IZdCqk0S1DCarvMhr4wcajoSBlA/nQA0/owwLduPTS8xxCnQp4/N/gDg==}
@@ -4243,6 +4256,16 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.0.8':
     optional: true
 
+  '@openrouter/ai-sdk-provider@1.5.4(ai@6.0.0-beta.150(zod@4.1.13))(zod@4.1.13)':
+    dependencies:
+      '@openrouter/sdk': 0.1.27
+      ai: 6.0.0-beta.150(zod@4.1.13)
+      zod: 4.1.13
+
+  '@openrouter/sdk@0.1.27':
+    dependencies:
+      zod: 4.1.13
+
   '@opentelemetry/api@1.9.0': {}
 
   '@opentui/core-darwin-arm64@0.1.60':
@@ -4791,9 +4814,9 @@ snapshots:
 
   '@tokenizer/token@0.3.0': {}
 
-  '@types/bun@1.3.4':
+  '@types/bun@1.3.5':
     dependencies:
-      bun-types: 1.3.4
+      bun-types: 1.3.5
 
   '@types/cookie@0.6.0': {}
 
@@ -4949,7 +4972,7 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  bun-types@1.3.4:
+  bun-types@1.3.5:
     dependencies:
       '@types/node': 22.19.3
 
@@ -5076,14 +5099,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.34.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@types/react@18.3.27)(@vercel/postgres@0.10.0(utf-8-validate@5.0.10))(bun-types@1.3.4)(postgres@3.4.7)(react@19.0.0-rc.1):
+  drizzle-orm@0.34.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@types/react@18.3.27)(@vercel/postgres@0.10.0(utf-8-validate@5.0.10))(bun-types@1.3.5)(postgres@3.4.7)(react@19.0.0-rc.1):
     optionalDependencies:
       '@neondatabase/serverless': 0.9.5
       '@opentelemetry/api': 1.9.0
       '@types/pg': 8.11.6
       '@types/react': 18.3.27
       '@vercel/postgres': 0.10.0(utf-8-validate@5.0.10)
-      bun-types: 1.3.4
+      bun-types: 1.3.5
       postgres: 3.4.7
       react: 19.0.0-rc.1
 

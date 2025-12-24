@@ -9,6 +9,7 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  integer,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -114,3 +115,21 @@ export const suggestion = pgTable(
 );
 
 export type Suggestion = InferSelectModel<typeof suggestion>;
+
+export const userSettings = pgTable('UserSettings', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id)
+    .unique(),
+  openrouterApiKey: text('openrouterApiKey'), // encrypted
+  aiGatewayApiKey: text('aiGatewayApiKey'), // encrypted
+  freeStoryUsed: boolean('freeStoryUsed').notNull().default(false),
+  freeStoryId: varchar('freeStoryId', { length: 64 }), // story ID being played
+  misuseWarnings: integer('misuseWarnings').notNull().default(0),
+  degradedMode: boolean('degradedMode').notNull().default(false),
+  createdAt: timestamp('createdAt').notNull(),
+  updatedAt: timestamp('updatedAt').notNull(),
+});
+
+export type UserSettings = InferSelectModel<typeof userSettings>;

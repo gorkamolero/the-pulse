@@ -22,14 +22,13 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
   const [selectedVoice] = useAtom(selectedVoiceAtom);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Add useEffect for autoplay
+  // Autoplay when enabled - user has interacted via story start modal
   useEffect(() => {
-    if (autoplay && content && !isPlaying && !isLoading) {
+    if (autoplay && audioEnabled && content && !isPlaying && !isLoading) {
       playAudio();
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoplay, content]);
+  }, [autoplay, content, audioEnabled]);
 
   // Generate a cache key based on content and voice settings
   const getCacheKey = () => {

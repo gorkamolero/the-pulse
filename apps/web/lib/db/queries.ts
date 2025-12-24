@@ -15,6 +15,8 @@ import {
   type Message,
   message,
   vote,
+  userSettings,
+  type UserSettings,
 } from './schema';
 
 // Optionally, if not using email/pass login, you can
@@ -341,6 +343,175 @@ export async function updateChatVisiblityById({
     return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));
   } catch (error) {
     console.error('Failed to update chat visibility in database');
+    throw error;
+  }
+}
+
+// User Settings Queries
+
+export async function getUserSettings(
+  userId: string,
+): Promise<UserSettings | null> {
+  try {
+    const [settings] = await db
+      .select()
+      .from(userSettings)
+      .where(eq(userSettings.userId, userId));
+    return settings ?? null;
+  } catch (error) {
+    console.error('Failed to get user settings from database');
+    throw error;
+  }
+}
+
+export async function saveUserSettings({
+  userId,
+  openrouterApiKey,
+  aiGatewayApiKey,
+}: {
+  userId: string;
+  openrouterApiKey?: string | null;
+  aiGatewayApiKey?: string | null;
+}): Promise<void> {
+  try {
+    const now = new Date();
+    const existing = await getUserSettings(userId);
+
+    if (existing) {
+      const updates: Partial<UserSettings> = { updatedAt: now };
+      if (openrouterApiKey !== undefined) {
+        updates.openrouterApiKey = openrouterApiKey;
+      }
+      if (aiGatewayApiKey !== undefined) {
+        updates.aiGatewayApiKey = aiGatewayApiKey;
+      }
+      await db
+        .update(userSettings)
+        .set(updates)
+        .where(eq(userSettings.userId, userId));
+    } else {
+      await db.insert(userSettings).values({
+        userId,
+        openrouterApiKey: openrouterApiKey ?? null,
+        aiGatewayApiKey: aiGatewayApiKey ?? null,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  } catch (error) {
+    console.error('Failed to save user settings in database');
+    throw error;
+  }
+}
+
+export async function deleteUserApiKey(
+  userId: string,
+  provider: 'openrouter' | 'aiGateway',
+): Promise<void> {
+  try {
+    const field =
+      provider === 'openrouter' ? 'openrouterApiKey' : 'aiGatewayApiKey';
+    await db
+      .update(userSettings)
+      .set({ [field]: null, updatedAt: new Date() })
+      .where(eq(userSettings.userId, userId));
+  } catch (error) {
+    console.error('Failed to delete user API key from database');
+    throw error;
+  }
+}
+
+export async function startFreeStory(
+  userId: string,
+  storyId: string,
+): Promise<void> {
+  try {
+    const now = new Date();
+    const existing = await getUserSettings(userId);
+
+    if (existing) {
+      await db
+        .update(userSettings)
+        .set({ freeStoryId: storyId, updatedAt: now })
+        .where(eq(userSettings.userId, userId));
+    } else {
+      await db.insert(userSettings).values({
+        userId,
+        freeStoryId: storyId,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  } catch (error) {
+    console.error('Failed to start free story in database');
+    throw error;
+  }
+}
+
+export async function completeFreeStory(userId: string): Promise<void> {
+  try {
+    await db
+      .update(userSettings)
+      .set({ freeStoryUsed: true, updatedAt: new Date() })
+      .where(eq(userSettings.userId, userId));
+  } catch (error) {
+    console.error('Failed to complete free story in database');
+    throw error;
+  }
+}
+
+export async function addMisuseWarning(userId: string): Promise<number> {
+  try {
+    const settings = await getUserSettings(userId);
+    const currentWarnings = settings?.misuseWarnings ?? 0;
+    const newWarnings = currentWarnings + 1;
+    const shouldDegrade = newWarnings >= 2;
+
+    if (settings) {
+      await db
+        .update(userSettings)
+        .set({
+          misuseWarnings: newWarnings,
+          degradedMode: shouldDegrade,
+          updatedAt: new Date(),
+        })
+        .where(eq(userSettings.userId, userId));
+    } else {
+      await db.insert(userSettings).values({
+        userId,
+        misuseWarnings: newWarnings,
+        degradedMode: shouldDegrade,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    return newWarnings;
+  } catch (error) {
+    console.error('Failed to add misuse warning in database');
+    throw error;
+  }
+}
+
+export async function getFreeStoryStatus(userId: string): Promise<{
+  hasFreeTier: boolean;
+  storyInProgress: string | null;
+  isDegraded: boolean;
+}> {
+  try {
+    const settings = await getUserSettings(userId);
+
+    if (!settings) {
+      return { hasFreeTier: true, storyInProgress: null, isDegraded: false };
+    }
+
+    return {
+      hasFreeTier: !settings.freeStoryUsed,
+      storyInProgress: settings.freeStoryId,
+      isDegraded: settings.degradedMode,
+    };
+  } catch (error) {
+    console.error('Failed to get free story status from database');
     throw error;
   }
 }

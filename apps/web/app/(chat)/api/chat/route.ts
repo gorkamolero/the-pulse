@@ -1,5 +1,6 @@
 import {
   type UIMessage,
+  type LanguageModel,
   streamText,
   convertToModelMessages,
 } from "ai";
@@ -13,6 +14,9 @@ import {
   getChatById,
   saveChat,
   saveMessages,
+  startFreeStory,
+  addMisuseWarning,
+  getUserSettings,
 } from "@/lib/db/queries";
 import {
   getMostRecentUserMessage,
@@ -24,6 +28,12 @@ import {
   isGarbageOutput,
   describeGarbageReason,
 } from "@pulse/core/narrator/validation";
+import { createUserModel } from "@/lib/ai/create-model";
+import {
+  evaluateMessage,
+  shouldSampleMessage,
+  isMisuseConfirmed,
+} from "@/lib/ai/misuse-evaluator";
 
 import { generateTitleFromUserMessage } from "../../actions";
 import { generatePulseImage } from "@/lib/ai/tools/generate-image";
@@ -49,10 +59,78 @@ export async function POST(request: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const userId = session.user.id;
   const userMessage = getMostRecentUserMessage(messages);
 
   if (!userMessage) {
     return new Response("No user message found", { status: 400 });
+  }
+
+  // Get user model based on their tier (own key, free tier, or degraded)
+  let model: LanguageModel;
+  let usingUserKey = false;
+  let isDegraded = false;
+
+  try {
+    const modelResult = await createUserModel({
+      userId,
+      modelId: NARRATOR_MODEL,
+    });
+    model = modelResult.model;
+    usingUserKey = modelResult.usingUserKey;
+    isDegraded = modelResult.isDegraded;
+  } catch (error) {
+    if (error instanceof Error && error.name === "FREE_TIER_EXHAUSTED") {
+      return new Response(
+        JSON.stringify({
+          error: "FREE_TIER_EXHAUSTED",
+          message:
+            "Your free story has been completed. Please add your own API key to continue playing.",
+          redirectTo: "/settings",
+        }),
+        {
+          status: 402,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    throw error;
+  }
+
+  // Track free story start (if using server key and first message)
+  if (!usingUserKey) {
+    const settings = await getUserSettings(userId);
+    if (!settings?.freeStoryId) {
+      await startFreeStory(userId, selectedStoryId);
+    }
+  }
+
+  // Periodic misuse sampling (only for server key users)
+  const messageCount = messages.filter((m) => m.role === "user").length;
+  let misuseWarning = false;
+
+  if (!usingUserKey && shouldSampleMessage(messageCount)) {
+    const story = getStoryById(selectedStoryId);
+    const lastAssistantMsg = messages
+      .filter((m) => m.role === "assistant")
+      .slice(-1)[0];
+    const recentNarration = lastAssistantMsg
+      ? getUIMessageContent(lastAssistantMsg)
+      : undefined;
+
+    const evaluation = await evaluateMessage(getUIMessageContent(userMessage), {
+      storyId: selectedStoryId,
+      storyTitle: story?.title,
+      recentNarration,
+    });
+
+    if (isMisuseConfirmed(evaluation)) {
+      const warnings = await addMisuseWarning(userId);
+      console.warn(
+        `Misuse detected for user ${userId}: ${evaluation.reason} (warning ${warnings})`
+      );
+      misuseWarning = warnings === 1; // Only warn on first offense
+    }
   }
 
   const chat = await getChatById({ id });
@@ -68,25 +146,28 @@ export async function POST(request: Request) {
     const randomChars = Math.random().toString(36).substring(2, 6);
 
     const title = `${storyPrefix}${userTitle} (${randomChars})`;
-    await saveChat({ id, userId: session.user.id, title });
+    await saveChat({ id, userId, title });
   }
 
   await saveMessages({
-    messages: [{
-      id: userMessage.id,
-      role: userMessage.role,
-      content: getUIMessageContent(userMessage),
-      createdAt: new Date(),
-      chatId: id,
-      imageUrl: null
-    }],
+    messages: [
+      {
+        id: crypto.randomUUID(),
+        role: userMessage.role,
+        content: getUIMessageContent(userMessage),
+        createdAt: new Date(),
+        chatId: id,
+        imageUrl: null,
+      },
+    ],
   });
 
   // Select the appropriate system prompt based on the language
-  const getSystemPromptForLanguage = (language: string) => systemPrompt({
-    storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
-    language: language === "es" ? "spanish" : "english",
-  })
+  const getSystemPromptForLanguage = (language: string) =>
+    systemPrompt({
+      storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
+      language: language === "es" ? "spanish" : "english",
+    });
 
   const maxRetries = 3;
 
@@ -97,7 +178,7 @@ export async function POST(request: Request) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const result = streamText({
-        model: NARRATOR_MODEL,
+        model,
         system: getSystemPromptForLanguage(language),
         messages: modelMessages,
         experimental_telemetry: {
@@ -111,7 +192,9 @@ export async function POST(request: Request) {
 
       if (isGarbageOutput(fullText)) {
         const reason = describeGarbageReason(fullText);
-        console.warn(`Narrator garbage detected (attempt ${attempt}/${maxRetries}): ${reason}`);
+        console.warn(
+          `Narrator garbage detected (attempt ${attempt}/${maxRetries}): ${reason}`
+        );
         if (attempt < maxRetries) {
           continue; // Retry
         }
@@ -125,33 +208,38 @@ export async function POST(request: Request) {
       if (session.user?.id) {
         try {
           // Convert reasoning array to string for sanitization
-          const reasoningText = reasoning?.map(r => r.text).join('\n');
+          const reasoningText = reasoning?.map((r) => r.text).join("\n");
           const sanitizedResponseMessages = sanitizeResponseMessages({
             messages: response.messages as unknown as Array<ResponseMessage>,
             reasoning: reasoningText,
           });
 
-          const lastAssistantMessage = sanitizedResponseMessages.filter(m => m.role === 'assistant').pop()
+          const lastAssistantMessage = sanitizedResponseMessages
+            .filter((m) => m.role === "assistant")
+            .pop();
 
-          let imageResult = null
+          let imageResult = null;
 
-          if (sanitizedResponseMessages[0].role === 'assistant' && lastAssistantMessage?.id) {
+          if (
+            sanitizedResponseMessages[0].role === "assistant" &&
+            lastAssistantMessage?.id
+          ) {
             imageResult = await generatePulseImage({
               storyId: selectedStoryId,
               pulse: lastAssistantMessage.content as string,
-              messageId: lastAssistantMessage.id
+              messageId: lastAssistantMessage.id,
             });
           }
 
           await saveMessages({
             messages: sanitizedResponseMessages.map((message) => {
               return {
-                id: message.id,
+                id: crypto.randomUUID(),
                 chatId: id,
                 role: message.role,
                 content: message.content,
                 createdAt: new Date(),
-                imageUrl: imageResult?.url ?? null
+                imageUrl: imageResult?.url ?? null,
               };
             }),
           });
@@ -160,10 +248,23 @@ export async function POST(request: Request) {
         }
       }
 
+      // Build response headers
+      const headers: HeadersInit = {
+        "Content-Type": "text/plain; charset=utf-8",
+      };
+
+      // Add warning header if misuse was detected
+      if (misuseWarning) {
+        headers["X-Misuse-Warning"] = "true";
+      }
+
+      // Add degraded mode indicator
+      if (isDegraded) {
+        headers["X-Degraded-Mode"] = "true";
+      }
+
       // Return as text response (already collected)
-      return new Response(fullText, {
-        headers: { "Content-Type": "text/plain; charset=utf-8" },
-      });
+      return new Response(fullText, { headers });
     } catch (error) {
       console.error(`Narrator generation error (attempt ${attempt}):`, error);
       if (attempt >= maxRetries) {
@@ -199,7 +300,7 @@ export async function DELETE(request: Request) {
     await deleteChatById({ id });
 
     return new Response("Chat deleted", { status: 200 });
-  } catch (error) {
+  } catch {
     return new Response("An error occurred while processing your request", {
       status: 500,
     });
