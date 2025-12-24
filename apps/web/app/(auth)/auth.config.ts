@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
+import { NextResponse } from 'next/server';
 
 export const authConfig = {
   pages: {
@@ -22,7 +23,7 @@ export const authConfig = {
 
       // Redirect logged-in users from auth/welcome pages to home
       if (isLoggedIn && (isOnLogin || isOnRegister || isOnWelcome || isOnGuest)) {
-        return Response.redirect(new URL('/', nextUrl as unknown as URL));
+        return NextResponse.redirect(new URL('/', nextUrl));
       }
 
       // Always allow access to register and login pages
@@ -39,7 +40,7 @@ export const authConfig = {
       // Root path: redirect unauthenticated to welcome page
       if (nextUrl.pathname === '/') {
         if (isLoggedIn) return true;
-        return Response.redirect(new URL('/welcome', nextUrl as unknown as URL));
+        return NextResponse.redirect(new URL('/welcome', nextUrl));
       }
 
       // All other routes (including /welcome, /guest) are public

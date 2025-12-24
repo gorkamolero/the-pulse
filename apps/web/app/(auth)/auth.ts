@@ -33,6 +33,7 @@ const nextAuth: NextAuthResult = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

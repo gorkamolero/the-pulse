@@ -1,0 +1,14 @@
+[2025-12-24T11:13:38Z] INFO    [Daemon.swift:37] Starting Maestro daemon
+[2025-12-24T11:13:38Z] INFO    [Daemon.swift:38] Configuration loaded: log=~/Library/Logs/Maestro/maestro.log, db=~/Library/Application Support/Maestro/maestro.db
+[2025-12-24T11:13:38Z] INFO    [Daemon.swift:42] Signal handlers registered
+[2025-12-24T11:13:38Z] INFO    [Daemon.swift:45] Initializing database at: ~/Library/Application Support/Maestro/maestro.db
+[2025-12-24T11:13:38Z] INFO    [Daemon.swift:47] Database initialized and migrations completed
+[2025-12-24T11:13:38Z] INFO    [Daemon.swift:50] Starting MCP server
+[2025-12-24T11:13:38Z] INFO    [Daemon.swift:61] Maestro daemon running
+[2025-12-24T11:13:39Z] INFO    [Daemon.swift:37] Starting Maestro daemon
+[2025-12-24T11:13:39Z] INFO    [Daemon.swift:38] Configuration loaded: log=~/Library/Logs/Maestro/maestro.log, db=~/Library/Application Support/Maestro/maestro.db
+[2025-12-24T11:13:39Z] INFO    [Daemon.swift:42] Signal handlers registered
+[2025-12-24T11:13:39Z] INFO    [Daemon.swift:45] Initializing database at: ~/Library/Application Support/Maestro/maestro.db
+[2025-12-24T11:13:39Z] INFO    [Daemon.swift:47] Database initialized and migrations completed
+[2025-12-24T11:13:39Z] INFO    [Daemon.swift:50] Starting MCP server
+[2025-12-24T11:13:39Z] INFO    [Daemon.swift:61] Maestro daemon running
