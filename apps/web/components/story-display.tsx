@@ -57,11 +57,11 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
         </div>
       )}
 
-      {/* Loading overlay when waiting for new image */}
+      {/* Loading overlay when waiting for new image - fullscreen centered */}
       <AnimatePresence>
         {isWaitingForImage && (
           <motion.div
-            className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm"
+            className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
