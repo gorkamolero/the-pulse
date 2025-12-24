@@ -61,7 +61,7 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
       <AnimatePresence>
         {isWaitingForImage && (
           <motion.div
-            className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm pointer-events-none"
+            className="fixed inset-0 z-20 flex flex-col items-center justify-center pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -105,8 +105,8 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
             <Image
               src={displayImageUrl}
               alt="Story visualization"
-              className="rounded-lg shadow-2xl object-contain max-h-[90vh] max-w-full"
-              width={540}
+              className="rounded-lg shadow-2xl object-contain max-h-[90vh] max-w-[85%]"
+              width={450}
               height={960}
               quality={85}
             />
