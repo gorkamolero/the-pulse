@@ -4,14 +4,14 @@ export default auth;
 
 export const config = {
   matcher: [
-    '/',
-    '/:id',
+    '/chat/:path*',
+    '/settings',
     '/api/chat/:path*',
     '/api/files/:path*',
     '/api/history/:path*',
     '/api/suggestions/:path*',
     '/api/vote/:path*',
     '/login',
-    '/register'
+    '/register',
   ],
 };
