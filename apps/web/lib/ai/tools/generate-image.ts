@@ -44,10 +44,11 @@ Make this prompt in English.
 Visual Prompt:`
     });
 
-    // Generate image using Replicate model
+    // Generate image using Replicate model - vertical 9:16 aspect ratio
     const { image } = await experimental_generateImage({
       model: replicate.image('black-forest-labs/flux-schnell'),
       prompt: imagePrompt,
+      aspectRatio: '9:16',
     });
 
     console.log('Image generation result:', {
