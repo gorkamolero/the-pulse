@@ -17,9 +17,12 @@ export const authConfig = {
       const isOnRegister = nextUrl.pathname.startsWith('/register');
       const isOnLogin = nextUrl.pathname.startsWith('/login');
 
-      // Redirect logged-in users from auth pages to chat
-      if (isLoggedIn && (isOnLogin || isOnRegister)) {
-        return Response.redirect(new URL('/chat', nextUrl as unknown as URL));
+      const isOnWelcome = nextUrl.pathname === '/welcome';
+      const isOnGuest = nextUrl.pathname.startsWith('/guest');
+
+      // Redirect logged-in users from auth/welcome pages to home
+      if (isLoggedIn && (isOnLogin || isOnRegister || isOnWelcome || isOnGuest)) {
+        return Response.redirect(new URL('/', nextUrl as unknown as URL));
       }
 
       // Always allow access to register and login pages
@@ -27,13 +30,19 @@ export const authConfig = {
         return true;
       }
 
-      // Protected routes: /chat and /settings
-      if (isOnChat || isOnSettings) {
+      // Protected routes: / (home), /settings
+      if (isOnSettings) {
         if (isLoggedIn) return true;
         return false; // Redirect unauthenticated users to login page
       }
 
-      // All other routes (including /, /guest) are public
+      // Root path: redirect unauthenticated to welcome page
+      if (nextUrl.pathname === '/') {
+        if (isLoggedIn) return true;
+        return Response.redirect(new URL('/welcome', nextUrl as unknown as URL));
+      }
+
+      // All other routes (including /welcome, /guest) are public
       return true;
     },
   },
