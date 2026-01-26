@@ -1,7 +1,5 @@
 import WebSocket from "ws";
-
-// Default voice for narration
-const DEFAULT_VOICE_ID = "qNkzaJoHLLdpvgh5tISm"; // Carter
+import { DEFAULT_VOICE_ID } from "@pulse/core/ai/models";
 
 interface ElevenLabsStreamOptions {
   voiceId?: string;

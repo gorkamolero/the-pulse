@@ -1,9 +1,7 @@
 import { experimental_generateSpeech as generateSpeech } from "ai";
 import { elevenlabs } from "@ai-sdk/elevenlabs";
 import { put } from "@vercel/blob";
-
-// Default voice for narration
-const DEFAULT_VOICE_ID = "qNkzaJoHLLdpvgh5tISm"; // Carter
+import { DEFAULT_VOICE_ID } from "@pulse/core/ai/models";
 
 /**
  * Generate audio narration for a story pulse and upload to Vercel Blob
