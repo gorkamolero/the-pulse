@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { VOICES, } from "@/lib/orate-service";
+import { VOICES, } from "@/lib/tts-service";
 import { useAtom } from "jotai";
 import { audioEnabledAtom, selectedVoiceAtom } from "@/lib/atoms";
 
