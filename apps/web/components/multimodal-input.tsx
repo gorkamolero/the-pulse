@@ -25,7 +25,6 @@ import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
 import { PreviewAttachment } from "./preview-attachment";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { RecordButton } from "./record-button";
 
 function PureMultimodalInput({
   chatId,
@@ -192,15 +191,6 @@ function PureMultimodalInput({
     [setAttachments]
   );
 
-  // Handle transcription from RecordButton
-  const handleTranscriptionComplete = (text: string) => {
-    const newInput = input.length > 0 ? `${input} ${text}` : text;
-    setInput(newInput);
-    
-    // Adjust the textarea height after setting the input
-    setTimeout(adjustHeight, 0);
-  };
-
   return (
     <div className="relative w-full flex flex-col gap-4">
       <input
@@ -233,11 +223,6 @@ function PureMultimodalInput({
       )}
 
       <div className="flex flex-row gap-4 items-start">
-        <RecordButton 
-          onTranscriptionComplete={handleTranscriptionComplete}
-          disabled={isLoading}
-        />
-        
         <div className="relative grow">
           <Textarea
             ref={textareaRef}

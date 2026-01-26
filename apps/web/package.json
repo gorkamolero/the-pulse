@@ -20,7 +20,6 @@
   "dependencies": {
     "@11labs/react": "^0.0.7",
     "@ai-sdk/elevenlabs": "2.0.0-beta.47",
-    "@ai-sdk/openai": "3.0.0-beta.96",
     "@ai-sdk/react": "3.0.0-beta.153",
     "@ai-sdk/replicate": "2.0.0-beta.47",
     "@codemirror/lang-javascript": "^6.2.2",

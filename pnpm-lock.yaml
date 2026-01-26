@@ -60,9 +60,6 @@ importers:
       '@ai-sdk/elevenlabs':
         specifier: 2.0.0-beta.47
         version: 2.0.0-beta.47(zod@4.1.13)
-      '@ai-sdk/openai':
-        specifier: 3.0.0-beta.96
-        version: 3.0.0-beta.96(zod@4.1.13)
       '@ai-sdk/react':
         specifier: 3.0.0-beta.153
         version: 3.0.0-beta.153(react@19.0.0-rc.1)(zod@4.1.13)
@@ -414,12 +411,6 @@ packages:
 
   '@ai-sdk/openai-compatible@2.0.0-beta.48':
     resolution: {integrity: sha512-z8oaXIgDc1bhfS01+IgkN87DAstCkl/TWVQlazbBZ/RgEe0aaG04CH+pQxyB2U8/TCd1OUAYZbi38VDtYqZfhQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/openai@3.0.0-beta.96':
-    resolution: {integrity: sha512-C4zOLbnxDYRqBWbQoY6lfgEtKF8ylBZTynzbPInSrmt53HJERBC3smLV1XEKWX2l28TspWrTMG7VeqDS/kzZjg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3481,16 +3472,6 @@ snapshots:
       - effect
 
   '@ai-sdk/openai-compatible@2.0.0-beta.48(zod@4.1.13)':
-    dependencies:
-      '@ai-sdk/provider': 3.0.0-beta.26
-      '@ai-sdk/provider-utils': 4.0.0-beta.47(zod@4.1.13)
-      zod: 4.1.13
-    transitivePeerDependencies:
-      - '@valibot/to-json-schema'
-      - arktype
-      - effect
-
-  '@ai-sdk/openai@3.0.0-beta.96(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 3.0.0-beta.26
       '@ai-sdk/provider-utils': 4.0.0-beta.47(zod@4.1.13)

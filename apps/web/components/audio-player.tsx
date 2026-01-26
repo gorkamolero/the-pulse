@@ -75,8 +75,7 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
           },
           body: JSON.stringify({
             text: content,
-            provider: selectedVoice.provider,
-            voiceId: selectedVoice.voiceId,
+            voiceId: selectedVoice,
           }),
         });
 

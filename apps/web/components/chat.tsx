@@ -193,7 +193,6 @@ export function Chat({
               messages={messages}
               setMessages={setMessages}
               append={append}
-              onSelectStory={handleStorySelection}
             />
           </form>
         )}

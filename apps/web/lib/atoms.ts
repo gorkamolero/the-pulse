@@ -1,6 +1,6 @@
 import { atomWithStorage } from "jotai/utils";
 import { atom } from "jotai";
-import { DEFAULT_ELEVENLABS_VOICE_ID } from "./orate-service";
+import { DEFAULT_VOICE_ID } from "@pulse/core/ai/models";
 import { type GuestSession, GUEST_SESSION_KEY } from "./guest-session";
 
 // Atom to control the expansion state of reasoning in messages
@@ -20,10 +20,9 @@ export const isGuestModeAtom = atom((get) => {
 
 // Audio narration atoms
 export const audioEnabledAtom = atom(true);
-export const selectedVoiceAtom = atom({
-  provider: "elevenlabs",
-  voiceId: DEFAULT_ELEVENLABS_VOICE_ID,
-});
+
+// Selected voice ID (ElevenLabs only)
+export const selectedVoiceAtom = atom(DEFAULT_VOICE_ID);
 
 // Real-time audio streaming (Option C) - when enabled, audio streams alongside text
 // When disabled (default), audio generates in background after text completes (Option B)

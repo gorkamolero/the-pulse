@@ -7,9 +7,12 @@ import {
 import { after } from "next/server";
 
 import { auth } from "@/app/(auth)/auth";
-import { NARRATOR_MODEL } from "@pulse/core/ai/models";
 import { systemPrompt } from "@pulse/core/ai/prompts/system";
-import { getStoryById, DEFAULT_STORY_ID } from "@pulse/core/ai/stories";
+import {
+  getStoryById,
+  getNarratorConfig,
+  DEFAULT_STORY_ID,
+} from "@pulse/core/ai/stories";
 import {
   getChatById,
   saveChat,
@@ -81,6 +84,9 @@ export async function POST(request: Request) {
     return new Response("No user message found", { status: 400 });
   }
 
+  // Get narrator config for this story (model + voice)
+  const narratorConfig = getNarratorConfig(selectedStoryId);
+
   // Get user model based on their tier
   let model: LanguageModel;
   let usingUserKey = false;
@@ -89,7 +95,7 @@ export async function POST(request: Request) {
   try {
     const modelResult = await createUserModel({
       userId,
-      modelId: NARRATOR_MODEL,
+      modelId: narratorConfig.modelId,
     });
     model = modelResult.model;
     usingUserKey = modelResult.usingUserKey;
@@ -192,6 +198,7 @@ export async function POST(request: Request) {
       if (enableAudio) {
         try {
           elevenLabsStream = createElevenLabsStream({
+            voiceId: narratorConfig.voiceId,
             onAudioChunk: (chunk) => {
               // Send audio chunk to client
               const base64Audio = chunk.toString("base64");
@@ -199,15 +206,13 @@ export async function POST(request: Request) {
                 encoder.encode(`${AUDIO_MARKER}${base64Audio}\n`)
               );
             },
-            onError: (error) => {
-              console.error("[Chat Stream] ElevenLabs error:", error);
+            onError: () => {
+              // ElevenLabs connection error - audio will be skipped
             },
           });
 
           await elevenLabsStream.waitForConnection();
-          console.log("[Chat Stream] ElevenLabs WebSocket connected");
-        } catch (error) {
-          console.error("[Chat Stream] Failed to connect ElevenLabs:", error);
+        } catch {
           elevenLabsStream = null;
         }
       }
@@ -291,8 +296,8 @@ export async function POST(request: Request) {
                 imageUrl: imageResult.url,
               });
             }
-          } catch (error) {
-            console.error("[After] Failed to generate image:", error);
+          } catch {
+            // Image generation failed - non-critical
           }
         });
 
@@ -300,7 +305,6 @@ export async function POST(request: Request) {
         controller.enqueue(encoder.encode(`${DONE_MARKER}\n`));
         controller.close();
       } catch (error) {
-        console.error("[Chat Stream] Error:", error);
         elevenLabsStream?.close();
         controller.error(error);
       }
