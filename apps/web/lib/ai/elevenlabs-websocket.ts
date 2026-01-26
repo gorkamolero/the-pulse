@@ -61,7 +61,6 @@ export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
   });
 
   ws.on("open", () => {
-    console.log("[ElevenLabs WS] Connected");
     isConnected = true;
 
     // Send initialization message with voice settings
@@ -93,9 +92,6 @@ export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
         onAudioChunk?.(audioBuffer);
       }
 
-      if (message.isFinal) {
-        console.log("[ElevenLabs WS] Received final audio chunk");
-      }
     } catch (error) {
       // Non-JSON message, might be binary audio
       if (Buffer.isBuffer(data)) {
@@ -105,13 +101,11 @@ export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
   });
 
   ws.on("error", (error) => {
-    console.error("[ElevenLabs WS] Error:", error);
     onError?.(error);
     connectionPromiseReject?.(error);
   });
 
   ws.on("close", () => {
-    console.log("[ElevenLabs WS] Connection closed");
     isConnected = false;
     onClose?.();
   });
@@ -127,7 +121,6 @@ export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
      */
     sendText: (text: string) => {
       if (!isConnected) {
-        console.warn("[ElevenLabs WS] Cannot send text: not connected");
         return;
       }
 

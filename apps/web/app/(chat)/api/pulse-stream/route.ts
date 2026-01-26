@@ -206,15 +206,13 @@ export async function POST(request: Request) {
                 encoder.encode(`${AUDIO_MARKER}${base64Audio}\n`)
               );
             },
-            onError: (error) => {
-              console.error("[Chat Stream] ElevenLabs error:", error);
+            onError: () => {
+              // ElevenLabs connection error - audio will be skipped
             },
           });
 
           await elevenLabsStream.waitForConnection();
-          console.log("[Chat Stream] ElevenLabs WebSocket connected");
-        } catch (error) {
-          console.error("[Chat Stream] Failed to connect ElevenLabs:", error);
+        } catch {
           elevenLabsStream = null;
         }
       }
@@ -298,8 +296,8 @@ export async function POST(request: Request) {
                 imageUrl: imageResult.url,
               });
             }
-          } catch (error) {
-            console.error("[After] Failed to generate image:", error);
+          } catch {
+            // Image generation failed - non-critical
           }
         });
 
@@ -307,7 +305,6 @@ export async function POST(request: Request) {
         controller.enqueue(encoder.encode(`${DONE_MARKER}\n`));
         controller.close();
       } catch (error) {
-        console.error("[Chat Stream] Error:", error);
         elevenLabsStream?.close();
         controller.error(error);
       }

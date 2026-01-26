@@ -245,10 +245,9 @@ export async function POST(request: Request) {
                 id: messageId,
                 imageUrl: imageResult.url,
               });
-              console.log(`[After] Image saved for message ${messageId}`);
             }
-          } catch (error) {
-            console.error("[After] Failed to generate image:", error);
+          } catch {
+            // Image generation failed - non-critical
           }
 
           // Generate audio with story-specific voice
@@ -264,14 +263,13 @@ export async function POST(request: Request) {
                 id: messageId,
                 audioUrl: audioResult.url,
               });
-              console.log(`[After] Audio saved for message ${messageId}`);
             }
-          } catch (error) {
-            console.error("[After] Failed to generate audio:", error);
+          } catch {
+            // Audio generation failed - non-critical
           }
         });
-      } catch (error) {
-        console.error("Failed to save assistant message:", error);
+      } catch {
+        // Failed to save assistant message - will be lost
       }
     },
     headers: {

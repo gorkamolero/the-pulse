@@ -16,8 +16,6 @@ export async function generatePulseAudio({
   voiceId?: string;
 }) {
   try {
-    console.log(`[Audio] Generating speech for message ${messageId}`);
-
     // Generate speech using ElevenLabs
     const { audio } = await generateSpeech({
       model: elevenlabs.speech("eleven_flash_v2_5"),
@@ -26,7 +24,6 @@ export async function generatePulseAudio({
     });
 
     if (!audio?.base64) {
-      console.error("[Audio] No audio data received");
       return { success: false, error: "No audio data received" };
     }
 
@@ -39,10 +36,8 @@ export async function generatePulseAudio({
       access: "public",
     });
 
-    console.log(`[Audio] Generated and uploaded: ${url}`);
     return { success: true, url };
-  } catch (error) {
-    console.error("[Audio] Error generating audio:", error);
+  } catch {
     return { success: false, error: "Failed to generate audio" };
   }
 }

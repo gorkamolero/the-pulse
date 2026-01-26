@@ -16,8 +16,6 @@ export async function POST(request: NextRequest) {
 
     const voice = voiceId || DEFAULT_VOICE_ID;
 
-    console.log(`[TTS API] Generating speech with ElevenLabs voice ${voice}`);
-
     const { audio } = await generateSpeech({
       model: elevenlabs.speech("eleven_flash_v2_5"),
       text,
@@ -30,8 +28,7 @@ export async function POST(request: NextRequest) {
         "Content-Disposition": `attachment; filename="speech.${audio.format}"`,
       },
     });
-  } catch (error) {
-    console.error(`[TTS API] Error generating speech:`, error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to generate speech" },
       { status: 500 }

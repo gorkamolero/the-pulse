@@ -19,11 +19,6 @@ export async function generateSpeech(
   voiceId: string = DEFAULT_VOICE_ID
 ): Promise<Blob> {
   try {
-    console.log(
-      `%c[Orate] Requesting speech with ElevenLabs voice ${voiceId}`,
-      "color: #e91e63; font-weight: bold"
-    );
-
     const response = await fetch("/api/tts", {
       method: "POST",
       headers: {
@@ -42,7 +37,6 @@ export async function generateSpeech(
 
     return await response.blob();
   } catch (error) {
-    console.error(`[Orate] Error generating speech:`, error);
     toast.error("Failed to generate audio narration");
     throw error;
   }
@@ -65,8 +59,7 @@ export function blobToAudio(audioBlob: Blob): {
     URL.revokeObjectURL(audioUrl);
   };
 
-  audioElement.onerror = (e) => {
-    console.error("Audio element error:", e);
+  audioElement.onerror = () => {
     URL.revokeObjectURL(audioUrl);
   };
 

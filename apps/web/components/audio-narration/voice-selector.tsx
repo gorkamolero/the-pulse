@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { VOICES, } from "@/lib/tts-service";
+import { VOICES } from "@/lib/tts-service";
 import { useAtom } from "jotai";
 import { audioEnabledAtom, selectedVoiceAtom } from "@/lib/atoms";
 
@@ -26,25 +26,20 @@ export function VoiceSelector({ className }: { className: string }) {
   const [audioEnabled] = useAtom(audioEnabledAtom);
   const [selectedVoice, setSelectedVoice] = useAtom(selectedVoiceAtom);
 
-  const voiceId = selectedVoice;
-
   // Find the currently selected voice
-  const currentVoice = VOICES.find((voice) => voice.id === voiceId);
+  const currentVoice = VOICES.find((voice) => voice.id === selectedVoice);
 
   // Handle voice selection
   const handleSelect = useCallback(
     (value: string) => {
-      console.log("Selecting voice:", value);
-
       setSelectedVoice(value);
       setOpen(false);
 
       // Save to localStorage
       try {
         localStorage.setItem("audioNarrationVoiceId", value);
-        console.log("Saved voice selection to localStorage");
-      } catch (e) {
-        console.error("Error saving voice selection to localStorage:", e);
+      } catch {
+        // Ignore localStorage errors (private browsing, etc.)
       }
     },
     [setSelectedVoice]
@@ -63,8 +58,8 @@ export function VoiceSelector({ className }: { className: string }) {
           setSelectedVoice(savedVoice);
         }
       }
-    } catch (e) {
-      console.error("Error loading voice selection from localStorage:", e);
+    } catch {
+      // Ignore localStorage errors (private browsing, etc.)
     }
   }, [setSelectedVoice]);
 
@@ -100,7 +95,7 @@ export function VoiceSelector({ className }: { className: string }) {
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        voiceId === voice.id ? "opacity-100" : "opacity-0"
+                        selectedVoice === voice.id ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <div className="flex flex-col">
