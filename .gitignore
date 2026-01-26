@@ -48,3 +48,4 @@ test-harness-reports/
 # beads
 .beads/
 sessions/
+tsconfig.tsbuildinfo
