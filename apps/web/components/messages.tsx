@@ -1,27 +1,31 @@
 "use client";
 
 import type { UIMessage } from "ai";
-import { memo } from "react";
+import { memo, useState, useRef, useEffect } from "react";
 import equal from "fast-deep-equal";
-import { motion } from "framer-motion";
-import { Play, Pause, Loader2 } from "lucide-react";
+import { Pause, Loader2, Volume2 } from "lucide-react";
+import { useAtom } from "jotai";
+import { AnimatePresence } from "framer-motion";
 
 import {
   Conversation,
   ConversationContent,
-} from "@/components/ai-elements/conversation";
-import {
+  ConversationScrollButton,
   Message,
   MessageContent,
   MessageResponse,
-} from "@/components/ai-elements/message";
+  MessageActions,
+  ThinkingIndicator,
+} from "@/components/ai-elements";
 import { Button } from "@/components/ui/button";
 import { getUIMessageContent } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useMessage } from "@/hooks/use-message";
-import { useAtom } from "jotai";
 import { audioEnabledAtom } from "@/lib/atoms";
-import { useState, useRef, useEffect } from "react";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface MessagesProps {
   chatId: string;
@@ -30,7 +34,11 @@ interface MessagesProps {
   messages: Array<UIMessage>;
 }
 
-// Simple inline audio button for messages
+// ─────────────────────────────────────────────────────────────────────────────
+// NARRATION BUTTON
+// Inline audio playback control for assistant messages
+// ─────────────────────────────────────────────────────────────────────────────
+
 function NarrationButton({
   messageId,
   autoplay,
@@ -49,7 +57,13 @@ function NarrationButton({
 
   // Autoplay when audio becomes available
   useEffect(() => {
-    if (autoplay && audioEnabled && audioUrl && !isPlaying && !hasAutoplayedRef.current) {
+    if (
+      autoplay &&
+      audioEnabled &&
+      audioUrl &&
+      !isPlaying &&
+      !hasAutoplayedRef.current
+    ) {
       hasAutoplayedRef.current = true;
       playAudio();
     }
@@ -101,97 +115,100 @@ function NarrationButton({
       size="sm"
       onClick={playAudio}
       disabled={isLoading || showGenerating || !audioUrl}
-      className="h-7 px-2 text-xs text-muted-foreground/60 hover:text-muted-foreground"
+      className={cn(
+        "h-7 px-2 gap-1.5 text-xs rounded-full",
+        "text-muted-foreground/50 hover:text-muted-foreground/80",
+        "transition-all duration-200",
+        isPlaying && "text-foreground/70 bg-foreground/5"
+      )}
     >
       {isLoading || showGenerating ? (
-        <Loader2 size={12} className="animate-spin mr-1" />
+        <Loader2 size={12} className="animate-spin" />
       ) : isPlaying ? (
-        <Pause size={12} className="mr-1" />
+        <Pause size={12} />
       ) : (
-        <Play size={12} className="mr-1" />
+        <Volume2 size={12} />
       )}
-      {showGenerating ? "Generating..." : isPlaying ? "Pause" : "Listen"}
+      <span className="font-serif italic">
+        {showGenerating ? "Conjuring voice..." : isPlaying ? "Pause" : "Listen"}
+      </span>
     </Button>
   );
 }
 
-// Thinking indicator
-function ThinkingIndicator() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="px-4"
-    >
-      <Message from="assistant">
-        <MessageContent>
-          <div className="flex items-center gap-2 text-muted-foreground/60 font-serif italic">
-            <motion.span
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-            >
-              The story awaits...
-            </motion.span>
-          </div>
-        </MessageContent>
-      </Message>
-    </motion.div>
-  );
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// PURE MESSAGES
+// The main messages container component
+// ─────────────────────────────────────────────────────────────────────────────
 
 function PureMessages({ chatId, isLoading, messages }: MessagesProps) {
-  const lastAssistantMessage = messages.filter((m) => m.role === "assistant").pop();
+  const lastAssistantMessage = messages
+    .filter((m) => m.role === "assistant")
+    .pop();
+
+  const showThinking =
+    isLoading &&
+    messages.length > 0 &&
+    messages[messages.length - 1].role === "user";
 
   return (
-    <Conversation className="h-full">
-      <ConversationContent className="gap-6 px-4 py-6 max-w-3xl mx-auto">
-        {messages.map((message) => {
-          const content = getUIMessageContent(message);
-          const isLastAssistant =
-            lastAssistantMessage &&
-            message.id === lastAssistantMessage.id;
+    <Conversation className="h-full relative">
+      <ConversationContent className="gap-8 px-4 py-8 max-w-3xl mx-auto">
+        <AnimatePresence mode="popLayout">
+          {messages.map((message) => {
+            const content = getUIMessageContent(message);
+            const isLastAssistant =
+              lastAssistantMessage && message.id === lastAssistantMessage.id;
 
-          return (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Message from={message.role}>
+            return (
+              <Message
+                key={message.id}
+                from={message.role}
+                isLast={isLastAssistant}
+              >
                 <MessageContent
                   className={cn(
-                    message.role === "user" && "font-medium",
-                    message.role === "assistant" && "font-serif leading-relaxed text-base"
+                    message.role === "user" &&
+                      "bg-secondary/50 px-4 py-3 rounded-2xl rounded-tr-sm"
                   )}
                 >
                   {message.role === "assistant" ? (
                     <MessageResponse>{content}</MessageResponse>
                   ) : (
-                    <span>{content}</span>
+                    <span className="text-sm">{content}</span>
                   )}
                 </MessageContent>
 
                 {message.role === "assistant" && (
-                  <div className="mt-2">
+                  <MessageActions>
                     <NarrationButton
                       messageId={message.id}
                       autoplay={isLastAssistant}
                     />
-                  </div>
+                  </MessageActions>
                 )}
               </Message>
-            </motion.div>
-          );
-        })}
+            );
+          })}
 
-        {isLoading &&
-          messages.length > 0 &&
-          messages[messages.length - 1].role === "user" && <ThinkingIndicator />}
+          {showThinking && (
+            <Message from="assistant" key="thinking">
+              <MessageContent>
+                <ThinkingIndicator />
+              </MessageContent>
+            </Message>
+          )}
+        </AnimatePresence>
       </ConversationContent>
+
+      <ConversationScrollButton />
     </Conversation>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MEMOIZED EXPORT
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const Messages = memo(PureMessages, (prevProps, nextProps) => {
   if (prevProps.isLoading !== nextProps.isLoading) return false;
