@@ -1,0 +1,1 @@
+ALTER TABLE "Room" ADD COLUMN "storyId" varchar(64);

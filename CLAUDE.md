@@ -279,3 +279,12 @@ When working on this codebase:
 4. Follow existing patterns from Vercel AI Chatbot template
 5. Port 7272 is project standard
 6. Use `proxy.ts` not `middleware.ts`
+
+## Remote Access
+
+When the user asks to start/view a dev server, always provide the **full Tailscale URL** since they may be on a different machine:
+
+- Tailscale IP: `100.92.166.126` (gorkbook-pro)
+- Example: `http://100.92.166.126:7272/login`
+
+Don't just say "localhost" - give the complete Tailscale address.

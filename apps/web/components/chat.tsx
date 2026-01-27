@@ -1,6 +1,7 @@
 "use client";
 
 import type { UIMessage, CreateUIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
 import { useChat } from "@ai-sdk/react";
 
 type Attachment = {
@@ -15,6 +16,8 @@ import { StoryDisplay } from "@/components/story-display";
 import { ChatHeader } from "@/components/chat-header";
 import { getUIMessageContent } from "@/lib/utils";
 import { DEFAULT_STORY_ID } from "@pulse/core/ai/stories";
+import { useGuestSession } from "@/hooks/use-guest-session";
+import { SoftGateModal } from "./soft-gate-modal";
 
 import { Overview } from "./overview";
 import { MultimodalInput } from "./multimodal-input";
@@ -33,20 +36,53 @@ export function Chat({
   selectedVisibilityType,
   isReadonly,
   user,
+  disabled,
+  disabledReason,
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
   user?: {
+    id?: string;
     email?: string | null;
     name?: string | null;
     image?: string | null;
   };
+  disabled?: boolean;
+  disabledReason?: string;
 }) {
   const { mutate } = useSWRConfig();
   const [selectedStoryId, setSelectedStoryId] = useState(DEFAULT_STORY_ID);
   const [language, setLanguage] = useState<string>("en");
+
+  // Guest session tracking
+  const isGuest = !user?.id;
+  const {
+    session: guestSession,
+    initSession,
+    addMessage: addGuestMessage,
+    shouldShowSoftGate,
+    markSoftGateShown,
+    pulseCount,
+    maxPulses,
+  } = useGuestSession();
+  const [showSoftGate, setShowSoftGate] = useState(false);
+
+  // Initialize guest session on mount if guest
+  useEffect(() => {
+    if (isGuest && !guestSession) {
+      initSession();
+    }
+  }, [isGuest, guestSession, initSession]);
+
+  // Check for soft gate after pulse count changes
+  useEffect(() => {
+    if (isGuest && shouldShowSoftGate()) {
+      setShowSoftGate(true);
+      markSoftGateShown();
+    }
+  }, [isGuest, shouldShowSoftGate, markSoftGateShown, pulseCount]);
 
   // Load the language preference from cookies on component mount
   useEffect(() => {
@@ -63,6 +99,22 @@ export function Chat({
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
 
+  // Guest limit check
+  const guestLimitReached = isGuest && pulseCount >= maxPulses;
+
+  // Create transport with custom API endpoint and body
+  const transport = useMemo(() => new DefaultChatTransport({
+    api: '/api/pulse',
+    body: isGuest ? {
+      guestPulseCount: pulseCount,
+      selectedStoryId,
+      language,
+    } : {
+      selectedStoryId,
+      language,
+    },
+  }), [isGuest, pulseCount, selectedStoryId, language]);
+
   const {
     messages,
     setMessages,
@@ -72,8 +124,15 @@ export function Chat({
     regenerate,
   } = useChat({
     id,
+    transport,
     messages: initialMessages,
     experimental_throttle: 100,
+    // Track assistant responses for guest pulse counting
+    onFinish: ({ message }) => {
+      if (isGuest && message.role === 'assistant') {
+        addGuestMessage({ role: 'assistant', content: '' });
+      }
+    },
   });
 
   const handleStorySelection = useCallback(
@@ -131,15 +190,22 @@ export function Chat({
   const isLoading = status === 'streaming';
 
   const currentMessageId = useMemo(() => {
+    // Don't fetch message data for guests (they don't save to DB, no images/audio)
+    if (isGuest) return null;
     // Start from the most recent message and work backwards
     const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop()
     return lastAssistantMessage?.id ?? null
-  }, [messages]);
+  }, [messages, isGuest]);
 
   return (
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
-        <ChatHeader user={user} />
+        <ChatHeader
+          user={user}
+          isGuest={isGuest}
+          pulseCount={pulseCount}
+          maxPulses={maxPulses}
+        />
 
         
       {messages.length === 0 ? (
@@ -147,20 +213,16 @@ export function Chat({
           chatId={id}
           append={append}
           onSelectStory={handleStorySelection}
+          user={user}
         />
       ) : (<ResizablePanelGroup direction="horizontal" className=" h-full" >
           <ResizablePanel  defaultSize={50}>
-            <div className="overflow-y-scroll h-full">
             <Messages
               chatId={id}
               isLoading={isLoading}
               messages={messages}
-              setMessages={setMessages}
-              reload={reload}
-              isReadonly={isReadonly}
               storyId={selectedStoryId}
             />
-            </div>
           </ResizablePanel>
 
           <ResizableHandle />
@@ -193,10 +255,37 @@ export function Chat({
               messages={messages}
               setMessages={setMessages}
               append={append}
+              disabled={disabled || guestLimitReached}
+              disabledReason={guestLimitReached ? "Create an account to continue your adventure" : disabledReason}
             />
           </form>
         )}
+
+        {/* Guest pulse progress bar */}
+        {isGuest && messages.length > 0 && (
+          <div className="mx-auto max-w-3xl w-full px-4 pb-4">
+            <div className="h-1 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-foreground/30 transition-all duration-300"
+                style={{ width: `${(pulseCount / maxPulses) * 100}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground/60 mt-1 text-center">
+              {pulseCount < maxPulses
+                ? `${maxPulses - pulseCount} free pulses remaining`
+                : "Create an account to continue your adventure"}
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Soft Gate Modal for guests */}
+      {showSoftGate && (
+        <SoftGateModal
+          onClose={() => setShowSoftGate(false)}
+          pulseCount={pulseCount}
+        />
+      )}
     </>
   );
 }

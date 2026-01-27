@@ -134,3 +134,33 @@ export const userSettings = pgTable('UserSettings', {
 });
 
 export type UserSettings = InferSelectModel<typeof userSettings>;
+
+// ==================== Multiplayer Rooms ====================
+
+export const room = pgTable('Room', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  inviteCode: varchar('inviteCode', { length: 8 }).notNull().unique(),
+  chatId: uuid('chatId').references(() => chat.id),
+  hostPlayerId: uuid('hostPlayerId'), // References roomPlayer.id (no FK to avoid circular dep)
+  spokespersonPlayerId: uuid('spokespersonPlayerId'), // References roomPlayer.id
+  status: varchar('status', { length: 16 }).notNull().default('lobby'), // lobby | playing | ended
+  storyId: varchar('storyId', { length: 64 }), // Selected story for this room
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+});
+
+export type Room = InferSelectModel<typeof room>;
+
+export const roomPlayer = pgTable('RoomPlayer', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  roomId: uuid('roomId')
+    .notNull()
+    .references(() => room.id, { onDelete: 'cascade' }),
+  userId: uuid('userId').references(() => user.id), // Nullable for guests
+  guestId: varchar('guestId', { length: 64 }), // For guest identification
+  displayName: varchar('displayName', { length: 64 }).notNull(),
+  color: varchar('color', { length: 7 }).notNull(), // Hex color e.g. #FF5733
+  isHost: boolean('isHost').notNull().default(false),
+  joinedAt: timestamp('joinedAt').notNull().defaultNow(),
+});
+
+export type RoomPlayer = InferSelectModel<typeof roomPlayer>;

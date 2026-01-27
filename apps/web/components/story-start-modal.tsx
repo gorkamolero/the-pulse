@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, Users, Loader2 } from "lucide-react";
 import { useAtom } from "jotai";
+import Link from "next/link";
 import { audioEnabledAtom } from "@/lib/atoms";
 import { Button } from "./ui/button";
 import type { Story } from "@pulse/core/ai/stories";
@@ -10,15 +11,21 @@ import type { Story } from "@pulse/core/ai/stories";
 interface StoryStartModalProps {
   story: Story | null;
   epigraph?: { quote: string; author: string };
-  onStart: () => void;
+  onStartSolo: () => void;
+  onStartMultiplayer: () => void;
   onClose: () => void;
+  isAuthenticated: boolean;
+  isCreatingRoom?: boolean;
 }
 
 export function StoryStartModal({
   story,
   epigraph,
-  onStart,
+  onStartSolo,
+  onStartMultiplayer,
   onClose,
+  isAuthenticated,
+  isCreatingRoom = false,
 }: StoryStartModalProps) {
   const [audioEnabled, setAudioEnabled] = useAtom(audioEnabledAtom);
 
@@ -97,16 +104,50 @@ export function StoryStartModal({
             ~30 minutes · Your choices shape the narrative
           </p>
 
-          {/* Start Button */}
-          <div className="flex justify-center">
+          {/* Action Buttons */}
+          <div className="flex flex-row gap-3">
+            {/* Primary: Begin Alone */}
             <Button
               size="lg"
-              onClick={onStart}
-              className="px-8 font-serif text-lg"
+              onClick={onStartSolo}
+              className="flex-1 font-serif text-base"
+              disabled={isCreatingRoom}
             >
-              Begin
+              Begin Alone
+            </Button>
+
+            {/* Secondary: Gather Travelers */}
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={onStartMultiplayer}
+              className="flex-1 font-serif text-base gap-2"
+              disabled={!isAuthenticated || isCreatingRoom}
+              title={!isAuthenticated ? "Sign in to host a gathering" : undefined}
+            >
+              {isCreatingRoom ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Creating...</span>
+                </>
+              ) : (
+                <>
+                  <Users className="w-4 h-4" />
+                  <span>Gather Travelers</span>
+                </>
+              )}
             </Button>
           </div>
+
+          {/* Sign in link for guests */}
+          {!isAuthenticated && (
+            <p className="text-xs text-muted-foreground/60 text-center mt-4">
+              <Link href="/login" className="text-foreground hover:underline">
+                Sign in
+              </Link>
+              {" "}to host a gathering or save your progress
+            </p>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

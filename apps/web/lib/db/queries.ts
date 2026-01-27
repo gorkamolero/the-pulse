@@ -17,6 +17,10 @@ import {
   vote,
   userSettings,
   type UserSettings,
+  room,
+  roomPlayer,
+  type Room,
+  type RoomPlayer,
 } from './schema';
 
 // Optionally, if not using email/pass login, you can
@@ -548,6 +552,197 @@ export async function getFreeStoryStatus(userId: string): Promise<{
     };
   } catch (error) {
     console.error('Failed to get free story status from database');
+    throw error;
+  }
+}
+
+// ==================== Room Queries ====================
+
+export async function createRoom({
+  inviteCode,
+  hostPlayerId,
+  storyId,
+}: {
+  inviteCode: string;
+  hostPlayerId?: string;
+  storyId?: string;
+}): Promise<Room> {
+  try {
+    const [newRoom] = await db
+      .insert(room)
+      .values({
+        inviteCode,
+        hostPlayerId: hostPlayerId ?? null,
+        spokespersonPlayerId: hostPlayerId ?? null,
+        status: 'lobby',
+        storyId: storyId ?? null,
+      })
+      .returning();
+    return newRoom;
+  } catch (error) {
+    console.error('Failed to create room in database');
+    throw error;
+  }
+}
+
+export async function getRoomById(id: string): Promise<Room | null> {
+  try {
+    const [foundRoom] = await db.select().from(room).where(eq(room.id, id));
+    return foundRoom ?? null;
+  } catch (error) {
+    console.error('Failed to get room by id from database');
+    throw error;
+  }
+}
+
+export async function getRoomByInviteCode(
+  inviteCode: string,
+): Promise<Room | null> {
+  try {
+    const [foundRoom] = await db
+      .select()
+      .from(room)
+      .where(eq(room.inviteCode, inviteCode));
+    return foundRoom ?? null;
+  } catch (error) {
+    console.error('Failed to get room by invite code from database');
+    throw error;
+  }
+}
+
+export async function getRoomWithPlayers(
+  id: string,
+): Promise<(Room & { players: RoomPlayer[] }) | null> {
+  try {
+    const [foundRoom] = await db.select().from(room).where(eq(room.id, id));
+    if (!foundRoom) return null;
+
+    const players = await db
+      .select()
+      .from(roomPlayer)
+      .where(eq(roomPlayer.roomId, id))
+      .orderBy(asc(roomPlayer.joinedAt));
+
+    return { ...foundRoom, players };
+  } catch (error) {
+    console.error('Failed to get room with players from database');
+    throw error;
+  }
+}
+
+export async function updateRoom(
+  id: string,
+  data: Partial<Pick<Room, 'status' | 'chatId' | 'hostPlayerId' | 'spokespersonPlayerId'>>,
+): Promise<Room | null> {
+  try {
+    const [updated] = await db
+      .update(room)
+      .set(data)
+      .where(eq(room.id, id))
+      .returning();
+    return updated ?? null;
+  } catch (error) {
+    console.error('Failed to update room in database');
+    throw error;
+  }
+}
+
+export async function addPlayerToRoom({
+  roomId,
+  userId,
+  guestId,
+  displayName,
+  color,
+  isHost,
+}: {
+  roomId: string;
+  userId?: string;
+  guestId?: string;
+  displayName: string;
+  color: string;
+  isHost?: boolean;
+}): Promise<RoomPlayer> {
+  try {
+    const [player] = await db
+      .insert(roomPlayer)
+      .values({
+        roomId,
+        userId: userId ?? null,
+        guestId: guestId ?? null,
+        displayName,
+        color,
+        isHost: isHost ?? false,
+      })
+      .returning();
+    return player;
+  } catch (error) {
+    console.error('Failed to add player to room in database');
+    throw error;
+  }
+}
+
+export async function getPlayersByRoomId(roomId: string): Promise<RoomPlayer[]> {
+  try {
+    return await db
+      .select()
+      .from(roomPlayer)
+      .where(eq(roomPlayer.roomId, roomId))
+      .orderBy(asc(roomPlayer.joinedAt));
+  } catch (error) {
+    console.error('Failed to get players by room id from database');
+    throw error;
+  }
+}
+
+export async function getPlayerById(id: string): Promise<RoomPlayer | null> {
+  try {
+    const [player] = await db
+      .select()
+      .from(roomPlayer)
+      .where(eq(roomPlayer.id, id));
+    return player ?? null;
+  } catch (error) {
+    console.error('Failed to get player by id from database');
+    throw error;
+  }
+}
+
+export async function removePlayerFromRoom(playerId: string): Promise<void> {
+  try {
+    await db.delete(roomPlayer).where(eq(roomPlayer.id, playerId));
+  } catch (error) {
+    console.error('Failed to remove player from room in database');
+    throw error;
+  }
+}
+
+export async function getPlayerInRoom({
+  roomId,
+  userId,
+  guestId,
+}: {
+  roomId: string;
+  userId?: string;
+  guestId?: string;
+}): Promise<RoomPlayer | null> {
+  try {
+    if (userId) {
+      const [player] = await db
+        .select()
+        .from(roomPlayer)
+        .where(and(eq(roomPlayer.roomId, roomId), eq(roomPlayer.userId, userId)));
+      return player ?? null;
+    }
+    if (guestId) {
+      const [player] = await db
+        .select()
+        .from(roomPlayer)
+        .where(and(eq(roomPlayer.roomId, roomId), eq(roomPlayer.guestId, guestId)));
+      return player ?? null;
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to get player in room from database');
     throw error;
   }
 }

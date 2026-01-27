@@ -1,8 +1,7 @@
 import type { LegacyMessage } from "@/lib/types/message";
 import { toast } from "sonner";
-import { useCopyToClipboard } from "usehooks-ts";
 
-import { CopyIcon, ClockRewind, } from "./icons";
+import { ClockRewind } from "./icons";
 import { Button } from "./ui/button";
 import {
   Tooltip,
@@ -25,8 +24,6 @@ export function PureMessageActions({
   isLoading: boolean;
   autoplay?: boolean
 }) {
-  const [_, copyToClipboard] = useCopyToClipboard();
-
   if (isLoading) return null;
 
   if (message.role === "user") {
@@ -68,27 +65,7 @@ export function PureMessageActions({
   }
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <div className="flex flex-row gap-2">
-        <AudioPlayer content={message.content as string} chatId={chatId} autoplay={autoplay} id={message.id} />
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              className="py-1 px-2 h-fit text-muted-foreground"
-              variant="outline"
-              onClick={async () => {
-                await copyToClipboard(message.content as string);
-                toast.success("Copied to clipboard!");
-              }}
-            >
-              <CopyIcon />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Copy</TooltipContent>
-        </Tooltip>
-      </div>
-    </TooltipProvider>
+    <AudioPlayer content={message.content as string} chatId={chatId} autoplay={autoplay} id={message.id} />
   );
 }
 

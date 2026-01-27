@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Pulse } from './ui/pulse';
-import { useGuestSession } from '@/hooks/use-guest-session';
 
 const INNSMOUTH_QUOTE = {
   text: 'The oldest and strongest emotion of mankind is fear, and the oldest and strongest kind of fear is fear of the unknown.',
@@ -16,20 +15,9 @@ const INNSMOUTH_DESCRIPTION =
 
 export function LandingPage() {
   const router = useRouter();
-  const { initSession, session, isExpired, clearSession } = useGuestSession();
 
   const handleBeginStory = () => {
-    // Clear expired session if any
-    if (session && isExpired()) {
-      clearSession();
-    }
-
-    // Initialize new session if needed
-    if (!session || isExpired()) {
-      initSession(true);
-    }
-
-    router.push('/guest');
+    router.push('/');
   };
 
   return (

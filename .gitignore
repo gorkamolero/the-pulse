@@ -49,3 +49,4 @@ test-harness-reports/
 .beads/
 sessions/
 tsconfig.tsbuildinfo
+voice-samples/

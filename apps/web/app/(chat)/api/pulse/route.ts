@@ -5,6 +5,7 @@ import {
   convertToModelMessages,
 } from "ai";
 import { after } from "next/server";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 import { auth } from "@/app/(auth)/auth";
 import { systemPrompt } from "@pulse/core/ai/prompts/system";
@@ -38,6 +39,7 @@ import {
   shouldSampleMessage,
   isMisuseConfirmed,
 } from "@/lib/ai/misuse-evaluator";
+import { MAX_GUEST_PULSES } from "@/lib/guest-session";
 
 import { generateTitleFromUserMessage } from "../../actions";
 import { generatePulseImage } from "@/lib/ai/tools/generate-image";
@@ -45,26 +47,114 @@ import { generatePulseAudio } from "@/lib/ai/tools/generate-audio";
 
 export const maxDuration = 60;
 
+// Rate limiting for guests
+const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 10;
+
+function checkGuestRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = ipRequestCounts.get(ip);
+
+  if (!record || record.resetAt < now) {
+    ipRequestCounts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
 export async function POST(request: Request) {
   const {
     id,
     messages,
     selectedStoryId = DEFAULT_STORY_ID,
     language = "en",
+    guestPulseCount,
   }: {
     id: string;
     messages: Array<UIMessage>;
     selectedStoryId?: string;
     language?: string;
+    guestPulseCount?: number;
   } = await request.json();
 
   const session = await auth();
+  const isGuest = !session?.user?.id;
 
-  if (!session || !session.user || !session.user.id) {
-    return new Response("Unauthorized", { status: 401 });
+  // ============== GUEST PATH ==============
+  if (isGuest) {
+    // Rate limit guests
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
+
+    if (!checkGuestRateLimit(ip)) {
+      return new Response(
+        JSON.stringify({
+          error: "RATE_LIMITED",
+          message: "Too many requests. Please wait a moment.",
+        }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check pulse limit
+    if (typeof guestPulseCount !== "number" || guestPulseCount >= MAX_GUEST_PULSES) {
+      return new Response(
+        JSON.stringify({
+          error: "GUEST_LIMIT_REACHED",
+          message: "Create a free account to continue your adventure.",
+        }),
+        { status: 402, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const userMessage = getMostRecentUserMessage(messages);
+    if (!userMessage) {
+      return new Response("No user message found", { status: 400 });
+    }
+
+    // Use cheaper model for guests
+    const openrouter = createOpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+    const model = openrouter("moonshotai/kimi-k2.5");
+
+    const story = getStoryById(selectedStoryId);
+    if (!story) {
+      return new Response(
+        JSON.stringify({ error: "STORY_NOT_FOUND" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Stream response without saving to DB
+    const result = streamText({
+      model,
+      system: systemPrompt({
+        storyGuide: story.storyGuide,
+        language: language === "es" ? "spanish" : "english",
+      }),
+      messages: convertToModelMessages(messages),
+    });
+
+    return result.toUIMessageStreamResponse({
+      generateMessageId: () => crypto.randomUUID(),
+      originalMessages: messages,
+    });
   }
 
-  const userId = session.user.id;
+  // ============== AUTHENTICATED PATH ==============
+  // At this point we know user exists (isGuest check above returned early)
+  const userId = session?.user?.id;
+  if (!userId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
   const userMessage = getMostRecentUserMessage(messages);
 
   if (!userMessage) {
@@ -171,10 +261,10 @@ export async function POST(request: Request) {
   });
 
   // Select the appropriate system prompt based on the language
-  const getSystemPromptForLanguage = (language: string) =>
+  const getSystemPromptForLanguage = (lang: string) =>
     systemPrompt({
       storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
-      language: language === "es" ? "spanish" : "english",
+      language: lang === "es" ? "spanish" : "english",
     });
 
   // Convert UIMessages to ModelMessages for the AI SDK

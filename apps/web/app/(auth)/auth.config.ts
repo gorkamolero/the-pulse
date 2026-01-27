@@ -19,10 +19,9 @@ export const authConfig = {
       const isOnLogin = nextUrl.pathname.startsWith('/login');
 
       const isOnWelcome = nextUrl.pathname === '/welcome';
-      const isOnGuest = nextUrl.pathname.startsWith('/guest');
 
       // Redirect logged-in users from auth/welcome pages to home
-      if (isLoggedIn && (isOnLogin || isOnRegister || isOnWelcome || isOnGuest)) {
+      if (isLoggedIn && (isOnLogin || isOnRegister || isOnWelcome)) {
         return NextResponse.redirect(new URL('/', nextUrl));
       }
 
@@ -37,13 +36,8 @@ export const authConfig = {
         return false; // Redirect unauthenticated users to login page
       }
 
-      // Root path: redirect unauthenticated to welcome page
-      if (nextUrl.pathname === '/') {
-        if (isLoggedIn) return true;
-        return NextResponse.redirect(new URL('/welcome', nextUrl));
-      }
-
-      // All other routes (including /welcome, /guest) are public
+      // Root path: allow both guests and authenticated users
+      // All other routes (including /welcome) are public
       return true;
     },
   },

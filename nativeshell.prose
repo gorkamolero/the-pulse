@@ -1,0 +1,323 @@
+// NativeShell Build Program v2
+// TDD approach: tests first, implementation follows
+// Run with: prose run nativeshell.prose
+
+config {
+  model: "zai/glm-4.7"  // Cheap model - PRD is now explicit enough
+  timeout: 1800
+}
+
+knowledge prd from "specs/nativeshell-prd.md"
+
+// ============================================
+// PHASE 0: Project Setup (Explicit)
+// ============================================
+
+session "phase0-setup" {
+  agent: claude-code
+  goal: "Create Xcode project using xcodegen"
+  
+  context: **prd.Phase 0**
+  
+  prompt: ```
+    Follow PRD Phase 0 EXACTLY. No improvisation.
+    
+    Working directory: /Users/gorkolas/www/nativeshell
+    
+    Step 1: Create project.yml (copy from PRD exactly)
+    Step 2: Create folder structure (NativeShell/, NativeShellTests/)
+    Step 3: Create Info.plist files
+    Step 4: Create NativeShellApp.swift and ContentView.swift
+    Step 5: Run: xcodegen generate
+    Step 6: Run: xcodebuild -project NativeShell.xcodeproj -scheme NativeShell -sdk iphonesimulator build
+    
+    VERIFICATION:
+    - NativeShell.xcodeproj must exist
+    - Build must succeed (exit code 0)
+    
+    Report exact output of build command.
+  ```
+  
+  on success: proceed
+  on failure: retry with "Check xcodegen output for errors. Fix project.yml if needed."
+}
+
+// Verification gate
+session "phase0-verify" {
+  agent: claude-code
+  goal: "Verify Phase 0 passed"
+  
+  prompt: ```
+    Run these verification commands:
+    
+    cd /Users/gorkolas/www/nativeshell
+    
+    # Test 1: Project exists
+    test -f NativeShell.xcodeproj/project.pbxproj && echo "PASS: xcodeproj exists" || echo "FAIL: no xcodeproj"
+    
+    # Test 2: Build succeeds
+    xcodebuild -project NativeShell.xcodeproj -scheme NativeShell -sdk iphonesimulator build 2>&1 | tail -5
+    
+    Report PASS or FAIL for each test.
+    If any FAIL, describe what's missing.
+  ```
+  
+  depends_on: phase0-setup
+  on success: proceed
+  on failure: halt with "Phase 0 verification failed"
+}
+
+// ============================================
+// PHASE 1: Terminal View (TDD)
+// ============================================
+
+session "phase1-tests" {
+  agent: claude-code
+  goal: "Write Phase 1 tests (Terminal View)"
+  
+  context: **prd.Phase 1**
+  
+  prompt: ```
+    In /Users/gorkolas/www/nativeshell:
+    
+    1. Create NativeShellTests/TerminalViewTests.swift with tests from PRD
+    2. Create NativeShellTests/Info.plist if missing
+    3. Run: xcodebuild test -project NativeShell.xcodeproj -scheme NativeShell -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15'
+    
+    Tests SHOULD FAIL at this point. Report the failures.
+  ```
+  
+  depends_on: phase0-verify
+  on success: proceed
+  on failure: retry
+}
+
+session "phase1-implement" {
+  agent: claude-code
+  goal: "Implement to pass Phase 1 tests"
+  
+  context: **prd.Phase 1**
+  
+  prompt: ```
+    In /Users/gorkolas/www/nativeshell:
+    
+    1. Create NativeShell/Models/TerminalConfig.swift (from PRD)
+    2. Create NativeShell/Views/TerminalContainerView.swift (from PRD)
+    3. Run tests again - they should PASS now
+    
+    Report test results.
+  ```
+  
+  depends_on: phase1-tests
+  on success: proceed
+  on failure: retry with "Check test output. Fix implementation to match expected behavior."
+}
+
+// ============================================
+// PHASE 2: SSH Connection (TDD)
+// ============================================
+
+session "phase2-tests" {
+  agent: claude-code
+  goal: "Write Phase 2 tests (SSH Service)"
+  
+  context: **prd.Phase 2**
+  
+  prompt: ```
+    1. Create NativeShellTests/SSHServiceTests.swift with tests from PRD
+    2. Run tests - should FAIL
+    
+    Report failures.
+  ```
+  
+  depends_on: phase1-implement
+  on success: proceed
+  on failure: retry
+}
+
+session "phase2-implement" {
+  agent: claude-code
+  goal: "Implement to pass Phase 2 tests"
+  
+  context: **prd.Phase 2**
+  
+  prompt: ```
+    1. Create NativeShell/Services/SSHService.swift (from PRD)
+    2. Add any needed SSH library integration
+    3. Run tests - should PASS
+    
+    Report test results.
+  ```
+  
+  depends_on: phase2-tests
+  on success: proceed
+  on failure: retry
+}
+
+// ============================================
+// PHASE 3: Input System (TDD)
+// ============================================
+
+session "phase3-tests" {
+  agent: claude-code
+  goal: "Write Phase 3 tests (Input System)"
+  
+  context: **prd.Phase 3**
+  
+  prompt: ```
+    1. Create NativeShellTests/InputSystemTests.swift with tests from PRD
+    2. Run tests - should FAIL
+    
+    Report failures.
+  ```
+  
+  depends_on: phase2-implement
+  on success: proceed
+  on failure: retry
+}
+
+session "phase3-implement" {
+  agent: claude-code
+  goal: "Implement to pass Phase 3 tests"
+  
+  context: **prd.Phase 3**
+  
+  prompt: ```
+    1. Create NativeShell/Models/InputMode.swift
+    2. Create NativeShell/Models/ComposerState.swift
+    3. Create NativeShell/Models/SpecialKey.swift
+    4. Create NativeShell/Views/InputComposerView.swift
+    5. Create NativeShell/Views/SpecialKeysBar.swift
+    6. Run tests - should PASS
+    
+    Report test results.
+  ```
+  
+  depends_on: phase3-tests
+  on success: proceed
+  on failure: retry
+}
+
+// ============================================
+// PHASE 4: Connection Manager (TDD)
+// ============================================
+
+session "phase4-tests" {
+  agent: claude-code
+  goal: "Write Phase 4 tests (Host Store)"
+  
+  context: **prd.Phase 4**
+  
+  prompt: ```
+    1. Create NativeShellTests/HostStoreTests.swift with tests from PRD
+    2. Run tests - should FAIL
+    
+    Report failures.
+  ```
+  
+  depends_on: phase3-implement
+  on success: proceed
+  on failure: retry
+}
+
+session "phase4-implement" {
+  agent: claude-code
+  goal: "Implement to pass Phase 4 tests"
+  
+  context: **prd.Phase 4**
+  
+  prompt: ```
+    1. Create NativeShell/Models/SavedHost.swift
+    2. Create NativeShell/Services/HostStore.swift
+    3. Create NativeShell/Views/HostListView.swift
+    4. Create NativeShell/Views/AddHostView.swift
+    5. Run tests - should PASS
+    
+    Report test results.
+  ```
+  
+  depends_on: phase4-tests
+  on success: proceed
+  on failure: retry
+}
+
+// ============================================
+// PHASE 5: Integration
+// ============================================
+
+session "phase5-integration" {
+  agent: claude-code
+  goal: "Wire up all components"
+  
+  prompt: ```
+    In /Users/gorkolas/www/nativeshell:
+    
+    1. Update ContentView.swift to show HostListView
+    2. Wire navigation: HostList -> AddHost -> Terminal
+    3. Connect InputComposer to Terminal
+    4. Add SpecialKeysBar above keyboard
+    5. Run FULL test suite:
+       xcodebuild test -project NativeShell.xcodeproj -scheme NativeShell -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15'
+    
+    ALL tests must pass. Report results.
+  ```
+  
+  depends_on: phase4-implement
+  on success: proceed
+  on failure: retry
+}
+
+// ============================================
+// FINAL: Verification
+// ============================================
+
+session "final-verify" {
+  agent: claude-code
+  goal: "Final build and test verification"
+  
+  prompt: ```
+    Final verification:
+    
+    1. Run full test suite (report pass/fail count)
+    2. Build for simulator (report success/fail)
+    3. List any TODOs or FIXMEs in code
+    4. Create README.md with:
+       - Build instructions
+       - Current status
+       - Known limitations
+    
+    Report final status.
+  ```
+  
+  depends_on: phase5-integration
+}
+
+// ============================================
+// Completion
+// ============================================
+
+on complete {
+  report: ```
+    # NativeShell Build Complete
+    
+    ## Test Results
+    {{ test pass/fail counts }}
+    
+    ## Phases Completed
+    - Phase 0: Project Setup
+    - Phase 1: Terminal View
+    - Phase 2: SSH Connection
+    - Phase 3: Input System
+    - Phase 4: Connection Manager
+    - Phase 5: Integration
+    
+    ## Artifacts
+    - Xcode project: /Users/gorkolas/www/nativeshell/NativeShell.xcodeproj
+    
+    ## Next Steps
+    1. Open in Xcode
+    2. Set development team for signing
+    3. Build and test on device
+    4. Submit to TestFlight
+  ```
+}

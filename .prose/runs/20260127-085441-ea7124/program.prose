@@ -1,0 +1,332 @@
+// NativeShell Build Program
+// A native iOS terminal with composer input mode
+// Run with: prose run nativeshell.prose
+
+config {
+  model: "zai/glm-4.7"  // Cheap coding model
+  timeout: 1800  // 30 min per session
+}
+
+// Load the PRD as source of truth
+knowledge prd from "specs/nativeshell-prd.md"
+
+// ============================================
+// PHASE 1: Project Setup
+// ============================================
+
+session "setup-xcode" {
+  agent: claude-code
+  goal: "Create the Xcode project structure for NativeShell"
+  
+  context: **prd**
+  
+  prompt: ```
+    Create a new iOS app project called "NativeShell" with:
+    
+    1. SwiftUI app lifecycle
+    2. Minimum deployment: iOS 16.0
+    3. Bundle ID: com.gorkamolero.nativeshell
+    4. Add SwiftTerm package dependency: https://github.com/migueldeicaza/SwiftTerm
+    5. Add NMSSH package or SwiftSH for SSH
+    6. Create folder structure:
+       - NativeShell/
+         - App/
+         - Views/
+         - Models/
+         - Services/
+         - Utilities/
+    7. Set up a basic ContentView that shows "NativeShell" text
+    
+    Work in: /Users/gorkolas/www/nativeshell
+  ```
+  
+  on success: proceed
+  on failure: retry with "Simplify: skip SSH dependency for now, just SwiftTerm"
+}
+
+// ============================================
+// PHASE 2: Terminal Core
+// ============================================
+
+session "terminal-view" {
+  agent: claude-code
+  goal: "Implement the terminal view using SwiftTerm"
+  
+  context: **prd**
+  
+  prompt: ```
+    In the NativeShell project, create the terminal view:
+    
+    1. Create TerminalView.swift that wraps SwiftTerm's LocalProcessTerminalView
+       or TerminalView for SSH use
+    2. Make it work with SwiftUI via UIViewRepresentable
+    3. Add pinch-to-zoom gesture (scale 0.5x to 3x)
+    4. Configure:
+       - Font: SF Mono, 14pt default
+       - Colors: Default dark theme
+       - Scrollback: 10000 lines
+    5. For now, just connect to a local shell for testing
+    
+    Reference SwiftTerm examples for integration patterns.
+  ```
+  
+  depends_on: setup-xcode
+  on success: proceed
+  on failure: retry with "Check SwiftTerm documentation and adjust approach"
+}
+
+// ============================================
+// PHASE 3: SSH Connection
+// ============================================
+
+session "ssh-service" {
+  agent: claude-code
+  goal: "Implement SSH connection service"
+  
+  context: **prd**
+  
+  prompt: ```
+    Create the SSH connection layer:
+    
+    1. SSHService.swift - manages SSH connections
+       - connect(host: String, port: Int, username: String, auth: AuthMethod)
+       - disconnect()
+       - send(data: Data)
+       - onReceive callback
+    
+    2. AuthMethod enum:
+       - .password(String)
+       - .privateKey(path: String, passphrase: String?)
+    
+    3. Integrate with SwiftTerm:
+       - SSHService receives data -> feed to terminal
+       - Terminal sends data -> SSHService transmits
+    
+    4. Handle connection errors gracefully
+    
+    Use NMSSH or SwiftSH, whichever is already added.
+  ```
+  
+  depends_on: terminal-view
+  on success: proceed
+  on failure: retry with "Try alternative SSH library if current one has issues"
+}
+
+// ============================================
+// PHASE 4: Input System
+// ============================================
+
+session "composer-input" {
+  agent: claude-code
+  goal: "Implement the native input composer"
+  
+  context: **prd**
+  
+  prompt: ```
+    Create the dual-mode input system:
+    
+    1. InputComposerView.swift (SwiftUI)
+       - TextEditor for multiline native input
+       - Send button
+       - Expands as text grows (max 4 lines before scroll)
+       - On send: transmit text + newline to terminal, clear field
+    
+    2. InputMode enum: .composer, .terminal
+    
+    3. Mode toggle button in toolbar
+    
+    4. SpecialKeysBar.swift
+       - Horizontal bar with: [↑] [Tab] [Ctrl] [Esc]
+       - Ctrl: sets a flag, next key sent with ctrl modifier
+       - Others: send immediately
+    
+    5. MainView.swift that combines:
+       - TerminalView (takes most space)
+       - InputComposerView or direct terminal input (based on mode)
+       - SpecialKeysBar above keyboard
+    
+    Make sure keyboard avoidance works properly.
+  ```
+  
+  depends_on: ssh-service
+  on success: proceed
+  on failure: retry with "Simplify: start with just composer mode, add toggle later"
+}
+
+// ============================================
+// PHASE 5: Connection Manager
+// ============================================
+
+session "connection-manager" {
+  agent: claude-code
+  goal: "Build the connection manager UI and storage"
+  
+  context: **prd**
+  
+  prompt: ```
+    Create the connection management system:
+    
+    1. SavedHost model (Codable):
+       - id: UUID
+       - name: String
+       - hostname: String
+       - port: Int
+       - username: String
+       - authMethod: AuthMethod
+    
+    2. HostStore.swift
+       - Load/save hosts to JSON file
+       - CRUD operations
+       - Keychain integration for passwords/keys
+    
+    3. HostListView.swift
+       - List of saved hosts
+       - Tap to connect
+       - Swipe to delete
+       - Add button -> AddHostView
+    
+    4. AddHostView.swift
+       - Form for host details
+       - Auth method picker
+       - Password field (secure) or key file picker
+       - Save button
+    
+    5. Update app navigation:
+       - Launch -> HostListView
+       - Select host -> Connect -> MainView (terminal)
+  ```
+  
+  depends_on: composer-input
+  on success: proceed
+  on failure: retry with "Focus on in-memory storage first, add persistence later"
+}
+
+// ============================================
+// PHASE 6: Tailscale Integration
+// ============================================
+
+session "tailscale" {
+  agent: claude-code
+  goal: "Add Tailscale device detection"
+  
+  context: **prd**
+  
+  prompt: ```
+    Add Tailscale integration:
+    
+    1. TailscaleService.swift
+       - Detect if Tailscale is available (check for tailscale CLI or network extension)
+       - Parse device list if available
+       - Return list of (name, ip) tuples
+    
+    2. In AddHostView:
+       - If Tailscale detected, show "Import from Tailscale" button
+       - Opens picker with Tailscale devices
+       - Selecting one populates hostname and name fields
+    
+    3. Handle case where Tailscale not available gracefully
+    
+    Note: On iOS, Tailscale runs as a network extension. 
+    May need to check for specific network interfaces or use 
+    a simpler heuristic (100.x.x.x addresses).
+  ```
+  
+  depends_on: connection-manager
+  on success: proceed
+  on failure: continue  // Tailscale is P1, not blocking
+}
+
+// ============================================
+// PHASE 7: History & Polish
+// ============================================
+
+session "history-polish" {
+  agent: claude-code
+  goal: "Add command history and final polish"
+  
+  context: **prd**
+  
+  prompt: ```
+    Final features and polish:
+    
+    1. CommandHistory.swift
+       - Per-host history storage
+       - Last 50 commands per host
+       - Persist to JSON
+    
+    2. Update InputComposerView:
+       - [↑] button shows history picker
+       - Selecting history item populates composer
+    
+    3. Polish:
+       - App icon (simple terminal icon, can be placeholder)
+       - Launch screen
+       - Dark mode support (default)
+       - Handle keyboard appearance/disappearance smoothly
+       - Connection status indicator
+       - Disconnect button
+    
+    4. Test the full flow:
+       - Add host
+       - Connect
+       - Type in composer, send
+       - Switch to terminal mode
+       - Use special keys
+       - Disconnect
+  ```
+  
+  depends_on: tailscale
+  on success: proceed
+  on failure: retry with "Skip history, focus on core polish"
+}
+
+// ============================================
+// FINAL: Integration Test
+// ============================================
+
+session "integration-test" {
+  agent: claude-code
+  goal: "Verify the app works end-to-end"
+  
+  prompt: ```
+    Final integration check:
+    
+    1. Build the app (should compile without errors)
+    2. List any remaining TODOs or FIXMEs
+    3. Document any known issues
+    4. Create a brief README.md with:
+       - What the app does
+       - How to build
+       - Current limitations
+       - Next steps for v0.2
+    
+    Report status and any blockers for TestFlight.
+  ```
+  
+  depends_on: history-polish
+}
+
+// ============================================
+// Completion
+// ============================================
+
+on complete {
+  report: ```
+    # NativeShell Build Complete
+    
+    ## Sessions Completed
+    {{ list completed sessions with status }}
+    
+    ## Artifacts Created
+    - Xcode project at /Users/gorkolas/www/nativeshell
+    - PRD at /Users/gorkolas/www/the-pulse/specs/nativeshell-prd.md
+    
+    ## Next Steps
+    1. Open in Xcode, build and test on simulator
+    2. Test on physical device
+    3. Submit to TestFlight
+    
+    ## Known Issues
+    {{ list any failures or skipped items }}
+  ```
+}

@@ -2,10 +2,13 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { CreateUIMessage, UIMessage } from "ai";
 import { stories, type Story } from "@pulse/core/ai/stories";
 import { Pulse } from "./ui/pulse";
 import { StoryStartModal } from "./story-start-modal";
+import type { User } from "next-auth";
 
 type Attachment = {
   url: string;
@@ -24,6 +27,7 @@ interface OverviewProps {
     chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
   onSelectStory?: (storyId: string) => void;
+  user?: User;
 }
 
 // Literary flavor for each story
@@ -56,14 +60,18 @@ const storyFlavor: Record<
   },
 };
 
-export const Overview = ({ chatId, append, onSelectStory }: OverviewProps) => {
+export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps) => {
+  const router = useRouter();
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+
+  const isAuthenticated = !!user?.id;
 
   const handleStoryClick = (story: Story) => {
     setSelectedStory(story);
   };
 
-  const handleStartStory = () => {
+  const handleStartSolo = () => {
     if (!selectedStory) return;
 
     window.history.replaceState({}, "", `/pulse/${chatId}`);
@@ -80,8 +88,45 @@ export const Overview = ({ chatId, append, onSelectStory }: OverviewProps) => {
     setSelectedStory(null);
   };
 
+  const handleStartMultiplayer = async () => {
+    if (!selectedStory) return;
+    if (!isAuthenticated) {
+      toast.error("Sign in to host a gathering");
+      return;
+    }
+
+    setIsCreatingRoom(true);
+
+    try {
+      const response = await fetch("/api/room", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storyId: selectedStory.id,
+          displayName: user?.email || "Host",
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        toast.error(data.error || "Failed to create gathering");
+        return;
+      }
+
+      const { room } = await response.json();
+      router.push(`/room/${room.id}/lobby`);
+    } catch (error) {
+      console.error("Failed to create room:", error);
+      toast.error("Failed to create gathering");
+    } finally {
+      setIsCreatingRoom(false);
+    }
+  };
+
   const handleCloseModal = () => {
-    setSelectedStory(null);
+    if (!isCreatingRoom) {
+      setSelectedStory(null);
+    }
   };
 
   return (
@@ -185,8 +230,11 @@ export const Overview = ({ chatId, append, onSelectStory }: OverviewProps) => {
         <StoryStartModal
           story={selectedStory}
           epigraph={storyFlavor[selectedStory.id]}
-          onStart={handleStartStory}
+          onStartSolo={handleStartSolo}
+          onStartMultiplayer={handleStartMultiplayer}
           onClose={handleCloseModal}
+          isAuthenticated={isAuthenticated}
+          isCreatingRoom={isCreatingRoom}
         />
       )}
     </>

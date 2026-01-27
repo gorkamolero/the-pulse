@@ -3,7 +3,7 @@
 import type { UIMessage } from "ai";
 import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useState, useMemo } from "react";
+import { memo, useMemo } from "react";
 import {
   convertUIMessageToLegacyFormat,
   getUIMessageContent,
@@ -12,16 +12,13 @@ import {
 } from "@/lib/utils";
 import type { Attachment } from "@/lib/types/message";
 
-import { PencilEditIcon, SparklesIcon } from "./icons";
+import { SparklesIcon } from "./icons";
 import { Markdown } from "./markdown";
 import { MessageActions } from "./message-actions";
 import { PreviewAttachment } from "./preview-attachment";
 import { Weather, type WeatherAtLocation } from "./weather";
 import equal from "fast-deep-equal";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "./ui/tooltip";
-import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 
 type ChatRequestOptions = {
@@ -49,8 +46,6 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
   autoplay?: boolean
 }) => {
-  const [mode, setMode] = useState<"view" | "edit">("view");
-
   // Convert UIMessage to legacy format for compatibility
   const message = useMemo(() => convertUIMessageToLegacyFormat(uiMessage), [uiMessage]);
 
@@ -64,13 +59,7 @@ const PurePreviewMessage = ({
         data-message-id={message.id}
       >
         <div
-          className={cn(
-            "flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl",
-            {
-              "w-full": mode === "edit",
-              "group-data-[role=user]/message:w-fit": mode !== "edit",
-            }
-          )}
+          className="flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:w-fit"
         >
           {message.role === "assistant" && (
             <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
@@ -99,49 +88,14 @@ const PurePreviewMessage = ({
               />
             )}
 
-            {(message.content || message.reasoning) && mode === "view" && (
-              <div className="flex flex-row gap-2 items-start">
-                {message.role === "user" && !isReadonly && (
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100"
-                          onClick={() => {
-                            setMode("edit");
-                          }}
-                        >
-                          <PencilEditIcon />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Edit message</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-
-                <div
-                  className={cn("flex flex-col gap-4", {
-                    "bg-primary text-primary-foreground px-3 py-2 rounded-xl":
-                      message.role === "user",
-                  })}
-                >
-                  <Markdown>{message.content as string}</Markdown>
-                </div>
-              </div>
-            )}
-
-            {message.content && mode === "edit" && (
-              <div className="flex flex-row gap-2 items-start">
-                <div className="size-8" />
-
-                <MessageEditor
-                  key={message.id}
-                  message={message}
-                  setMode={setMode}
-                  setMessages={setMessages}
-                  reload={reload}
-                />
+            {(message.content || message.reasoning) && (
+              <div
+                className={cn("flex flex-col gap-4", {
+                  "bg-primary text-primary-foreground px-3 py-2 rounded-xl":
+                    message.role === "user",
+                })}
+              >
+                <Markdown>{message.content as string}</Markdown>
               </div>
             )}
 
@@ -201,6 +155,7 @@ export const PreviewMessage = memo(
   PurePreviewMessage,
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
+    if (prevProps.autoplay !== nextProps.autoplay) return false;
     if (getUIMessageReasoning(prevProps.message) !== getUIMessageReasoning(nextProps.message))
       return false;
     if (getUIMessageContent(prevProps.message) !== getUIMessageContent(nextProps.message)) return false;

@@ -39,6 +39,8 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
+  disabled,
+  disabledReason,
 }: {
   chatId: string;
   input: string;
@@ -60,6 +62,8 @@ function PureMultimodalInput({
     chatRequestOptions?: ChatRequestOptions
   ) => void;
   className?: string;
+  disabled?: boolean;
+  disabledReason?: string;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -226,18 +230,25 @@ function PureMultimodalInput({
         <div className="relative grow">
           <Textarea
             ref={textareaRef}
-            placeholder="What do you do?"
+            placeholder={disabled && disabledReason ? disabledReason : "What do you do?"}
             value={input}
             onChange={handleInput}
+            disabled={disabled}
             className={cx(
               "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700",
+              disabled && "opacity-60 cursor-not-allowed",
               className
             )}
             rows={2}
-            autoFocus
+            autoFocus={!disabled}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
+
+                if (disabled) {
+                  if (disabledReason) toast.error(disabledReason);
+                  return;
+                }
 
                 if (isLoading) {
                   toast.error("Please wait for the model to finish its response!");
@@ -260,6 +271,7 @@ function PureMultimodalInput({
                 input={input}
                 submitForm={submitForm}
                 uploadQueue={uploadQueue}
+                disabled={disabled}
               />
             )}
           </div>
@@ -276,7 +288,9 @@ export const MultimodalInput = memo(
       prevProps.input === nextProps.input &&
       prevProps.isLoading === nextProps.isLoading &&
       prevProps.attachments === nextProps.attachments &&
-      prevProps.messages.length === nextProps.messages.length
+      prevProps.messages.length === nextProps.messages.length &&
+      prevProps.disabled === nextProps.disabled &&
+      prevProps.disabledReason === nextProps.disabledReason
     );
   }
 );
@@ -333,10 +347,12 @@ function PureSendButton({
   submitForm,
   input,
   uploadQueue,
+  disabled,
 }: {
   submitForm: () => void;
   input: string;
   uploadQueue: Array<string>;
+  disabled?: boolean;
 }) {
   return (
     <Button
@@ -345,7 +361,7 @@ function PureSendButton({
         event.preventDefault();
         submitForm();
       }}
-      disabled={input.length === 0 || uploadQueue.length > 0}
+      disabled={disabled || input.length === 0 || uploadQueue.length > 0}
     >
       <ArrowUpIcon size={14} />
     </Button>
@@ -356,5 +372,6 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length)
     return false;
   if (prevProps.input !== nextProps.input) return false;
+  if (prevProps.disabled !== nextProps.disabled) return false;
   return true;
 });

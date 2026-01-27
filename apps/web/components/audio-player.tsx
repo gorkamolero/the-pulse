@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Pause, Play, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "./ui/tooltip";
 import { useAtom } from "jotai";
 import { audioEnabledAtom, selectedVoiceAtom } from "@/lib/atoms";
 import { useMessage } from "@/hooks/use-message";
@@ -115,32 +115,34 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
   const showGenerating = isGeneratingAudio && !audioUrl;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          className="py-1 px-2 h-fit text-muted-foreground"
-          variant="outline"
-          onClick={playAudio}
-          disabled={isLoading || showGenerating}
-        >
-          {isLoading || showGenerating ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : isPlaying ? (
-            <Pause size={16} />
-          ) : (
-            <Play size={16} />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        {showGenerating
-          ? "Generating audio..."
-          : isLoading
-            ? "Loading audio..."
-            : isPlaying
-              ? "Pause"
-              : "Play narration"}
-      </TooltipContent>
-    </Tooltip>
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            className="py-1 px-2 h-fit text-muted-foreground"
+            variant="outline"
+            onClick={playAudio}
+            disabled={isLoading || showGenerating}
+          >
+            {isLoading || showGenerating ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : isPlaying ? (
+              <Pause size={16} />
+            ) : (
+              <Play size={16} />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {showGenerating
+            ? "Generating audio..."
+            : isLoading
+              ? "Loading audio..."
+              : isPlaying
+                ? "Pause"
+                : "Play narration"}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

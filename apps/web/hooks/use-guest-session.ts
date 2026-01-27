@@ -6,6 +6,7 @@ import { guestSessionAtom } from '@/lib/atoms';
 import {
   type GuestMessage,
   createGuestSession,
+  generateUUID,
   hasReachedLimit,
   isSessionExpired,
   MAX_GUEST_PULSES,
@@ -30,7 +31,7 @@ export function useGuestSession() {
 
         const newMessage: GuestMessage = {
           ...message,
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           createdAt: new Date().toISOString(),
         };
 
