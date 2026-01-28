@@ -28,9 +28,13 @@ export async function POST(request: NextRequest) {
         "Content-Disposition": `attachment; filename="speech.${audio.format}"`,
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("[TTS] Error generating speech:", error);
     return NextResponse.json(
-      { error: "Failed to generate speech" },
+      {
+        error: "Failed to generate speech",
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
