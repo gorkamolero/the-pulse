@@ -81,15 +81,29 @@ export function useAmbientAudio(config: AmbientAudioConfig | undefined) {
 
     const audio = audioRef.current;
 
-    if (audioEnabled) {
-      // Start playing with fade-in
+    const tryPlay = () => {
+      if (!audioEnabled || audio.paused === false) return;
       audio
         .play()
-        .then(() => fadeIn(audio))
-        .catch((err) => {
-          // Autoplay blocked - will play on next user interaction
-          console.debug("Ambient audio autoplay blocked:", err.message);
+        .then(() => {
+          fadeIn(audio);
+          // Remove listeners once playing
+          document.removeEventListener("click", tryPlay);
+          document.removeEventListener("keydown", tryPlay);
+          document.removeEventListener("touchstart", tryPlay);
+        })
+        .catch(() => {
+          // Still blocked, listeners remain
         });
+    };
+
+    if (audioEnabled) {
+      // Try to play immediately
+      tryPlay();
+      // Also listen for user interaction in case autoplay was blocked
+      document.addEventListener("click", tryPlay, { once: false });
+      document.addEventListener("keydown", tryPlay, { once: false });
+      document.addEventListener("touchstart", tryPlay, { once: false });
     } else {
       // Fade out and pause
       if (!audio.paused) {
@@ -101,6 +115,9 @@ export function useAmbientAudio(config: AmbientAudioConfig | undefined) {
       if (fadeIntervalRef.current) {
         clearInterval(fadeIntervalRef.current);
       }
+      document.removeEventListener("click", tryPlay);
+      document.removeEventListener("keydown", tryPlay);
+      document.removeEventListener("touchstart", tryPlay);
     };
   }, [config?.src, audioEnabled, fadeIn, fadeOut]);
 
