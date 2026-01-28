@@ -52,6 +52,31 @@ export async function createUser(email: string, password: string) {
   }
 }
 
+// Fixed UUID for guest users - must exist in User table
+export const GUEST_USER_ID = '00000000-0000-0000-0000-000000000000';
+export const GUEST_USER_EMAIL = 'guest@pulse.local';
+
+export async function ensureGuestUser(): Promise<string> {
+  try {
+    // Check if guest user exists
+    const existing = await db.select().from(user).where(eq(user.id, GUEST_USER_ID));
+    if (existing.length > 0) {
+      return GUEST_USER_ID;
+    }
+    // Create guest user with fixed ID
+    await db.insert(user).values({
+      id: GUEST_USER_ID,
+      email: GUEST_USER_EMAIL,
+      password: null, // No password - can't login
+    });
+    return GUEST_USER_ID;
+  } catch (error) {
+    // If insert fails due to race condition, user already exists
+    console.warn('Guest user creation race condition (expected):', error);
+    return GUEST_USER_ID;
+  }
+}
+
 export async function saveChat({
   id,
   userId,

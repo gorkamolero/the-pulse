@@ -30,8 +30,8 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
   // Initial state - no previous image to show
   if (!currentMessageId && !displayImageUrl) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8">
-        <div className="text-center space-y-4">
+      <div className="flex items-center justify-center h-full w-full p-8">
+        <div className="flex flex-col items-center gap-4">
           <Pulse />
           <p className="text-sm text-muted-foreground/60 font-serif italic">
             The story awaits...

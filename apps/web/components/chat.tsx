@@ -190,12 +190,10 @@ export function Chat({
   const isLoading = status === 'streaming';
 
   const currentMessageId = useMemo(() => {
-    // Don't fetch message data for guests (they don't save to DB, no images/audio)
-    if (isGuest) return null;
-    // Start from the most recent message and work backwards
+    // Get the most recent assistant message ID for image/audio display
     const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop()
     return lastAssistantMessage?.id ?? null
-  }, [messages, isGuest]);
+  }, [messages]);
 
   return (
     <>

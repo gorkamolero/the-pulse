@@ -37,7 +37,7 @@ export interface GuestSession {
   softGateShown: boolean;
 }
 
-export const MAX_GUEST_PULSES = 5;
+export const MAX_GUEST_PULSES = 6; // 5 real pulses + 1 for auto-generated intro
 export const GUEST_SESSION_KEY = 'pulse_guest_session';
 export const GUEST_SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 

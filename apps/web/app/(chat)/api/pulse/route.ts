@@ -24,6 +24,7 @@ import {
   startFreeStory,
   addMisuseWarning,
   getUserSettings,
+  ensureGuestUser,
 } from "@/lib/db/queries";
 import {
   getMostRecentUserMessage,
@@ -69,6 +70,111 @@ function checkGuestRateLimit(ip: string): boolean {
   return true;
 }
 
+// Shared: Save user message to database
+async function saveUserMessage(
+  userMessage: UIMessage,
+  chatId: string
+) {
+  await saveMessages({
+    messages: [
+      {
+        id: crypto.randomUUID(),
+        role: userMessage.role,
+        content: getUIMessageContent(userMessage),
+        createdAt: new Date(),
+        chatId,
+        imageUrl: null,
+        audioUrl: null,
+      },
+    ],
+  });
+}
+
+// Shared: Create onFinish handler for streaming response
+function createOnFinishHandler({
+  chatId,
+  storyId,
+  voiceId,
+  checkGarbage = false,
+}: {
+  chatId: string;
+  storyId: string;
+  voiceId: string;
+  checkGarbage?: boolean;
+}) {
+  return async ({ responseMessage }: { responseMessage: { id: string; parts: Array<{ type: string; text?: string }> } }) => {
+    const messageId = responseMessage.id;
+    const text = responseMessage.parts
+      .filter((p): p is { type: "text"; text: string } => p.type === "text")
+      .map((p) => p.text)
+      .join("");
+
+    // Check for garbage output (authenticated users only)
+    if (checkGarbage && isGarbageOutput(text)) {
+      const reason = describeGarbageReason(text);
+      console.warn(`Narrator garbage detected: ${reason}`);
+    }
+
+    // Save the assistant message
+    try {
+      await saveMessages({
+        messages: [
+          {
+            id: messageId,
+            chatId,
+            role: "assistant",
+            content: text,
+            createdAt: new Date(),
+            imageUrl: null,
+            audioUrl: null,
+          },
+        ],
+      });
+
+      // Schedule image and audio generation to run AFTER response is sent
+      after(async () => {
+        // Generate image
+        try {
+          const imageResult = await generatePulseImage({
+            storyId,
+            pulse: text,
+            messageId,
+          });
+
+          if (imageResult?.url) {
+            await updateMessageImageUrl({
+              id: messageId,
+              imageUrl: imageResult.url,
+            });
+          }
+        } catch {
+          // Image generation failed - non-critical
+        }
+
+        // Generate audio with story-specific voice
+        try {
+          const audioResult = await generatePulseAudio({
+            text,
+            messageId,
+            voiceId,
+          });
+
+          if (audioResult?.url) {
+            await updateMessageAudioUrl({
+              id: messageId,
+              audioUrl: audioResult.url,
+            });
+          }
+        } catch {
+          // Audio generation failed - non-critical
+        }
+      });
+    } catch {
+      // Failed to save assistant message - will be lost
+    }
+  };
+}
+
 export async function POST(request: Request) {
   const {
     id,
@@ -85,9 +191,30 @@ export async function POST(request: Request) {
   } = await request.json();
 
   const session = await auth();
-  const isGuest = !session?.user?.id;
+  const userId = session?.user?.id;
+  const isGuest = !userId;
 
-  // ============== GUEST PATH ==============
+  // Common validation
+  const userMessage = getMostRecentUserMessage(messages);
+  if (!userMessage) {
+    return new Response("No user message found", { status: 400 });
+  }
+
+  const story = getStoryById(selectedStoryId);
+  if (!story) {
+    return new Response(
+      JSON.stringify({ error: "STORY_NOT_FOUND" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const narratorConfig = getNarratorConfig(selectedStoryId);
+  const systemPromptText = systemPrompt({
+    storyGuide: story.storyGuide,
+    language: language === "es" ? "spanish" : "english",
+  });
+
+  // ============== GUEST-SPECIFIC CHECKS ==============
   if (isGuest) {
     // Rate limit guests
     const forwardedFor = request.headers.get("x-forwarded-for");
@@ -113,255 +240,127 @@ export async function POST(request: Request) {
         { status: 402, headers: { "Content-Type": "application/json" } }
       );
     }
+  }
 
-    const userMessage = getMostRecentUserMessage(messages);
-    if (!userMessage) {
-      return new Response("No user message found", { status: 400 });
-    }
+  // ============== MODEL SELECTION ==============
+  let model: LanguageModel;
+  let isDegraded = false;
+  let usingUserKey = false;
 
+  if (isGuest) {
     // Use cheaper model for guests
     const openrouter = createOpenRouter({
       apiKey: process.env.OPENROUTER_API_KEY,
     });
-    const model = openrouter("moonshotai/kimi-k2.5");
-
-    const story = getStoryById(selectedStoryId);
-    if (!story) {
-      return new Response(
-        JSON.stringify({ error: "STORY_NOT_FOUND" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    model = openrouter("moonshotai/kimi-k2.5");
+  } else {
+    // Get user model based on their tier
+    try {
+      const modelResult = await createUserModel({
+        userId,
+        modelId: narratorConfig.modelId,
+      });
+      model = modelResult.model;
+      usingUserKey = modelResult.usingUserKey;
+      isDegraded = modelResult.isDegraded;
+    } catch (error) {
+      if (error instanceof Error && error.name === "FREE_TIER_EXHAUSTED") {
+        return new Response(
+          JSON.stringify({
+            error: "FREE_TIER_EXHAUSTED",
+            message:
+              "Your free story has been completed. Please add your own API key to continue playing.",
+            redirectTo: "/settings",
+          }),
+          {
+            status: 402,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+      throw error;
     }
-
-    // Stream response without saving to DB
-    const result = streamText({
-      model,
-      system: systemPrompt({
-        storyGuide: story.storyGuide,
-        language: language === "es" ? "spanish" : "english",
-      }),
-      messages: convertToModelMessages(messages),
-    });
-
-    return result.toUIMessageStreamResponse({
-      generateMessageId: () => crypto.randomUUID(),
-      originalMessages: messages,
-    });
   }
 
-  // ============== AUTHENTICATED PATH ==============
-  // At this point we know user exists (isGuest check above returned early)
-  const userId = session?.user?.id;
-  if (!userId) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-  const userMessage = getMostRecentUserMessage(messages);
-
-  if (!userMessage) {
-    return new Response("No user message found", { status: 400 });
-  }
-
-  // Get narrator config for this story (model + voice)
-  const narratorConfig = getNarratorConfig(selectedStoryId);
-
-  // Get user model based on their tier (own key, free tier, or degraded)
-  let model: LanguageModel;
-  let usingUserKey = false;
-  let isDegraded = false;
-
-  try {
-    const modelResult = await createUserModel({
-      userId,
-      modelId: narratorConfig.modelId,
-    });
-    model = modelResult.model;
-    usingUserKey = modelResult.usingUserKey;
-    isDegraded = modelResult.isDegraded;
-  } catch (error) {
-    if (error instanceof Error && error.name === "FREE_TIER_EXHAUSTED") {
-      return new Response(
-        JSON.stringify({
-          error: "FREE_TIER_EXHAUSTED",
-          message:
-            "Your free story has been completed. Please add your own API key to continue playing.",
-          redirectTo: "/settings",
-        }),
-        {
-          status: 402,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-    throw error;
-  }
-
-  // Track free story start (if using server key and first message)
-  if (!usingUserKey) {
+  // ============== AUTHENTICATED-ONLY: FREE STORY & MISUSE TRACKING ==============
+  if (!isGuest && !usingUserKey) {
+    // Track free story start
     const settings = await getUserSettings(userId);
     if (!settings?.freeStoryId) {
       await startFreeStory(userId, selectedStoryId);
     }
-  }
 
-  // Periodic misuse sampling (only for server key users)
-  const messageCount = messages.filter((m) => m.role === "user").length;
+    // Periodic misuse sampling
+    const messageCount = messages.filter((m) => m.role === "user").length;
+    if (shouldSampleMessage(messageCount)) {
+      const lastAssistantMsg = messages
+        .filter((m) => m.role === "assistant")
+        .slice(-1)[0];
+      const recentNarration = lastAssistantMsg
+        ? getUIMessageContent(lastAssistantMsg)
+        : undefined;
 
-  if (!usingUserKey && shouldSampleMessage(messageCount)) {
-    const story = getStoryById(selectedStoryId);
-    const lastAssistantMsg = messages
-      .filter((m) => m.role === "assistant")
-      .slice(-1)[0];
-    const recentNarration = lastAssistantMsg
-      ? getUIMessageContent(lastAssistantMsg)
-      : undefined;
+      const evaluation = await evaluateMessage(getUIMessageContent(userMessage), {
+        storyId: selectedStoryId,
+        storyTitle: story?.title,
+        recentNarration,
+      });
 
-    const evaluation = await evaluateMessage(getUIMessageContent(userMessage), {
-      storyId: selectedStoryId,
-      storyTitle: story?.title,
-      recentNarration,
-    });
-
-    if (isMisuseConfirmed(evaluation)) {
-      const warnings = await addMisuseWarning(userId);
-      console.warn(
-        `Misuse detected for user ${userId}: ${evaluation.reason} (warning ${warnings})`
-      );
+      if (isMisuseConfirmed(evaluation)) {
+        const warnings = await addMisuseWarning(userId);
+        console.warn(
+          `Misuse detected for user ${userId}: ${evaluation.reason} (warning ${warnings})`
+        );
+      }
     }
   }
 
+  // ============== CREATE/GET CHAT ==============
   const chat = await getChatById({ id });
 
   if (!chat) {
-    const userTitle = await generateTitleFromUserMessage({
-      message: userMessage,
-    });
-    const story = getStoryById(selectedStoryId);
-    const storyPrefix = story ? `[${story.title}] ` : "";
-
-    // Generate a random 4-character string
-    const randomChars = Math.random().toString(36).substring(2, 6);
-
-    const title = `${storyPrefix}${userTitle} (${randomChars})`;
-    await saveChat({ id, userId, title });
+    let title: string;
+    if (isGuest) {
+      title = `[Guest] ${story.title}`;
+    } else {
+      const userTitle = await generateTitleFromUserMessage({ message: userMessage });
+      const storyPrefix = `[${story.title}] `;
+      const randomChars = Math.random().toString(36).substring(2, 6);
+      title = `${storyPrefix}${userTitle} (${randomChars})`;
+    }
+    // Ensure guest user exists and get the ID
+    const effectiveUserId = userId || await ensureGuestUser();
+    await saveChat({ id, userId: effectiveUserId, title });
   }
 
-  // Save user message
-  await saveMessages({
-    messages: [
-      {
-        id: crypto.randomUUID(),
-        role: userMessage.role,
-        content: getUIMessageContent(userMessage),
-        createdAt: new Date(),
-        chatId: id,
-        imageUrl: null,
-        audioUrl: null,
-      },
-    ],
-  });
+  // ============== SAVE USER MESSAGE ==============
+  await saveUserMessage(userMessage, id);
 
-  // Select the appropriate system prompt based on the language
-  const getSystemPromptForLanguage = (lang: string) =>
-    systemPrompt({
-      storyGuide: getStoryById(selectedStoryId)?.storyGuide || "",
-      language: lang === "es" ? "spanish" : "english",
-    });
-
-  // Convert UIMessages to ModelMessages for the AI SDK
-  const modelMessages = convertToModelMessages(messages);
-
-  // Stream the response
+  // ============== STREAM RESPONSE ==============
   const result = streamText({
     model,
-    system: getSystemPromptForLanguage(language),
-    messages: modelMessages,
-    experimental_telemetry: {
-      isEnabled: true,
-      functionId: "stream-text",
-    },
-    onError: ({ error }) => {
-      console.error("Narrator streaming error:", error);
-    },
+    system: systemPromptText,
+    messages: convertToModelMessages(messages),
+    ...(isGuest ? {} : {
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: "stream-text",
+      },
+      onError: ({ error }) => {
+        console.error("Narrator streaming error:", error);
+      },
+    }),
   });
 
-  // Return streaming response with AI SDK v6 best practices
   return result.toUIMessageStreamResponse({
-    // Use UUIDs for message IDs so they match database format
     generateMessageId: () => crypto.randomUUID(),
-    // Pass original messages to prevent duplicates
     originalMessages: messages,
-    // Persist message after streaming completes
-    onFinish: async ({ responseMessage }) => {
-      const messageId = responseMessage.id;
-      const text = responseMessage.parts
-        .filter((p): p is { type: "text"; text: string } => p.type === "text")
-        .map((p) => p.text)
-        .join("");
-
-      // Check for garbage output
-      if (isGarbageOutput(text)) {
-        const reason = describeGarbageReason(text);
-        console.warn(`Narrator garbage detected: ${reason}`);
-      }
-
-      // Save the assistant message
-      try {
-        await saveMessages({
-          messages: [
-            {
-              id: messageId,
-              chatId: id,
-              role: "assistant",
-              content: text,
-              createdAt: new Date(),
-              imageUrl: null,
-              audioUrl: null,
-            },
-          ],
-        });
-
-        // Schedule image and audio generation to run AFTER response is sent
-        after(async () => {
-          // Generate image
-          try {
-            const imageResult = await generatePulseImage({
-              storyId: selectedStoryId,
-              pulse: text,
-              messageId,
-            });
-
-            if (imageResult?.url) {
-              await updateMessageImageUrl({
-                id: messageId,
-                imageUrl: imageResult.url,
-              });
-            }
-          } catch {
-            // Image generation failed - non-critical
-          }
-
-          // Generate audio with story-specific voice
-          try {
-            const audioResult = await generatePulseAudio({
-              text,
-              messageId,
-              voiceId: narratorConfig.voiceId,
-            });
-
-            if (audioResult?.url) {
-              await updateMessageAudioUrl({
-                id: messageId,
-                audioUrl: audioResult.url,
-              });
-            }
-          } catch {
-            // Audio generation failed - non-critical
-          }
-        });
-      } catch {
-        // Failed to save assistant message - will be lost
-      }
-    },
+    onFinish: createOnFinishHandler({
+      chatId: id,
+      storyId: selectedStoryId,
+      voiceId: narratorConfig.voiceId,
+      checkGarbage: !isGuest,
+    }),
     headers: {
       ...(isDegraded && { "X-Degraded-Mode": "true" }),
     },
