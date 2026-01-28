@@ -17,11 +17,14 @@
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
-    "db:up": "drizzle-kit up"
+    "db:up": "drizzle-kit up",
+    "test:tts": "tsx scripts/test-tts-providers.ts"
   },
   "dependencies": {
     "@11labs/react": "^0.0.7",
     "@ai-sdk/elevenlabs": "2.0.0-beta.47",
+    "@ai-sdk/hume": "^2.0.12",
+    "@ai-sdk/lmnt": "^2.0.12",
     "@ai-sdk/react": "3.0.0-beta.153",
     "@ai-sdk/replicate": "2.0.0-beta.47",
     "@codemirror/lang-javascript": "^6.2.2",

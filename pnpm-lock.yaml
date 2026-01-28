@@ -41,7 +41,7 @@ importers:
     devDependencies:
       '@types/bun':
         specifier: latest
-        version: 1.3.6
+        version: 1.3.7
       '@types/react':
         specifier: ^18
         version: 18.3.27
@@ -60,6 +60,12 @@ importers:
       '@ai-sdk/elevenlabs':
         specifier: 2.0.0-beta.47
         version: 2.0.0-beta.47(zod@4.1.13)
+      '@ai-sdk/hume':
+        specifier: ^2.0.12
+        version: 2.0.12(zod@4.1.13)
+      '@ai-sdk/lmnt':
+        specifier: ^2.0.12
+        version: 2.0.12(zod@4.1.13)
       '@ai-sdk/react':
         specifier: 3.0.0-beta.153
         version: 3.0.0-beta.153(react@19.0.0-rc.1)(zod@4.1.13)
@@ -218,7 +224,7 @@ importers:
         version: 16.6.1
       drizzle-orm:
         specifier: ^0.34.0
-        version: 0.34.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@types/react@18.3.27)(@vercel/postgres@0.10.0(utf-8-validate@5.0.10))(bun-types@1.3.6)(postgres@3.4.7)(react@19.0.0-rc.1)
+        version: 0.34.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@types/react@18.3.27)(@vercel/postgres@0.10.0(utf-8-validate@5.0.10))(bun-types@1.3.7)(postgres@3.4.7)(react@19.0.0-rc.1)
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.0.0-rc.1)
@@ -490,6 +496,18 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/hume@2.0.12':
+    resolution: {integrity: sha512-hJKygA9HgmVlbuFxRnTgxRfVXDd1vnqWJgazkaXZ7KUfcFmB/apnKsL9VkSHtq68GFMkfo3SstxyDZv3adIqDQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/lmnt@2.0.12':
+    resolution: {integrity: sha512-MECz0d2EAlJRCLi73TE79Kd6U7yjNABOIef+3/6MTQPaL/fhEVkZJOJcsM1DJbumPXkectuBFiQX4fbktNygFg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/openai-compatible@2.0.0-beta.48':
     resolution: {integrity: sha512-z8oaXIgDc1bhfS01+IgkN87DAstCkl/TWVQlazbBZ/RgEe0aaG04CH+pQxyB2U8/TCd1OUAYZbi38VDtYqZfhQ==}
     engines: {node: '>=18'}
@@ -512,8 +530,18 @@ packages:
       effect:
         optional: true
 
+  '@ai-sdk/provider-utils@4.0.10':
+    resolution: {integrity: sha512-VeDAiCH+ZK8Xs4hb9Cw7pHlujWNL52RKe8TExOkrw6Ir1AmfajBZTb9XUdKOZO08RwQElIKA8+Ltm+Gqfo8djQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/provider@3.0.0-beta.26':
     resolution: {integrity: sha512-UQyOlrpahFL1CZ/QA0ZpFhAkE32fw1XXBx+6gu23YWSCMJCjaf/fiJUPV7xUhp/nXqVO/IC+PIIfLomx55D16A==}
+    engines: {node: '>=18'}
+
+  '@ai-sdk/provider@3.0.5':
+    resolution: {integrity: sha512-2Xmoq6DBJqmSl80U6V9z5jJSJP7ehaJJQMy2iFUqTay06wdCqTnPVBBQbtEL8RCChenL+q5DC5H5WzU3vV3v8w==}
     engines: {node: '>=18'}
 
   '@ai-sdk/react@3.0.0-beta.153':
@@ -2126,6 +2154,9 @@ packages:
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
+  '@standard-schema/spec@1.1.0':
+    resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
   '@streamdown/cjk@1.0.1':
     resolution: {integrity: sha512-ElDoEfad2u8iFzmgmEEab15N4mt19r47xeUIPJtHaHVyEF5baojamGo+xw3MywMj2qUsAY3LnTnKbrUtL5tGkg==}
     peerDependencies:
@@ -2257,8 +2288,8 @@ packages:
   '@tokenlens/models@1.3.0':
     resolution: {integrity: sha512-9mx7ZGeewW4ndXAiD7AT1bbCk4OpJeortbjHHyNkgap+pMPPn1chY6R5zqe1ggXIUzZ2l8VOAKfPqOvpcrisJw==}
 
-  '@types/bun@1.3.6':
-    resolution: {integrity: sha512-uWCv6FO/8LcpREhenN1d1b6fcspAB+cefwD7uti8C8VffIv0Um08TKMn98FynpTiU38+y2dUO55T11NgDt8VAA==}
+  '@types/bun@1.3.7':
+    resolution: {integrity: sha512-lmNuMda+Z9b7tmhA0tohwy8ZWFSnmQm1UDWXtH5r9F7wZCfkeO3Jx7wKQ1EOiKq43yHts7ky6r8SDJQWRNupkA==}
 
   '@types/cookie@0.6.0':
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
@@ -2557,8 +2588,8 @@ packages:
     peerDependencies:
       typescript: ^5
 
-  bun-types@1.3.6:
-    resolution: {integrity: sha512-OlFwHcnNV99r//9v5IIOgQ9Uk37gZqrNMCcqEaExdkVq3Avwqok1bJFmvGMCkCE0FqzdY8VMOZpfpR3lwI+CsQ==}
+  bun-types@1.3.7:
+    resolution: {integrity: sha512-qyschsA03Qz+gou+apt6HNl6HnI+sJJLL4wLDke4iugsE6584CMupOtTY1n+2YC9nGVrEKUlTs99jjRLKgWnjQ==}
 
   bun-webgpu-darwin-arm64@0.1.4:
     resolution: {integrity: sha512-eDgLN9teKTfmvrCqgwwmWNsNszxYs7IZdCqk0S1DCarvMhr4wcajoSBlA/nQA0/owwLduPTS8xxCnQp4/N/gDg==}
@@ -4513,6 +4544,18 @@ snapshots:
       - arktype
       - effect
 
+  '@ai-sdk/hume@2.0.12(zod@4.1.13)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.5
+      '@ai-sdk/provider-utils': 4.0.10(zod@4.1.13)
+      zod: 4.1.13
+
+  '@ai-sdk/lmnt@2.0.12(zod@4.1.13)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.5
+      '@ai-sdk/provider-utils': 4.0.10(zod@4.1.13)
+      zod: 4.1.13
+
   '@ai-sdk/openai-compatible@2.0.0-beta.48(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 3.0.0-beta.26
@@ -4530,7 +4573,18 @@ snapshots:
       eventsource-parser: 3.0.6
       zod: 4.1.13
 
+  '@ai-sdk/provider-utils@4.0.10(zod@4.1.13)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.5
+      '@standard-schema/spec': 1.1.0
+      eventsource-parser: 3.0.6
+      zod: 4.1.13
+
   '@ai-sdk/provider@3.0.0-beta.26':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/provider@3.0.5':
     dependencies:
       json-schema: 0.4.0
 
@@ -6013,6 +6067,8 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
+  '@standard-schema/spec@1.1.0': {}
+
   '@streamdown/cjk@1.0.1(@types/mdast@4.0.4)(micromark-util-types@2.0.2)(micromark@4.0.2)(react@19.0.0-rc.1)(unified@11.0.5)':
     dependencies:
       react: 19.0.0-rc.1
@@ -6139,9 +6195,9 @@ snapshots:
     dependencies:
       '@tokenlens/core': 1.3.0
 
-  '@types/bun@1.3.6':
+  '@types/bun@1.3.7':
     dependencies:
-      bun-types: 1.3.6
+      bun-types: 1.3.7
 
   '@types/cookie@0.6.0': {}
 
@@ -6456,7 +6512,7 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  bun-types@1.3.6:
+  bun-types@1.3.7:
     dependencies:
       '@types/node': 22.19.3
 
@@ -6811,14 +6867,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.34.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@types/react@18.3.27)(@vercel/postgres@0.10.0(utf-8-validate@5.0.10))(bun-types@1.3.6)(postgres@3.4.7)(react@19.0.0-rc.1):
+  drizzle-orm@0.34.1(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@types/react@18.3.27)(@vercel/postgres@0.10.0(utf-8-validate@5.0.10))(bun-types@1.3.7)(postgres@3.4.7)(react@19.0.0-rc.1):
     optionalDependencies:
       '@neondatabase/serverless': 0.9.5
       '@opentelemetry/api': 1.9.0
       '@types/pg': 8.11.6
       '@types/react': 18.3.27
       '@vercel/postgres': 0.10.0(utf-8-validate@5.0.10)
-      bun-types: 1.3.6
+      bun-types: 1.3.7
       postgres: 3.4.7
       react: 19.0.0-rc.1
 
