@@ -92,19 +92,20 @@ function PureMultimodalInput({
     }
   }, []);
 
+  const MIN_HEIGHT = 56; // Fixed minimum height to prevent jumping
+
   const adjustHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${
-        textareaRef.current.scrollHeight + 2
-      }px`;
+      // Reset to min to measure true scrollHeight, but don't go below MIN_HEIGHT
+      textareaRef.current.style.height = `${MIN_HEIGHT}px`;
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${Math.max(scrollHeight, MIN_HEIGHT)}px`;
     }
   };
 
   const resetHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = "98px";
+      textareaRef.current.style.height = `${MIN_HEIGHT}px`;
     }
   };
 
@@ -237,7 +238,7 @@ function PureMultimodalInput({
             onChange={handleInput}
             disabled={disabled}
             className={cx(
-              "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pr-12 transition-colors duration-300 border",
+              "min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pr-12 transition-colors duration-300 border",
               borderContrastClass,
               disabled && "opacity-60 cursor-not-allowed",
               className
