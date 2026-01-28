@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, VolumeX, Users, Loader2 } from "lucide-react";
 import { useAtom } from "jotai";
 import Link from "next/link";
@@ -32,19 +31,14 @@ export function StoryStartModal({
   if (!story) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+    <>
+      {/* Backdrop */}
+      <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ delay: 0.1 }}
+        {/* Modal content */}
+        <div
           className="max-w-lg w-full mx-4 p-8 bg-background border border-border rounded-lg shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
@@ -148,8 +142,8 @@ export function StoryStartModal({
               {" "}to host a gathering or save your progress
             </p>
           )}
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+      </div>
+    </>
   );
 }

@@ -259,22 +259,6 @@ export function Chat({
           </form>
         )}
 
-        {/* Guest pulse progress bar */}
-        {isGuest && messages.length > 0 && (
-          <div className="mx-auto max-w-3xl w-full px-4 pb-4">
-            <div className="h-1 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-foreground/30 transition-all duration-300"
-                style={{ width: `${(pulseCount / maxPulses) * 100}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground/60 mt-1 text-center">
-              {pulseCount < maxPulses
-                ? `${maxPulses - pulseCount} free pulses remaining`
-                : "Create an account to continue your adventure"}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Soft Gate Modal for guests */}

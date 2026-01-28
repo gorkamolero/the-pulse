@@ -18,7 +18,7 @@ export const TITLE_MODEL = "google/gemini-2.5-flash-lite";
 // ============================================================================
 
 /** Default voice ID when story doesn't specify */
-export const DEFAULT_VOICE_ID = "qNkzaJoHLLdpvgh5tISm"; // Carter
+export const DEFAULT_VOICE_ID = "wLiYNWyRubh6yen1QNSU";
 
 /** ElevenLabs voice catalog */
 export const VOICES = [
