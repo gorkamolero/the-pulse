@@ -21,7 +21,7 @@ const ORB_COLORS = {
 
 interface StoryOrbProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 /**
@@ -46,6 +46,7 @@ export function StoryOrb({ className, size = "md" }: StoryOrbProps) {
     sm: "w-16 h-16",
     md: "w-32 h-32",
     lg: "w-48 h-48",
+    xl: "w-96 h-96",
   };
 
   return (

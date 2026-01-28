@@ -217,7 +217,7 @@ function PureMultimodalInput({
   return (
     <div className="relative w-full flex flex-col items-center gap-3">
       {/* Audio-reactive Orb above input */}
-      <StoryOrb size="sm" />
+      <StoryOrb size="md" />
 
       {/* Hidden file input for attachments (kept for future use) */}
       <input
