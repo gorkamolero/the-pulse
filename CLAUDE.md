@@ -102,7 +102,8 @@ PORT=7272 pnpm dev
   - Claude 3.5 Haiku (title generation)
 - **Fireworks AI**
   - DeepSeek R1 (reasoning model)
-  - Flux-1-dev (image generation)
+- **Replicate**
+  - Flux 2 Klein 4B (image generation) - 0.78s, ~$0.0006/image
 - **OpenAI** (GPT-4o-mini for artifacts)
 
 #### Audio/Voice

@@ -44,9 +44,10 @@ Make this prompt in English.
 Visual Prompt:`
     });
 
-    // Generate image using Nano Banana Pro - vertical 9:16 aspect ratio
+    // Generate image using Flux 2 Klein 4B - fastest + cheapest option
+    // Speed: 0.78s | Cost: ~$0.0006/image | Quality: Excellent
     const { image } = await experimental_generateImage({
-      model: replicate.image('google/nano-banana-pro'),
+      model: replicate.image('black-forest-labs/flux-2-klein-4b'),
       prompt: imagePrompt,
       aspectRatio: '9:16',
     });
