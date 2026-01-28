@@ -145,4 +145,12 @@ export const whisperingPines = {
   
   </story-guide>
   `,
+  narrator: {
+    voiceId: "uVKHymY7OYMd6OailpG5",
+  },
+  ambientAudio: {
+    src: "/audio/ambience/whispering-pines-forest.mp3",
+    volume: 0.25,
+    fadeInMs: 4000,
+  },
 };

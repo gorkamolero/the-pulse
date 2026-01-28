@@ -75,5 +75,13 @@ You slog through mud to the glow-the cabin. Door's open, light's on, but it's wr
 
 The rain gnawed Navaluenga's darkness with hungry teeth while the comet's hum stirred something ancient below. Your duplicates emerged from fog, knives steady as churchgoers' hands. The cabin didn't just wait—it watched, wooden bones settling in anticipation. Blood spilled; mud drank greedily. Time fractured. Meeting your own eyes across the room was like finding a stranger in your bathroom mirror at 3 AM. Horror crawled beneath your skin like insects, nesting where no light could reach.
 ---
-`
+`,
+  narrator: {
+    voiceId: "0dPqNXnhg2bmxQv1WKDp",
+  },
+  ambientAudio: {
+    src: "/audio/ambience/endless-path-rain.mp3",
+    volume: 0.35,
+    fadeInMs: 3000,
+  },
 };

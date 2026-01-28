@@ -15,6 +15,7 @@ interface UseChatWithAudioOptions {
   onAudioEnd?: () => void;
   onComplete?: (fullText: string) => void;
   onError?: (error: Error) => void;
+  onAmbienceUrl?: (url: string) => void; // Called when scene ambience is ready
   enabled?: boolean;
 }
 
@@ -27,6 +28,7 @@ interface ChatWithAudioState {
 // Protocol markers
 const TEXT_MARKER = "T:";
 const AUDIO_MARKER = "A:";
+const SFX_MARKER = "S:"; // Sound effect / ambience URL
 const DONE_MARKER = "D:";
 
 /**
@@ -41,6 +43,7 @@ export function useChatWithAudio(options: UseChatWithAudioOptions) {
     onAudioEnd,
     onComplete,
     onError,
+    onAmbienceUrl,
     enabled = true,
   } = options;
 
@@ -204,6 +207,9 @@ export function useChatWithAudio(options: UseChatWithAudioOptions) {
               if (audioBuffer) {
                 queueAudioBuffer(audioBuffer);
               }
+            } else if (line.startsWith(SFX_MARKER)) {
+              const url = line.slice(SFX_MARKER.length);
+              onAmbienceUrl?.(url);
             } else if (line.startsWith(DONE_MARKER)) {
               onComplete?.(fullText);
             }

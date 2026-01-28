@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 // Dynamic import for WebGL component
 const StoryOrb = dynamic(
   () => import("./story-orb").then((mod) => ({ default: mod.StoryOrb })),
-  { ssr: false, loading: () => <div className="w-32 h-32" /> }
+  { ssr: false, loading: () => <div className="w-48 h-48" /> }
 );
 
 const LOADING_PHRASES = [

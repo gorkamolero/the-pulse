@@ -245,4 +245,12 @@ This is The Hollow Choir-a haunting, flexible tale ready for you to narrate and 
 Write in the style of J. G. Ballard but readable for a wider audience.
 
 </story-guide>`,
+  narrator: {
+    voiceId: "flHkNRp1BlvT73UL6gyz",
+  },
+  ambientAudio: {
+    src: "/audio/ambience/hollow-choir-water.mp3",
+    volume: 0.3,
+    fadeInMs: 5000,
+  },
 };

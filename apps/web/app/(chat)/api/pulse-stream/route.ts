@@ -37,14 +37,19 @@ import {
 } from "@/lib/ai/misuse-evaluator";
 
 import { generateTitleFromUserMessage } from "../../actions";
-import { generatePulseImage } from "@/lib/ai/tools/generate-image";
+import {
+  generateImagePrompt,
+  generateImageFromPrompt,
+} from "@/lib/ai/tools/generate-image";
 import { createElevenLabsStream } from "@/lib/ai/elevenlabs-websocket";
+import { generateSceneAmbience } from "@/lib/ai/sound-effects";
 
 export const maxDuration = 60;
 
 // Protocol markers for multiplexed stream
 const TEXT_MARKER = "T:"; // Text chunk
 const AUDIO_MARKER = "A:"; // Audio chunk (base64)
+const SFX_MARKER = "S:"; // Sound effect URL
 const DONE_MARKER = "D:"; // Stream complete
 
 /**
@@ -194,32 +199,50 @@ export async function POST(request: Request) {
       let elevenLabsStream: ReturnType<typeof createElevenLabsStream> | null =
         null;
 
-      // Initialize ElevenLabs WebSocket if audio is enabled
-      if (enableAudio) {
-        try {
-          elevenLabsStream = createElevenLabsStream({
-            voiceId: narratorConfig.voiceId,
-            onAudioChunk: (chunk) => {
-              // Send audio chunk to client
-              const base64Audio = chunk.toString("base64");
-              controller.enqueue(
-                encoder.encode(`${AUDIO_MARKER}${base64Audio}\n`)
-              );
-            },
-            onError: () => {
-              // ElevenLabs connection error - audio will be skipped
-            },
-          });
+      // Start ElevenLabs WebSocket connection in parallel (don't await yet)
+      const elevenLabsPromise = enableAudio
+        ? new Promise<ReturnType<typeof createElevenLabsStream> | null>(
+            (resolve) => {
+              try {
+                const stream = createElevenLabsStream({
+                  voiceId: narratorConfig.voiceId,
+                  onAudioChunk: (chunk) => {
+                    // Send audio chunk to client
+                    const base64Audio = chunk.toString("base64");
+                    controller.enqueue(
+                      encoder.encode(`${AUDIO_MARKER}${base64Audio}\n`)
+                    );
+                  },
+                  onError: () => {
+                    // ElevenLabs connection error - audio will be skipped
+                  },
+                });
 
-          await elevenLabsStream.waitForConnection();
-        } catch {
-          elevenLabsStream = null;
-        }
-      }
+                stream.waitForConnection().then(() => resolve(stream));
+              } catch {
+                resolve(null);
+              }
+            }
+          )
+        : Promise.resolve(null);
 
       // Buffer for accumulating text to send in sentence-sized chunks
       let textBuffer = "";
       const sentenceEndRegex = /[.!?]\s+|[.!?]$/;
+
+      // Early image prompt tracking
+      let imagePromptPromise: Promise<string> | null = null;
+      let imagePromptStarted = false;
+      const EARLY_PROMPT_CHARS = 150; // Start generating prompt after this many chars
+
+      // Scene ambience tracking
+      let sceneAmbiencePromise: Promise<
+        | { success: true; url: string }
+        | { success: false; error: string }
+        | null
+      > = Promise.resolve(null);
+      let sceneAmbienceStarted = false;
+      const AMBIENCE_TRIGGER_CHARS = 200; // Start generating ambience after this many chars
 
       try {
         // Stream text from the narrator
@@ -233,6 +256,9 @@ export async function POST(request: Request) {
           },
         });
 
+        // Wait for ElevenLabs connection to be ready (should be fast since started early)
+        elevenLabsStream = await elevenLabsPromise;
+
         // Process the text stream
         for await (const chunk of result.textStream) {
           fullText += chunk;
@@ -240,6 +266,40 @@ export async function POST(request: Request) {
 
           // Send text chunk to client immediately
           controller.enqueue(encoder.encode(`${TEXT_MARKER}${chunk}\n`));
+
+          // Start image prompt generation early (after we have enough context)
+          if (!imagePromptStarted && fullText.length >= EARLY_PROMPT_CHARS) {
+            imagePromptStarted = true;
+            imagePromptPromise = generateImagePrompt({
+              storyId: selectedStoryId,
+              pulse: fullText,
+            }).catch((err) => {
+              console.error("Early image prompt generation failed:", err);
+              return ""; // Fallback to empty, will retry with full text
+            });
+          }
+
+          // Start scene ambience generation (creates unique atmosphere for this scene)
+          if (!sceneAmbienceStarted && fullText.length >= AMBIENCE_TRIGGER_CHARS) {
+            sceneAmbienceStarted = true;
+            sceneAmbiencePromise = generateSceneAmbience({
+              storyId: selectedStoryId,
+              sceneText: fullText,
+              messageId: assistantMessageId,
+              durationSeconds: 22,
+            }).then((result) => {
+              if (result.success) {
+                // Stream the ambience URL to client
+                controller.enqueue(
+                  encoder.encode(`${SFX_MARKER}${result.url}\n`)
+                );
+              }
+              return result;
+            }).catch((err) => {
+              console.error("Scene ambience generation failed:", err);
+              return null;
+            });
+          }
 
           // Send to ElevenLabs when we have a complete sentence
           if (elevenLabsStream?.isOpen() && sentenceEndRegex.test(textBuffer)) {
@@ -266,7 +326,7 @@ export async function POST(request: Request) {
           console.warn(`Narrator garbage detected: ${reason}`);
         }
 
-        // Save the assistant message and generate image in background
+        // Save the assistant message
         await saveMessages({
           messages: [
             {
@@ -281,12 +341,30 @@ export async function POST(request: Request) {
           ],
         });
 
-        // Generate image in background
+        // Generate image in background (using early prompt if available)
         after(async () => {
           try {
-            const imageResult = await generatePulseImage({
-              storyId: selectedStoryId,
-              pulse: fullText,
+            let imagePrompt: string | undefined;
+
+            // Use early-generated prompt if it completed successfully
+            if (imagePromptPromise) {
+              const earlyPrompt = await imagePromptPromise;
+              if (earlyPrompt) {
+                imagePrompt = earlyPrompt;
+              }
+            }
+
+            // Fall back to generating with full text if early prompt failed
+            if (!imagePrompt) {
+              imagePrompt = await generateImagePrompt({
+                storyId: selectedStoryId,
+                pulse: fullText,
+              });
+            }
+
+            // Generate the actual image
+            const imageResult = await generateImageFromPrompt({
+              imagePrompt,
               messageId: assistantMessageId,
             });
 

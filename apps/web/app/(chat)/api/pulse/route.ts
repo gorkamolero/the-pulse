@@ -45,8 +45,12 @@ import {
 import { MAX_GUEST_PULSES } from "@/lib/guest-session";
 
 import { generateTitleFromUserMessage } from "../../actions";
-import { generatePulseImage } from "@/lib/ai/tools/generate-image";
+import {
+  generateImagePrompt,
+  generateImageFromPrompt,
+} from "@/lib/ai/tools/generate-image";
 import { generatePulseAudio } from "@/lib/ai/tools/generate-audio";
+import { generateSceneAmbience } from "@/lib/ai/sound-effects";
 
 export const maxDuration = 60;
 
@@ -98,11 +102,13 @@ function createOnFinishHandler({
   storyId,
   voiceId,
   checkGarbage = false,
+  earlyImagePromptPromise,
 }: {
   chatId: string;
   storyId: string;
   voiceId: string;
   checkGarbage?: boolean;
+  earlyImagePromptPromise?: Promise<string> | null;
 }) {
   return async ({ responseMessage }: { responseMessage: { id: string; parts: Array<{ type: string; text?: string }> } }) => {
     const messageId = responseMessage.id;
@@ -133,13 +139,31 @@ function createOnFinishHandler({
         ],
       });
 
-      // Schedule image and audio generation to run AFTER response is sent
+      // Schedule image, audio, and ambience generation to run AFTER response is sent
       after(async () => {
-        // Generate image
+        // Generate image (using early prompt if available)
         try {
-          const imageResult = await generatePulseImage({
-            storyId,
-            pulse: text,
+          let imagePrompt: string | undefined;
+
+          // Use early-generated prompt if it completed successfully
+          if (earlyImagePromptPromise) {
+            const earlyPrompt = await earlyImagePromptPromise.catch(() => null);
+            if (earlyPrompt) {
+              imagePrompt = earlyPrompt;
+            }
+          }
+
+          // Fall back to generating with full text if early prompt failed
+          if (!imagePrompt) {
+            imagePrompt = await generateImagePrompt({
+              storyId,
+              pulse: text,
+            });
+          }
+
+          // Generate the actual image
+          const imageResult = await generateImageFromPrompt({
+            imagePrompt,
             messageId,
           });
 
@@ -169,6 +193,18 @@ function createOnFinishHandler({
           }
         } catch {
           // Audio generation failed - non-critical
+        }
+
+        // Generate scene ambience sound effect
+        try {
+          await generateSceneAmbience({
+            storyId,
+            sceneText: text,
+            messageId,
+            durationSeconds: 22,
+          });
+        } catch {
+          // Ambience generation failed - non-critical
         }
       });
     } catch {
@@ -370,6 +406,11 @@ export async function POST(request: Request) {
         let fullText = "";
         const reader = mergedStream.getReader();
 
+        // Early image prompt tracking
+        let imagePromptPromise: Promise<string> | null = null;
+        let imagePromptStarted = false;
+        const EARLY_PROMPT_CHARS = 150;
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -381,6 +422,18 @@ export async function POST(request: Request) {
           if (value && typeof value === 'object' && 'type' in value) {
             if (value.type === 'text-delta' && 'delta' in value) {
               fullText += value.delta;
+
+              // Start image prompt generation early
+              if (!imagePromptStarted && fullText.length >= EARLY_PROMPT_CHARS) {
+                imagePromptStarted = true;
+                imagePromptPromise = generateImagePrompt({
+                  storyId: selectedStoryId,
+                  pulse: fullText,
+                }).catch((err) => {
+                  console.error("Early image prompt generation failed:", err);
+                  return "";
+                });
+              }
             }
           }
         }
@@ -432,12 +485,30 @@ export async function POST(request: Request) {
           console.error("Audio generation failed:", e);
         }
 
-        // Generate image in background (not critical for loading modal)
+        // Generate image in background (using early prompt if available)
         after(async () => {
           try {
-            const imageResult = await generatePulseImage({
-              storyId: selectedStoryId,
-              pulse: fullText,
+            let imagePrompt: string | undefined;
+
+            // Use early-generated prompt if it completed successfully
+            if (imagePromptPromise) {
+              const earlyPrompt = await imagePromptPromise.catch(() => null);
+              if (earlyPrompt) {
+                imagePrompt = earlyPrompt;
+              }
+            }
+
+            // Fall back to generating with full text if early prompt failed
+            if (!imagePrompt) {
+              imagePrompt = await generateImagePrompt({
+                storyId: selectedStoryId,
+                pulse: fullText,
+              });
+            }
+
+            // Generate the actual image
+            const imageResult = await generateImageFromPrompt({
+              imagePrompt,
               messageId,
             });
 
@@ -449,6 +520,20 @@ export async function POST(request: Request) {
             }
           } catch {
             // Image generation failed - non-critical
+          }
+        });
+
+        // Generate scene ambience sound effect in background
+        after(async () => {
+          try {
+            await generateSceneAmbience({
+              storyId: selectedStoryId,
+              sceneText: fullText,
+              messageId,
+              durationSeconds: 22,
+            });
+          } catch {
+            // Ambience generation failed - non-critical
           }
         });
       },
