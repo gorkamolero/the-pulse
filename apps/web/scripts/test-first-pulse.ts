@@ -66,7 +66,7 @@ async function testModel(modelKey: ModelKey): Promise<{ model: string; output: s
       model: openrouter(modelId),
       system,
       messages: [{ role: "user", content: USER_MESSAGE }],
-      maxTokens: 500,
+      maxOutputTokens: 500,
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
