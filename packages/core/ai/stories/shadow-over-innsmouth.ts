@@ -155,7 +155,7 @@ Narrator's Guide: Bringing It to Life
 </story-guide>
 `,
   narrator: {
-    voiceId: "nPczCjzI2devNBz1zQrb", // Brian - Deep, Resonant
+    voiceId: "wLiYNWyRubh6yen1QNSU", // The Professor v2
   },
   ambientAudio: {
     src: "/audio/vinyl-crackle.mp3",

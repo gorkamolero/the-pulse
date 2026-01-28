@@ -18,7 +18,7 @@ export const TITLE_MODEL = "google/gemini-2.5-flash-lite";
 // ============================================================================
 
 /** Default voice ID when story doesn't specify */
-export const DEFAULT_VOICE_ID = "nPczCjzI2devNBz1zQrb"; // Brian - Deep, Resonant and Comforting
+export const DEFAULT_VOICE_ID = "wLiYNWyRubh6yen1QNSU"; // The Professor v2
 
 /** ElevenLabs voice catalog */
 export const VOICES = [
