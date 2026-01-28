@@ -1,11 +1,30 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": ["ELEVENLABS_API_KEY", "OPENROUTER_API_KEY", "DATABASE_URL"],
+  "globalPassThroughEnv": [
+    "ELEVENLABS_API_KEY",
+    "OPENROUTER_API_KEY",
+    "DATABASE_URL",
+    "POSTGRES_URL",
+    "POSTGRES_URL_NON_POOLING",
+    "POSTGRES_URL_NO_SSL",
+    "POSTGRES_HOST",
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_DATABASE",
+    "PGHOST",
+    "PGHOST_UNPOOLED",
+    "PGUSER",
+    "PGPASSWORD",
+    "PGDATABASE",
+    "AUTH_SECRET",
+    "OPENAI_API_KEY",
+    "REPLICATE_API_TOKEN",
+    "BLOB_READ_WRITE_TOKEN"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": ["ELEVENLABS_API_KEY", "OPENROUTER_API_KEY", "DATABASE_URL", "BLOB_READ_WRITE_TOKEN"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": {
       "cache": false,
