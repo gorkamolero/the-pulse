@@ -246,6 +246,36 @@ Defined in `agents/narrator.ts` as `NARRATOR_MODEL_MAP`:
 - `opus-4.5` - Claude Opus 4.5
 - `grok-4` - Grok 4
 
+### Guest Narrator Model
+
+**Current:** `moonshotai/kimi-k2` - Selected for speed (2.6s) + atmospheric prose quality.
+
+Configured in `apps/web/app/(chat)/api/pulse/route.ts`
+
+**Model comparison results:** See `docs/narrator-model-comparison.md`
+
+**Test first pulse across models:**
+```bash
+pnpm test:first-pulse              # All models
+pnpm test:first-pulse --model=kimi-k2  # Specific model
+```
+
+**Selection criteria for guest narrator:**
+1. Speed < 5 seconds (UX)
+2. Prose quality - atmospheric, evocative, no markdown formatting
+3. Length 60-120 words for first pulse
+4. Immersion - no "What do you do?" prompts, no headers
+
+**Tested models (2025-01-28):**
+| Model | Time | Words | Verdict |
+|-------|------|-------|---------|
+| **kimi-k2** | **2.6s** | **103** | ⭐ Winner |
+| minimax-her | 3.0s | 61 | Good, concise |
+| opus-4.5 | 5.7s | 102 | Great but slower |
+| deepseek-v3.2 | 5.1s | 60 | Short, poetic |
+| haiku-4.5 | 3.9s | 164 | ❌ Markdown headers |
+| mistral-creative | 1.2s | 127 | ❌ Markdown formatting |
+
 ### Player Model Fallback Chain
 
 Defined in `archetypes/types.ts`:

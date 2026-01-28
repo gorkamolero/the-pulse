@@ -249,11 +249,11 @@ export async function POST(request: Request) {
   let usingUserKey = false;
 
   if (isGuest) {
-    // MiniMax M2-her: built for immersive roleplay & storytelling ($0.30/$1.20 per 1M)
+    // Kimi K2: fast (2.6s), atmospheric prose, great for horror narrative
     const openrouter = createOpenRouter({
       apiKey: process.env.OPENROUTER_API_KEY,
     });
-    model = openrouter("minimax/minimax-m2-her");
+    model = openrouter("moonshotai/kimi-k2");
   } else {
     // Get user model based on their tier
     try {

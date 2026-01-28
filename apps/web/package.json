@@ -18,7 +18,8 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test:tts": "tsx scripts/test-tts-providers.ts"
+    "test:tts": "tsx scripts/test-tts-providers.ts",
+    "test:first-pulse": "tsx scripts/test-first-pulse.ts"
   },
   "dependencies": {
     "@11labs/react": "^0.0.7",
