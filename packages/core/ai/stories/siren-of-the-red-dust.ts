@@ -171,7 +171,7 @@ This McCarthy-Clancy mix keeps the tone grounded and tense-McCarthy's "dunes lay
 </story-guide>
 `,
   narrator: {
-    voiceId: "dAcds2QMcvmv86jQMC3Y",
+    voiceId: "onwK4e9ZLuTAKqWW03F9", // Daniel - Steady Broadcaster
   },
   ambientAudio: {
     src: "/audio/ambience/red-dust-wind.mp3",

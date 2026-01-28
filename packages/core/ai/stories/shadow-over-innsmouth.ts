@@ -155,7 +155,7 @@ Narrator's Guide: Bringing It to Life
 </story-guide>
 `,
   narrator: {
-    voiceId: "wLiYNWyRubh6yen1QNSU",
+    voiceId: "nPczCjzI2devNBz1zQrb", // Brian - Deep, Resonant
   },
   ambientAudio: {
     src: "/audio/vinyl-crackle.mp3",

@@ -246,7 +246,7 @@ Write in the style of J. G. Ballard but readable for a wider audience.
 
 </story-guide>`,
   narrator: {
-    voiceId: "flHkNRp1BlvT73UL6gyz",
+    voiceId: "N2lVS1w4EtoT3dr4eOWO", // Callum - Husky Trickster
   },
   ambientAudio: {
     src: "/audio/ambience/hollow-choir-water.mp3",

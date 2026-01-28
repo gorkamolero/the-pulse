@@ -146,7 +146,7 @@ export const whisperingPines = {
   </story-guide>
   `,
   narrator: {
-    voiceId: "uVKHymY7OYMd6OailpG5",
+    voiceId: "nPczCjzI2devNBz1zQrb", // Brian - Deep, Resonant
   },
   ambientAudio: {
     src: "/audio/ambience/whispering-pines-forest.mp3",
