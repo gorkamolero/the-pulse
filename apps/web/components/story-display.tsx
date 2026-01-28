@@ -1,76 +1,11 @@
 "use client";
 
-import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import { useSetAtom } from 'jotai';
 import { useMessage } from '@/hooks/use-message';
-import { StoryAwaiting } from './story-awaiting';
 import { currentBackgroundImageAtom } from '@/lib/atoms';
-
-// Dynamic import with SSR disabled for WebGL component
-const StoryOrb = dynamic(() => import('./story-orb').then(mod => ({ default: mod.StoryOrb })), {
-  ssr: false,
-});
-
-// Atmospheric phrases for loading states
-const LOADING_PHRASES = [
-  "The story deepens...",
-  "Shadows shift...",
-  "Something stirs...",
-  "Listen closely...",
-  "The veil thins...",
-];
-
-const IMAGE_PHRASES = [
-  "A vision forms...",
-  "Shadows coalesce...",
-  "The scene emerges...",
-  "Darkness parts...",
-];
-
-function TypewriterText({ phrases }: { phrases: string[] }) {
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [displayText, setDisplayText] = useState("");
-  const [isTyping, setIsTyping] = useState(true);
-
-  useEffect(() => {
-    const currentPhrase = phrases[phraseIndex];
-    let currentIndex = 0;
-    setIsTyping(true);
-    setDisplayText("");
-
-    const typeInterval = setInterval(() => {
-      if (currentIndex <= currentPhrase.length) {
-        setDisplayText(currentPhrase.slice(0, currentIndex));
-        currentIndex++;
-      } else {
-        clearInterval(typeInterval);
-        setIsTyping(false);
-        // Hold, then move to next phrase
-        setTimeout(() => {
-          setPhraseIndex((prev) => (prev + 1) % phrases.length);
-        }, 2500);
-      }
-    }, 70);
-
-    return () => clearInterval(typeInterval);
-  }, [phraseIndex, phrases]);
-
-  return (
-    <span className="inline-flex items-center">
-      {displayText}
-      {isTyping && (
-        <motion.span
-          className="inline-block w-px h-4 bg-foreground/50 ml-0.5"
-          animate={{ opacity: [1, 0] }}
-          transition={{ duration: 0.5, repeat: Number.POSITIVE_INFINITY }}
-        />
-      )}
-    </span>
-  );
-}
 
 interface StoryDisplayProps {
   currentMessageId: string | null
@@ -99,9 +34,12 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
     setBackgroundImage(displayImageUrl || null);
   }, [displayImageUrl, setBackgroundImage]);
 
-  // Initial state - immersive waiting experience
+  // Initial state - minimal placeholder while waiting for first image
+  // (The main loading experience is handled by StoryLoadingModal)
   if (!currentMessageId && !displayImageUrl) {
-    return <StoryAwaiting />;
+    return (
+      <div className="flex items-center justify-center h-full w-full bg-black/50" />
+    );
   }
 
   return (
@@ -120,64 +58,6 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
         </div>
       )}
 
-      {/* Loading overlay when waiting for new image - atmospheric transition */}
-      <AnimatePresence>
-        {isWaitingForImage && (
-          <motion.div
-            className="fixed inset-0 z-20 flex flex-col items-center justify-center pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {/* Darkening veil with vignette */}
-            <motion.div
-              className="absolute inset-0"
-              style={{
-                background: "radial-gradient(ellipse at 50% 50%, hsl(var(--background) / 0.75) 0%, hsl(var(--background) / 0.92) 100%)",
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.2 }}
-            />
-
-            {/* Central loading indicator */}
-            <div className="relative z-10 flex flex-col items-center gap-8">
-              {/* The Orb - atmospheric WebGL visualization */}
-              <StoryOrb size="md" />
-
-              {/* Atmospheric typewriter text */}
-              <motion.p
-                className="text-sm text-muted-foreground/80 font-serif italic h-6"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <TypewriterText phrases={isLoading ? LOADING_PHRASES : IMAGE_PHRASES} />
-              </motion.p>
-
-              {/* Subtle pulsing dots */}
-              <div className="flex gap-1.5">
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="w-1 h-1 rounded-full bg-foreground/20"
-                    animate={{
-                      opacity: [0.2, 0.5, 0.2],
-                      scale: [1, 1.2, 1],
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      delay: i * 0.2,
-                      repeat: Number.POSITIVE_INFINITY,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Main image with fade-in animation - tall vertical orientation for 50/50 split */}
       <AnimatePresence mode="wait">

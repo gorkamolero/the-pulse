@@ -3,6 +3,8 @@ import {
   type LanguageModel,
   streamText,
   convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
 } from "ai";
 import { after } from "next/server";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
@@ -337,34 +339,120 @@ export async function POST(request: Request) {
   // ============== SAVE USER MESSAGE ==============
   await saveUserMessage(userMessage, id);
 
-  // ============== STREAM RESPONSE ==============
-  const result = streamText({
-    model,
-    system: systemPromptText,
-    messages: convertToModelMessages(messages),
-    ...(isGuest ? {} : {
-      experimental_telemetry: {
-        isEnabled: true,
-        functionId: "stream-text",
-      },
-      onError: ({ error }) => {
-        console.error("Narrator streaming error:", error);
-      },
-    }),
-  });
+  // ============== STREAM RESPONSE WITH INLINE AUDIO ==============
+  const messageId = crypto.randomUUID();
 
-  return result.toUIMessageStreamResponse({
-    generateMessageId: () => crypto.randomUUID(),
-    originalMessages: messages,
-    onFinish: createOnFinishHandler({
-      chatId: id,
-      storyId: selectedStoryId,
-      voiceId: narratorConfig.voiceId,
-      checkGarbage: !isGuest,
-    }),
+  return createUIMessageStreamResponse({
     headers: {
       ...(isDegraded && { "X-Degraded-Mode": "true" }),
     },
+    stream: createUIMessageStream({
+      execute: async ({ writer }) => {
+        // Stream the LLM text response
+        const result = streamText({
+          model,
+          system: systemPromptText,
+          messages: convertToModelMessages(messages),
+          ...(isGuest ? {} : {
+            experimental_telemetry: {
+              isEnabled: true,
+              functionId: "stream-text",
+            },
+          }),
+        });
+
+        // Merge the text stream and wait for it to complete
+        const mergedStream = result.toUIMessageStream({
+          generateMessageId: () => messageId,
+        });
+
+        // Collect the full text while streaming
+        let fullText = "";
+        const reader = mergedStream.getReader();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Forward the chunk to client
+          writer.write(value);
+
+          // Extract text from the value if it's a text delta
+          if (value && typeof value === 'object' && 'type' in value) {
+            if (value.type === 'text-delta' && 'delta' in value) {
+              fullText += value.delta;
+            }
+          }
+        }
+
+        // Check for garbage output
+        if (!isGuest && isGarbageOutput(fullText)) {
+          const reason = describeGarbageReason(fullText);
+          console.warn(`Narrator garbage detected: ${reason}`);
+        }
+
+        // Save message to database
+        try {
+          await saveMessages({
+            messages: [{
+              id: messageId,
+              chatId: id,
+              role: "assistant",
+              content: fullText,
+              createdAt: new Date(),
+              imageUrl: null,
+              audioUrl: null,
+            }],
+          });
+        } catch (e) {
+          console.error("Failed to save message:", e);
+        }
+
+        // Generate audio INLINE (not in after()) so we can stream the URL
+        try {
+          const audioResult = await generatePulseAudio({
+            text: fullText,
+            messageId,
+            voiceId: narratorConfig.voiceId,
+          });
+
+          if (audioResult?.url) {
+            await updateMessageAudioUrl({
+              id: messageId,
+              audioUrl: audioResult.url,
+            });
+
+            // Send audio URL to client via data stream (type must start with 'data-')
+            writer.write({
+              type: 'data-audio-ready',
+              data: { messageId, audioUrl: audioResult.url },
+            });
+          }
+        } catch (e) {
+          console.error("Audio generation failed:", e);
+        }
+
+        // Generate image in background (not critical for loading modal)
+        after(async () => {
+          try {
+            const imageResult = await generatePulseImage({
+              storyId: selectedStoryId,
+              pulse: fullText,
+              messageId,
+            });
+
+            if (imageResult?.url) {
+              await updateMessageImageUrl({
+                id: messageId,
+                imageUrl: imageResult.url,
+              });
+            }
+          } catch {
+            // Image generation failed - non-critical
+          }
+        });
+      },
+    }),
   });
 }
 

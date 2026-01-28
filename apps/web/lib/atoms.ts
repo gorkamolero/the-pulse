@@ -18,6 +18,10 @@ export const isGuestModeAtom = atom((get) => {
   return session !== null;
 });
 
+// Story has begun - user clicked "Begin" on loading modal
+// Prevents audio autoplay before user dismisses the loading screen
+export const storyBegunAtom = atom(false);
+
 // Audio narration atoms
 export const audioEnabledAtom = atom(true);
 

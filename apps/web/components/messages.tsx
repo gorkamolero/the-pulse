@@ -4,7 +4,7 @@ import type { UIMessage } from "ai";
 import { memo, useState, useRef, useEffect } from "react";
 import equal from "fast-deep-equal";
 import { Pause, Loader2, Volume2 } from "lucide-react";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence } from "framer-motion";
 
 import {
@@ -26,6 +26,7 @@ import {
   audioElementAtom,
   audioPlayingAtom,
   narratorStateAtom,
+  storyBegunAtom,
 } from "@/lib/atoms";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,6 +53,7 @@ function NarrationButton({
   autoplay?: boolean;
 }) {
   const [audioEnabled] = useAtom(audioEnabledAtom);
+  const [storyBegun] = useAtom(storyBegunAtom);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -65,11 +67,12 @@ function NarrationButton({
   const { message, isGeneratingAudio } = useMessage(messageId);
   const audioUrl = message?.audioUrl;
 
-  // Autoplay when audio becomes available
+  // Autoplay when audio becomes available AND story has begun (user clicked "Begin")
   useEffect(() => {
     if (
       autoplay &&
       audioEnabled &&
+      storyBegun && // Wait for user to dismiss loading modal
       audioUrl &&
       !isPlaying &&
       !hasAutoplayedRef.current
@@ -77,7 +80,7 @@ function NarrationButton({
       hasAutoplayedRef.current = true;
       playAudio();
     }
-  }, [autoplay, audioUrl, audioEnabled]);
+  }, [autoplay, audioUrl, audioEnabled, storyBegun]);
 
   // Cleanup
   useEffect(() => {
@@ -173,11 +176,25 @@ function NarrationButton({
 
 function PureMessages({ chatId, isLoading, messages }: MessagesProps) {
   const setNarratorState = useSetAtom(narratorStateAtom);
+  const storyBegun = useAtomValue(storyBegunAtom);
 
-  const lastAssistantMessage = messages
+  // Filter out system messages like "Let's start the story"
+  const visibleMessages = messages.filter((m) => {
+    if (m.role === "user") {
+      const content = getUIMessageContent(m);
+      if (content.toLowerCase().includes("let's start the story")) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const lastAssistantMessage = visibleMessages
     .filter((m) => m.role === "assistant")
     .pop();
 
+  // Use original messages (not filtered) for thinking indicator
+  // since hidden messages like "Let's start the story" still need thinking shown
   const showThinking =
     isLoading &&
     messages.length > 0 &&
@@ -195,7 +212,7 @@ function PureMessages({ chatId, isLoading, messages }: MessagesProps) {
     <Conversation className="h-full relative">
       <ConversationContent className="gap-8 px-4 py-8 max-w-3xl mx-auto">
         <AnimatePresence mode="popLayout">
-          {messages.map((message) => {
+          {visibleMessages.map((message) => {
             const content = getUIMessageContent(message);
             const isLastAssistant =
               lastAssistantMessage && message.id === lastAssistantMessage.id;
@@ -223,7 +240,7 @@ function PureMessages({ chatId, isLoading, messages }: MessagesProps) {
                   <MessageActions>
                     <NarrationButton
                       messageId={message.id}
-                      autoplay={isLastAssistant}
+                      autoplay={isLastAssistant && storyBegun}
                     />
                   </MessageActions>
                 )}
