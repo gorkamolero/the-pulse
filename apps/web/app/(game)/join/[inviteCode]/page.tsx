@@ -1,22 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatInviteCode } from "@/lib/multiplayer/invite-code";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
-import { use } from "react";
 import { Pulse } from "@/components/ui/pulse";
 
-interface JoinPageProps {
-  params: Promise<{ inviteCode: string }>;
-}
-
-export default function JoinPage({ params }: JoinPageProps) {
-  const { inviteCode } = use(params);
+export default function JoinPage() {
+  const params = useParams<{ inviteCode: string }>();
+  const inviteCode = params.inviteCode;
   const router = useRouter();
 
   const [displayName, setDisplayName] = useState("");

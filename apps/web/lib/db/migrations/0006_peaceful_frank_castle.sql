@@ -20,7 +20,11 @@ CREATE TABLE IF NOT EXISTS "RoomPlayer" (
 	"joinedAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "Message" ADD COLUMN "audioUrl" text;--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Message" ADD COLUMN "audioUrl" text;
+EXCEPTION
+ WHEN duplicate_column THEN null;
+END $$;--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "Room" ADD CONSTRAINT "Room_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."Chat"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION

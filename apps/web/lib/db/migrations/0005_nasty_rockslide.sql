@@ -12,7 +12,11 @@ CREATE TABLE IF NOT EXISTS "UserSettings" (
 	CONSTRAINT "UserSettings_userId_unique" UNIQUE("userId")
 );
 --> statement-breakpoint
-ALTER TABLE "Message" ADD COLUMN "imageUrl" text;--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Message" ADD COLUMN "imageUrl" text;
+EXCEPTION
+ WHEN duplicate_column THEN null;
+END $$;--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "UserSettings" ADD CONSTRAINT "UserSettings_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
