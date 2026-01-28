@@ -263,7 +263,7 @@ function PureMultimodalInput({
             }}
           />
 
-          <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+          <div className="absolute top-0 right-0 p-2 w-fit flex flex-row justify-end">
             {isLoading ? (
               <StopButton stop={stop} setMessages={setMessages} />
             ) : (
