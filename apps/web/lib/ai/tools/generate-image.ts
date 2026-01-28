@@ -44,9 +44,9 @@ Make this prompt in English.
 Visual Prompt:`
     });
 
-    // Generate image using Replicate model - vertical 9:16 aspect ratio
+    // Generate image using Nano Banana Pro - vertical 9:16 aspect ratio
     const { image } = await experimental_generateImage({
-      model: replicate.image('black-forest-labs/flux-schnell'),
+      model: replicate.image('google/nano-banana-pro'),
       prompt: imagePrompt,
       aspectRatio: '9:16',
     });

@@ -34,11 +34,17 @@ export function StoryStartModal({
     <>
       {/* Backdrop */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="Close modal"
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
         onClick={onClose}
+        onKeyDown={(e) => e.key === "Escape" && onClose()}
       >
         {/* Modal content */}
         <div
+          role="dialog"
+          aria-modal="true"
           className="max-w-lg w-full mx-4 p-8 bg-background border border-border rounded-lg shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >

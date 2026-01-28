@@ -11,12 +11,17 @@ type Attachment = {
 };
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useSWRConfig } from "swr";
+import { useAtomValue, useSetAtom } from "jotai";
+import { stories } from "@pulse/core/ai/stories";
 
 import { StoryDisplay } from "@/components/story-display";
+import { StoryLoadingModal } from "@/components/story-loading-modal";
+import { audioEnabledAtom, storyBegunAtom } from "@/lib/atoms";
 import { ChatHeader } from "@/components/chat-header";
 import { getUIMessageContent } from "@/lib/utils";
 import { DEFAULT_STORY_ID } from "@pulse/core/ai/stories";
 import { useGuestSession } from "@/hooks/use-guest-session";
+import { useAmbientAudio } from "@/hooks/use-ambient-audio";
 import { SoftGateModal } from "./soft-gate-modal";
 
 import { Overview } from "./overview";
@@ -55,6 +60,33 @@ export function Chat({
   const { mutate } = useSWRConfig();
   const [selectedStoryId, setSelectedStoryId] = useState(DEFAULT_STORY_ID);
   const [language, setLanguage] = useState<string>("en");
+  const [selectedStoryTitle, setSelectedStoryTitle] = useState<string>("");
+  const audioEnabled = useAtomValue(audioEnabledAtom);
+  const setStoryBegun = useSetAtom(storyBegunAtom);
+
+  // Simple 3-phase UI state (no race conditions):
+  // - 'overview': Story selection screen
+  // - 'loading': Black screen + loading modal (story starting)
+  // - 'chat': Full chat interface
+  const [phase, setPhase] = useState<'overview' | 'loading' | 'chat'>(
+    initialMessages.length > 0 ? 'chat' : 'overview'
+  );
+
+  // If returning to existing session, mark story as begun for audio autoplay
+  useEffect(() => {
+    if (initialMessages.length > 0) {
+      setStoryBegun(true);
+    }
+  }, [initialMessages.length, setStoryBegun]);
+
+  // Get selected story for ambient audio
+  const selectedStory = useMemo(
+    () => stories.find((s) => s.id === selectedStoryId),
+    [selectedStoryId]
+  );
+
+  // Play ambient audio when in chat phase
+  useAmbientAudio(phase === "chat" ? selectedStory?.ambientAudio : undefined);
 
   // Guest session tracking
   const isGuest = !user?.id;
@@ -115,6 +147,9 @@ export function Chat({
     },
   }), [isGuest, pulseCount, selectedStoryId, language]);
 
+  // Track when audio is ready from the stream data
+  const [audioReady, setAudioReady] = useState(false);
+
   const {
     messages,
     setMessages,
@@ -127,6 +162,15 @@ export function Chat({
     transport,
     messages: initialMessages,
     experimental_throttle: 100,
+    // Handle custom data parts from the stream
+    onData: (dataPart) => {
+      // Check for audio-ready signal
+      if (dataPart && typeof dataPart === 'object' && 'type' in dataPart) {
+        if ((dataPart as { type: string }).type === 'data-audio-ready') {
+          setAudioReady(true);
+        }
+      }
+    },
     // Track assistant responses for guest pulse counting
     onFinish: ({ message }) => {
       if (isGuest && message.role === 'assistant') {
@@ -139,14 +183,16 @@ export function Chat({
     async (storyId: string) => {
       setSelectedStoryId(storyId);
 
-      // Only update the title if there are no messages yet (new chat)
-      if (messages.length === 0) {
-        // We don't need to update the title in the database here
-        // as it will be set when the first message is sent
-        mutate("/api/history");
+      // Get story title and immediately switch to loading phase
+      const story = stories.find(s => s.id === storyId);
+      if (story) {
+        setSelectedStoryTitle(story.title);
+        setPhase('loading'); // Instantly show loading screen + modal
       }
+
+      mutate("/api/history");
     },
-    [messages.length, mutate]
+    [mutate]
   );
 
   // Create wrapper functions to match the old API
@@ -195,6 +241,25 @@ export function Chat({
     return lastAssistantMessage?.id ?? null
   }, [messages]);
 
+  // Check if narrator has responded
+  const hasNarratorResponse = useMemo(() => {
+    return messages.some(m => m.role === 'assistant');
+  }, [messages]);
+
+  // Story is ready when:
+  // - Narrator has responded AND
+  // - Audio is ready (signaled via stream data) OR audio is disabled
+  const isStoryReady = useMemo(() => {
+    if (!hasNarratorResponse) return false;
+    if (!audioEnabled) return true;
+    return audioReady;
+  }, [hasNarratorResponse, audioEnabled, audioReady]);
+
+  const handleBeginStory = useCallback(() => {
+    setStoryBegun(true); // Enable audio autoplay
+    setPhase('chat');    // Transition to chat interface
+  }, [setStoryBegun]);
+
   return (
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
@@ -206,15 +271,26 @@ export function Chat({
         />
 
         
-      {messages.length === 0 ? (
+      {/*
+        Simple 3-phase layout (no race conditions):
+        - 'overview': Story selection screen
+        - 'loading': Black screen (modal covers this)
+        - 'chat': Full chat interface
+      */}
+      {phase === 'overview' && (
         <Overview
           chatId={id}
           append={append}
           onSelectStory={handleStorySelection}
           user={user}
         />
-      ) : (<ResizablePanelGroup direction="horizontal" className=" h-full" >
-          <ResizablePanel  defaultSize={50}>
+      )}
+      {phase === 'loading' && (
+        <div className="flex-1 bg-black" />
+      )}
+      {phase === 'chat' && (
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          <ResizablePanel defaultSize={50}>
             <Messages
               chatId={id}
               isLoading={isLoading}
@@ -226,15 +302,16 @@ export function Chat({
           <ResizableHandle />
 
           <ResizablePanel defaultSize={50}>
-            <div className='flex flex-col items-center justify-center h-full overflow-hidden'>
+            <div className="flex flex-col items-center justify-center h-full overflow-hidden">
               <StoryDisplay currentMessageId={currentMessageId} />
             </div>
           </ResizablePanel>
-        </ResizablePanelGroup>)}
+        </ResizablePanelGroup>
+      )}
 
         
 
-        {messages.length > 0 && !isReadonly && (
+        {phase === 'chat' && !isReadonly && (
           <form
             className="flex mx-auto bg-background p-4 md:p-6 gap-2 w-full md:max-w-3xl"
             onSubmit={(e) => {
@@ -268,6 +345,14 @@ export function Chat({
           pulseCount={pulseCount}
         />
       )}
+
+      {/* Story Loading Modal - appears immediately on story selection */}
+      <StoryLoadingModal
+        isVisible={phase === 'loading'}
+        isReady={isStoryReady}
+        storyTitle={selectedStoryTitle}
+        onBegin={handleBeginStory}
+      />
     </>
   );
 }

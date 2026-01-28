@@ -16,6 +16,18 @@ export interface NarratorConfig {
 }
 
 /**
+ * Ambient audio configuration for background atmosphere
+ */
+export interface AmbientAudioConfig {
+  /** Path to audio file (relative to public folder) */
+  src: string;
+  /** Volume level 0-1 (default: 0.3) */
+  volume?: number;
+  /** Fade-in duration in ms (default: 3000) */
+  fadeInMs?: number;
+}
+
+/**
  * Story definition
  */
 export interface Story {
@@ -25,6 +37,8 @@ export interface Story {
   storyGuide: string;
   /** Optional narrator configuration - uses defaults if not specified */
   narrator?: NarratorConfig;
+  /** Optional ambient audio to loop in background */
+  ambientAudio?: AmbientAudioConfig;
 }
 
 export const stories: Array<Story> = [

@@ -157,4 +157,9 @@ Narrator's Guide: Bringing It to Life
   narrator: {
     voiceId: "wLiYNWyRubh6yen1QNSU",
   },
+  ambientAudio: {
+    src: "/audio/vinyl-crackle.mp3",
+    volume: 0.15,
+    fadeInMs: 4000,
+  },
 };

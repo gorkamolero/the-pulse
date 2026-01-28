@@ -9,12 +9,14 @@ import { resolve } from "node:path";
 // Load .env.local from apps/web
 config({ path: resolve(import.meta.dirname, "../../../apps/web/.env.local") });
 
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+const envApiKey = process.env.ELEVENLABS_API_KEY;
 
-if (!ELEVENLABS_API_KEY) {
+if (!envApiKey) {
   console.error("Missing ELEVENLABS_API_KEY");
   process.exit(1);
 }
+
+const ELEVENLABS_API_KEY = envApiKey;
 
 // Test text - typical narrator response
 const TEST_TEXT = `The streetlamp above the Gilman House flickers like a dying fish, casting sickly yellow light across a sign that reads "Rooms, 75¢, Humanity Optional"; its hanging wooden door hangs half off its hinges, groaning as you push through. Inside, the lobby breathes clotted air—maggoty wallpaper depicting screaming gulls peels in sheets, and a dented brass bell rests on the front desk beside an open register smeared with damp, mucous fingerprints.`;
@@ -42,7 +44,7 @@ async function testModel(modelKey: string, modelId: string) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "xi-api-key": ELEVENLABS_API_KEY!,
+          "xi-api-key": ELEVENLABS_API_KEY,
         },
         body: JSON.stringify({
           text: TEST_TEXT,
