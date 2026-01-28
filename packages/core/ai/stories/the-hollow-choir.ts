@@ -253,4 +253,5 @@ Write in the style of J. G. Ballard but readable for a wider audience.
     volume: 0.3,
     fadeInMs: 5000,
   },
+  comingSoon: true,
 };

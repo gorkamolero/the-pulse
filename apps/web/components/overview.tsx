@@ -165,24 +165,31 @@ export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps)
                 author: "Unknown",
               };
 
+              const isComingSoon = story.comingSoon;
+
               return (
                 <motion.button
                   key={story.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * index + 0.4 }}
-                  whileHover={{ x: 8 }}
-                  whileTap={{ scale: 0.995 }}
-                  onClick={() => handleStoryClick(story)}
-                  className="
+                  whileHover={isComingSoon ? {} : { x: 8 }}
+                  whileTap={isComingSoon ? {} : { scale: 0.995 }}
+                  onClick={() => !isComingSoon && handleStoryClick(story)}
+                  disabled={isComingSoon}
+                  className={`
                     group text-left p-6 md:p-8
-                    border-l-2 border-muted-foreground/20 hover:border-foreground/60
-                    bg-transparent hover:bg-muted/30
-                    transition-all duration-300
-                  "
+                    border-l-2 transition-all duration-300
+                    ${isComingSoon
+                      ? "border-muted-foreground/10 opacity-50 cursor-not-allowed"
+                      : "border-muted-foreground/20 hover:border-foreground/60 bg-transparent hover:bg-muted/30"
+                    }
+                  `}
                 >
                   {/* Title */}
-                  <h2 className="text-xl md:text-2xl font-serif font-normal mb-3 group-hover:text-foreground transition-colors">
+                  <h2 className={`text-xl md:text-2xl font-serif font-normal mb-3 transition-colors ${
+                    isComingSoon ? "text-muted-foreground/60" : "group-hover:text-foreground"
+                  }`}>
                     {story.title}
                   </h2>
 
@@ -201,10 +208,14 @@ export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps)
                     </cite>
                   </blockquote>
 
-                  {/* Begin indicator */}
-                  <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+                  {/* Begin / Coming Soon indicator */}
+                  <div className={`mt-4 flex items-center gap-2 text-xs transition-colors ${
+                    isComingSoon
+                      ? "text-muted-foreground/40"
+                      : "text-muted-foreground/50 group-hover:text-muted-foreground"
+                  }`}>
                     <span className="w-4 h-px bg-current" />
-                    <span>Begin</span>
+                    <span>{isComingSoon ? "Coming Soon" : "Begin"}</span>
                   </div>
                 </motion.button>
               );

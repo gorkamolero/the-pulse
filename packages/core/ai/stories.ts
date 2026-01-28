@@ -39,15 +39,16 @@ export interface Story {
   narrator?: NarratorConfig;
   /** Optional ambient audio to loop in background */
   ambientAudio?: AmbientAudioConfig;
+  /** If true, story shows as "Coming Soon" and cannot be started */
+  comingSoon?: boolean;
 }
 
 export const stories: Array<Story> = [
   innsmouth,
-  // Disabled until voices are configured:
-  // theHollowChoir,
-  // whisperingPines,
-  // sirenOfTheRedDust,
-  // endlessPath,
+  theHollowChoir,
+  whisperingPines,
+  sirenOfTheRedDust,
+  endlessPath,
 ];
 
 export const DEFAULT_STORY_ID = "shadow-over-innsmouth";

@@ -153,4 +153,5 @@ export const whisperingPines = {
     volume: 0.25,
     fadeInMs: 4000,
   },
+  comingSoon: true,
 };
