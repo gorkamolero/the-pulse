@@ -50,3 +50,9 @@ test-harness-reports/
 sessions/
 tsconfig.tsbuildinfo
 voice-samples/
+
+# Audio samples
+*.mp3
+
+# Test results
+test-results/
