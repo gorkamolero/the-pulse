@@ -10,6 +10,7 @@ import {
   hasReachedLimit,
   isSessionExpired,
   MAX_GUEST_PULSES,
+  GUEST_PULSES_DISPLAY,
 } from '@/lib/guest-session';
 
 export function useGuestSession() {
@@ -87,6 +88,6 @@ export function useGuestSession() {
     isExpired,
     canContinue,
     pulseCount: session?.pulseCount ?? 0,
-    maxPulses: MAX_GUEST_PULSES,
+    maxPulses: GUEST_PULSES_DISPLAY,
   };
 }

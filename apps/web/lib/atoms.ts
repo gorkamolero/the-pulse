@@ -27,3 +27,6 @@ export const selectedVoiceAtom = atom(DEFAULT_VOICE_ID);
 // Real-time audio streaming (Option C) - when enabled, audio streams alongside text
 // When disabled (default), audio generates in background after text completes (Option B)
 export const realtimeAudioAtom = atomWithStorage("realtimeAudio", false);
+
+// Current background image URL for contrast-aware input styling
+export const currentBackgroundImageAtom = atom<string | null>(null);

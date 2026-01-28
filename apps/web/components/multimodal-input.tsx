@@ -20,11 +20,14 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
+import { useAtomValue } from "jotai";
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
 import { PreviewAttachment } from "./preview-attachment";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import { currentBackgroundImageAtom } from "@/lib/atoms";
+import { useImageLuminance } from "@/hooks/use-image-luminance";
 
 function PureMultimodalInput({
   chatId,
@@ -67,6 +70,15 @@ function PureMultimodalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+
+  // Get background image luminance for contrast-aware styling
+  const backgroundImage = useAtomValue(currentBackgroundImageAtom);
+  const { theme: bgTheme } = useImageLuminance(backgroundImage);
+
+  // Contrast-aware border: light bg = dark border, dark bg = light border
+  const borderContrastClass = bgTheme === "light"
+    ? "border-zinc-800"
+    : "border-zinc-300";
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -235,7 +247,8 @@ function PureMultimodalInput({
             onChange={handleInput}
             disabled={disabled}
             className={cx(
-              "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700",
+              "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-10 transition-colors duration-300 border-2",
+              borderContrastClass,
               disabled && "opacity-60 cursor-not-allowed",
               className
             )}

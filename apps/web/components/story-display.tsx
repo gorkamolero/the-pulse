@@ -2,9 +2,69 @@
 
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import { useSetAtom } from 'jotai';
 import { useMessage } from '@/hooks/use-message';
-import { Pulse } from './ui/pulse';
+import { StoryAwaiting } from './story-awaiting';
+import { currentBackgroundImageAtom } from '@/lib/atoms';
+
+// Atmospheric phrases for loading states
+const LOADING_PHRASES = [
+  "The story deepens...",
+  "Shadows shift...",
+  "Something stirs...",
+  "Listen closely...",
+  "The veil thins...",
+];
+
+const IMAGE_PHRASES = [
+  "A vision forms...",
+  "Shadows coalesce...",
+  "The scene emerges...",
+  "Darkness parts...",
+];
+
+function TypewriterText({ phrases }: { phrases: string[] }) {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [displayText, setDisplayText] = useState("");
+  const [isTyping, setIsTyping] = useState(true);
+
+  useEffect(() => {
+    const currentPhrase = phrases[phraseIndex];
+    let currentIndex = 0;
+    setIsTyping(true);
+    setDisplayText("");
+
+    const typeInterval = setInterval(() => {
+      if (currentIndex <= currentPhrase.length) {
+        setDisplayText(currentPhrase.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(typeInterval);
+        setIsTyping(false);
+        // Hold, then move to next phrase
+        setTimeout(() => {
+          setPhraseIndex((prev) => (prev + 1) % phrases.length);
+        }, 2500);
+      }
+    }, 70);
+
+    return () => clearInterval(typeInterval);
+  }, [phraseIndex, phrases]);
+
+  return (
+    <span className="inline-flex items-center">
+      {displayText}
+      {isTyping && (
+        <motion.span
+          className="inline-block w-px h-4 bg-foreground/50 ml-0.5"
+          animate={{ opacity: [1, 0] }}
+          transition={{ duration: 0.5, repeat: Number.POSITIVE_INFINITY }}
+        />
+      )}
+    </span>
+  );
+}
 
 interface StoryDisplayProps {
   currentMessageId: string | null
@@ -12,6 +72,7 @@ interface StoryDisplayProps {
 
 export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
   const { message, isLoading, isError, isGeneratingImage } = useMessage(currentMessageId);
+  const setBackgroundImage = useSetAtom(currentBackgroundImageAtom);
 
   // Keep track of the last valid image to show during loading/generation
   const lastImageUrlRef = useRef<string | null>(null);
@@ -27,18 +88,14 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
   const displayImageUrl = currentImageUrl || lastImageUrlRef.current;
   const isWaitingForImage = !currentImageUrl && (isLoading || isGeneratingImage);
 
-  // Initial state - no previous image to show
+  // Update the global background image atom for contrast-aware input styling
+  useEffect(() => {
+    setBackgroundImage(displayImageUrl || null);
+  }, [displayImageUrl, setBackgroundImage]);
+
+  // Initial state - immersive waiting experience
   if (!currentMessageId && !displayImageUrl) {
-    return (
-      <div className="flex items-center justify-center h-full w-full p-8">
-        <div className="flex flex-col items-center gap-4">
-          <Pulse />
-          <p className="text-sm text-muted-foreground/60 font-serif italic">
-            The story awaits...
-          </p>
-        </div>
-      </div>
-    );
+    return <StoryAwaiting />;
   }
 
   return (
@@ -57,7 +114,7 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
         </div>
       )}
 
-      {/* Loading overlay when waiting for new image - fullscreen centered */}
+      {/* Loading overlay when waiting for new image - atmospheric transition */}
       <AnimatePresence>
         {isWaitingForImage && (
           <motion.div
@@ -65,26 +122,97 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.15 }}
           >
-            <div className="text-center space-y-6">
-              <Pulse />
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground font-serif italic">
-                  {isLoading ? "The story unfolds..." : "Visualizing the scene..."}
-                </p>
-                <motion.div className="w-48 h-1 bg-muted rounded-full mx-auto overflow-hidden">
+            {/* Darkening veil with vignette */}
+            <motion.div
+              className="absolute inset-0"
+              style={{
+                background: "radial-gradient(ellipse at 50% 50%, hsl(var(--background) / 0.75) 0%, hsl(var(--background) / 0.92) 100%)",
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            />
+
+            {/* Central loading indicator */}
+            <div className="relative z-10 flex flex-col items-center gap-8">
+              {/* Heartbeat pulse with expanding rings */}
+              <div className="relative flex items-center justify-center">
+                {/* Outer expanding rings */}
+                <motion.div
+                  className="absolute w-16 h-16 rounded-full border border-foreground/10"
+                  animate={{
+                    scale: [1, 2.5],
+                    opacity: [0.4, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeOut",
+                  }}
+                />
+                <motion.div
+                  className="absolute w-16 h-16 rounded-full border border-foreground/10"
+                  animate={{
+                    scale: [1, 2],
+                    opacity: [0.3, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    delay: 0.5,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeOut",
+                  }}
+                />
+
+                {/* Core pulse */}
+                <motion.div
+                  className="w-12 h-12 rounded-full bg-gradient-to-br from-foreground/25 to-foreground/10 shadow-lg"
+                  animate={{
+                    scale: [1, 1.12, 1, 1.08, 1], // lub-dub heartbeat
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    times: [0, 0.15, 0.3, 0.45, 1],
+                  }}
+                >
                   <motion.div
-                    className="h-full bg-foreground/20 rounded-full"
-                    initial={{ x: "-100%" }}
-                    animate={{ x: "100%" }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Number.POSITIVE_INFINITY,
-                      ease: "easeInOut"
-                    }}
+                    className="absolute inset-2 rounded-full bg-foreground/20"
+                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                    transition={{ duration: 1.2, repeat: Number.POSITIVE_INFINITY }}
                   />
                 </motion.div>
+              </div>
+
+              {/* Atmospheric typewriter text */}
+              <motion.p
+                className="text-sm text-muted-foreground/80 font-serif italic h-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <TypewriterText phrases={isLoading ? LOADING_PHRASES : IMAGE_PHRASES} />
+              </motion.p>
+
+              {/* Subtle pulsing dots */}
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-1 h-1 rounded-full bg-foreground/20"
+                    animate={{
+                      opacity: [0.2, 0.5, 0.2],
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      delay: i * 0.2,
+                      repeat: Number.POSITIVE_INFINITY,
+                    }}
+                  />
+                ))}
               </div>
             </div>
           </motion.div>

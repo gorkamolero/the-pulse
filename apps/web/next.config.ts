@@ -29,8 +29,10 @@ const nextConfig: NextConfig = {
   },
   allowedDevOrigins: [
     "raspgorkpi.drake-halosaur.ts.net",
+    "raspgorkpi",
     "100.73.125.61",
     "gorkbook-pro.drake-halosaur.ts.net",
+    "gorkbook-pro",
     "100.92.166.126",
   ],
 };
