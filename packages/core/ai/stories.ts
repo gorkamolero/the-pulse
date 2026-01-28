@@ -43,10 +43,11 @@ export interface Story {
 
 export const stories: Array<Story> = [
   innsmouth,
-  theHollowChoir,
-  whisperingPines,
-  sirenOfTheRedDust,
-  endlessPath,
+  // Disabled until voices are configured:
+  // theHollowChoir,
+  // whisperingPines,
+  // sirenOfTheRedDust,
+  // endlessPath,
 ];
 
 export const DEFAULT_STORY_ID = "shadow-over-innsmouth";
