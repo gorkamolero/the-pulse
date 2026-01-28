@@ -31,11 +31,18 @@
     "cli:batch": "tsx cli/batch.ts",
     "cli:compare-stories": "tsx cli/compare-stories.ts",
     "cli:metrics": "tsx cli/metrics.ts",
-    "cli:eval": "tsx cli/eval.ts"
+    "cli:eval": "tsx cli/eval.ts",
+    "cli:speed": "tsx scripts/test-narrator-speed.ts",
+    "cli:tts-speed": "tsx scripts/test-tts-speed.ts",
+    "cli:tts-all": "tsx scripts/test-tts-all.ts"
   },
   "dependencies": {
-    "@pulse/core": "workspace:*",
+    "@ai-sdk/elevenlabs": "2.0.0-beta.47",
+    "@ai-sdk/hume": "^2.0.12",
+    "@ai-sdk/lmnt": "^2.0.12",
     "@faker-js/faker": "^10.1.0",
+    "@openrouter/ai-sdk-provider": "^1.5.4",
+    "@pulse/core": "workspace:*",
     "ai": "6.0.0-beta.150",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",

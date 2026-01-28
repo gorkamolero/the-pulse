@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
@@ -7,6 +8,11 @@ import { useSetAtom } from 'jotai';
 import { useMessage } from '@/hooks/use-message';
 import { StoryAwaiting } from './story-awaiting';
 import { currentBackgroundImageAtom } from '@/lib/atoms';
+
+// Dynamic import with SSR disabled for WebGL component
+const StoryOrb = dynamic(() => import('./story-orb').then(mod => ({ default: mod.StoryOrb })), {
+  ssr: false,
+});
 
 // Atmospheric phrases for loading states
 const LOADING_PHRASES = [
@@ -137,54 +143,8 @@ export function StoryDisplay({ currentMessageId }: StoryDisplayProps) {
 
             {/* Central loading indicator */}
             <div className="relative z-10 flex flex-col items-center gap-8">
-              {/* Heartbeat pulse with expanding rings */}
-              <div className="relative flex items-center justify-center">
-                {/* Outer expanding rings */}
-                <motion.div
-                  className="absolute w-16 h-16 rounded-full border border-foreground/10"
-                  animate={{
-                    scale: [1, 2.5],
-                    opacity: [0.4, 0],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Number.POSITIVE_INFINITY,
-                    ease: "easeOut",
-                  }}
-                />
-                <motion.div
-                  className="absolute w-16 h-16 rounded-full border border-foreground/10"
-                  animate={{
-                    scale: [1, 2],
-                    opacity: [0.3, 0],
-                  }}
-                  transition={{
-                    duration: 2,
-                    delay: 0.5,
-                    repeat: Number.POSITIVE_INFINITY,
-                    ease: "easeOut",
-                  }}
-                />
-
-                {/* Core pulse */}
-                <motion.div
-                  className="w-12 h-12 rounded-full bg-gradient-to-br from-foreground/25 to-foreground/10 shadow-lg"
-                  animate={{
-                    scale: [1, 1.12, 1, 1.08, 1], // lub-dub heartbeat
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Number.POSITIVE_INFINITY,
-                    times: [0, 0.15, 0.3, 0.45, 1],
-                  }}
-                >
-                  <motion.div
-                    className="absolute inset-2 rounded-full bg-foreground/20"
-                    animate={{ opacity: [0.4, 0.8, 0.4] }}
-                    transition={{ duration: 1.2, repeat: Number.POSITIVE_INFINITY }}
-                  />
-                </motion.div>
-              </div>
+              {/* The Orb - atmospheric WebGL visualization */}
+              <StoryOrb size="md" />
 
               {/* Atmospheric typewriter text */}
               <motion.p

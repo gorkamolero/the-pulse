@@ -155,6 +155,6 @@ Narrator's Guide: Bringing It to Life
 </story-guide>
 `,
   narrator: {
-    voiceId: "tiCdiJK6pzWPIV4PqAPp",
+    voiceId: "wLiYNWyRubh6yen1QNSU",
   },
 };

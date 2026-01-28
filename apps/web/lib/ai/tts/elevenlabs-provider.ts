@@ -15,7 +15,11 @@ const ELEVENLABS_VOICES: TTSVoice[] = VOICES.map((v) => ({
   provider: "elevenlabs" as const,
 }));
 
-export const DEFAULT_ELEVENLABS_MODEL = "eleven_flash_v2_5";
+// eleven_turbo_v2_5 = fast with good quality & emotional depth (best for narration)
+// eleven_flash_v2_5 = fastest, lower emotional depth (best for chatbots)
+// eleven_v3 = highest quality but 12x slower (~14s vs ~1s)
+// eleven_multilingual_v2 = high quality but 6x slower
+export const DEFAULT_ELEVENLABS_MODEL = "eleven_turbo_v2_5";
 export const DEFAULT_ELEVENLABS_VOICE_ID = DEFAULT_VOICE_ID;
 
 export class ElevenLabsProvider implements ITTSProvider {

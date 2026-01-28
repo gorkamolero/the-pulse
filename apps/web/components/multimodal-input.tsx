@@ -22,12 +22,18 @@ import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import { useAtomValue } from "jotai";
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
-import { PreviewAttachment } from "./preview-attachment";
+import dynamic from "next/dynamic";
+import { ArrowUpIcon, StopIcon } from "./icons";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { currentBackgroundImageAtom } from "@/lib/atoms";
 import { useImageLuminance } from "@/hooks/use-image-luminance";
+
+// Dynamic import with SSR disabled for WebGL component
+const StoryOrb = dynamic(() => import("./story-orb").then(mod => ({ default: mod.StoryOrb })), {
+  ssr: false,
+  loading: () => <div className="w-8 h-8" />, // Placeholder while loading
+});
 
 function PureMultimodalInput({
   chatId,
@@ -208,7 +214,11 @@ function PureMultimodalInput({
   );
 
   return (
-    <div className="relative w-full flex flex-col gap-4">
+    <div className="relative w-full flex flex-col items-center gap-3">
+      {/* Audio-reactive Orb above input */}
+      <StoryOrb size="sm" />
+
+      {/* Hidden file input for attachments (kept for future use) */}
       <input
         type="file"
         className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
@@ -218,27 +228,7 @@ function PureMultimodalInput({
         tabIndex={-1}
       />
 
-      {(attachments.length > 0 || uploadQueue.length > 0) && (
-        <div className="flex flex-row gap-2 overflow-x-scroll items-end">
-          {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
-          ))}
-
-          {uploadQueue.map((filename) => (
-            <PreviewAttachment
-              key={filename}
-              attachment={{
-                url: "",
-                name: filename,
-                contentType: "",
-              }}
-              isUploading={true}
-            />
-          ))}
-        </div>
-      )}
-
-      <div className="flex flex-row gap-4 items-start">
+      <div className="flex flex-row gap-4 items-start w-full">
         <div className="relative grow">
           <Textarea
             ref={textareaRef}
@@ -247,12 +237,12 @@ function PureMultimodalInput({
             onChange={handleInput}
             disabled={disabled}
             className={cx(
-              "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-10 transition-colors duration-300 border-2",
+              "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pr-12 transition-colors duration-300 border",
               borderContrastClass,
               disabled && "opacity-60 cursor-not-allowed",
               className
             )}
-            rows={2}
+            rows={1}
             autoFocus={!disabled}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
@@ -271,10 +261,6 @@ function PureMultimodalInput({
               }
             }}
           />
-
-          <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-            <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
-          </div>
 
           <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
             {isLoading ? (
@@ -307,30 +293,6 @@ export const MultimodalInput = memo(
     );
   }
 );
-
-function PureAttachmentsButton({
-  fileInputRef,
-  isLoading,
-}: {
-  fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
-  isLoading: boolean;
-}) {
-  return (
-    <Button
-      className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
-      onClick={(event) => {
-        event.preventDefault();
-        fileInputRef.current?.click();
-      }}
-      disabled={isLoading}
-      variant="ghost"
-    >
-      <PaperclipIcon size={14} />
-    </Button>
-  );
-}
-
-const AttachmentsButton = memo(PureAttachmentsButton);
 
 function PureStopButton({
   stop,

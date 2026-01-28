@@ -30,3 +30,21 @@ export const realtimeAudioAtom = atomWithStorage("realtimeAudio", false);
 
 // Current background image URL for contrast-aware input styling
 export const currentBackgroundImageAtom = atom<string | null>(null);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIO PLAYBACK STATE
+// Global state for audio visualization (Orb component)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Whether TTS audio is currently playing
+export const audioPlayingAtom = atom(false);
+
+// Current audio element reference (shared across components)
+export const audioElementAtom = atom<HTMLAudioElement | null>(null);
+
+// Narrator state for the Orb visualization
+// - null: idle (story awaiting)
+// - "thinking": narrator is generating response
+// - "talking": audio is playing
+export type NarratorState = null | "thinking" | "talking";
+export const narratorStateAtom = atom<NarratorState>(null);

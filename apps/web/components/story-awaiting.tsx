@@ -1,7 +1,13 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+
+// Dynamic import with SSR disabled for WebGL component
+const StoryOrb = dynamic(() => import("./story-orb").then(mod => ({ default: mod.StoryOrb })), {
+  ssr: false,
+});
 
 /**
  * Atmospheric fragments that fade in/out during the waiting state
@@ -67,71 +73,6 @@ function FogLayer({ opacity, speed }: { opacity: number; speed: number }) {
   );
 }
 
-/**
- * The heartbeat pulse - more organic than a simple pulsing circle
- * Mimics an actual heartbeat rhythm (lub-dub pattern)
- */
-function HeartbeatPulse() {
-  return (
-    <div className="relative">
-      {/* Outer glow rings */}
-      <motion.div
-        className="absolute inset-0 rounded-full bg-foreground/10"
-        style={{ width: 80, height: 80, margin: "auto", left: 0, right: 0, top: 0, bottom: 0 }}
-        animate={{
-          scale: [1, 2.5, 1],
-          opacity: [0.3, 0, 0.3],
-        }}
-        transition={{
-          duration: 1.5,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: [0.4, 0, 0.2, 1],
-        }}
-      />
-      <motion.div
-        className="absolute inset-0 rounded-full bg-foreground/10"
-        style={{ width: 80, height: 80, margin: "auto", left: 0, right: 0, top: 0, bottom: 0 }}
-        animate={{
-          scale: [1, 2, 1],
-          opacity: [0.2, 0, 0.2],
-        }}
-        transition={{
-          duration: 1.5,
-          delay: 0.15,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: [0.4, 0, 0.2, 1],
-        }}
-      />
-
-      {/* Core pulse - heartbeat rhythm */}
-      <motion.div
-        className="relative w-12 h-12 rounded-full bg-gradient-to-br from-foreground/40 to-foreground/20 shadow-lg"
-        animate={{
-          scale: [1, 1.15, 1, 1.1, 1], // lub-dub pattern
-        }}
-        transition={{
-          duration: 1.2,
-          repeat: Number.POSITIVE_INFINITY,
-          times: [0, 0.15, 0.3, 0.45, 1],
-          ease: "easeOut",
-        }}
-      >
-        {/* Inner light */}
-        <motion.div
-          className="absolute inset-2 rounded-full bg-foreground/30"
-          animate={{
-            opacity: [0.5, 1, 0.5],
-          }}
-          transition={{
-            duration: 1.2,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
-      </motion.div>
-    </div>
-  );
-}
 
 /**
  * Animated text that types out then fades
@@ -213,8 +154,8 @@ export function StoryAwaiting() {
 
       {/* Central content */}
       <div className="relative z-10 flex flex-col items-center gap-8">
-        {/* The pulse - center of attention */}
-        <HeartbeatPulse />
+        {/* The Orb - atmospheric WebGL visualization */}
+        <StoryOrb size="lg" />
 
         {/* Atmospheric text rotation */}
         <div className="h-8 flex items-center justify-center">

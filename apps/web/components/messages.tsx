@@ -4,7 +4,7 @@ import type { UIMessage } from "ai";
 import { memo, useState, useRef, useEffect } from "react";
 import equal from "fast-deep-equal";
 import { Pause, Loader2, Volume2 } from "lucide-react";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { AnimatePresence } from "framer-motion";
 
 import {
@@ -21,7 +21,12 @@ import { Button } from "@/components/ui/button";
 import { getUIMessageContent } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useMessage } from "@/hooks/use-message";
-import { audioEnabledAtom } from "@/lib/atoms";
+import {
+  audioEnabledAtom,
+  audioElementAtom,
+  audioPlayingAtom,
+  narratorStateAtom,
+} from "@/lib/atoms";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -52,6 +57,11 @@ function NarrationButton({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasAutoplayedRef = useRef(false);
 
+  // Global audio state for Orb visualization
+  const setAudioElement = useSetAtom(audioElementAtom);
+  const setAudioPlaying = useSetAtom(audioPlayingAtom);
+  const setNarratorState = useSetAtom(narratorStateAtom);
+
   const { message, isGeneratingAudio } = useMessage(messageId);
   const audioUrl = message?.audioUrl;
 
@@ -74,15 +84,19 @@ function NarrationButton({
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        setAudioPlaying(false);
+        setNarratorState(null);
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [setAudioPlaying, setNarratorState]);
 
   const playAudio = async () => {
     if (isPlaying && audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);
+      setAudioPlaying(false);
+      setNarratorState(null);
       return;
     }
 
@@ -90,16 +104,32 @@ function NarrationButton({
 
     try {
       setIsLoading(true);
+
+      // Proxy audio through our API to enable CORS for Web Audio analysis
+      const proxyUrl = `/api/audio-proxy?url=${encodeURIComponent(audioUrl)}`;
+
       if (!audioRef.current) {
-        audioRef.current = new Audio(audioUrl);
-        audioRef.current.onended = () => setIsPlaying(false);
+        audioRef.current = new Audio();
+        audioRef.current.crossOrigin = "anonymous";
+        audioRef.current.src = proxyUrl;
+        audioRef.current.onended = () => {
+          setIsPlaying(false);
+          setAudioPlaying(false);
+          setNarratorState(null);
+        };
+        // Share audio element for Orb visualization
+        setAudioElement(audioRef.current);
       } else {
-        audioRef.current.src = audioUrl;
+        audioRef.current.src = proxyUrl;
       }
       await audioRef.current.play();
       setIsPlaying(true);
+      setAudioPlaying(true);
+      setNarratorState("talking");
     } catch (error) {
       console.error("Error playing audio:", error);
+      setAudioPlaying(false);
+      setNarratorState(null);
     } finally {
       setIsLoading(false);
     }
@@ -142,6 +172,8 @@ function NarrationButton({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function PureMessages({ chatId, isLoading, messages }: MessagesProps) {
+  const setNarratorState = useSetAtom(narratorStateAtom);
+
   const lastAssistantMessage = messages
     .filter((m) => m.role === "assistant")
     .pop();
@@ -150,6 +182,14 @@ function PureMessages({ chatId, isLoading, messages }: MessagesProps) {
     isLoading &&
     messages.length > 0 &&
     messages[messages.length - 1].role === "user";
+
+  // Update global narrator state for Orb visualization
+  useEffect(() => {
+    if (showThinking) {
+      setNarratorState("thinking");
+    }
+    // Note: Don't reset to null here - let audio playback handle that
+  }, [showThinking, setNarratorState]);
 
   return (
     <Conversation className="h-full relative">

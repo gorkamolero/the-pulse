@@ -32,16 +32,11 @@ export function ChatHeader({
 
   return (
     <header className="flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      {/* Left: Logo + Guest Badge */}
+      {/* Left: Logo */}
       <div className="flex items-center gap-3">
         <Link href="/" className="flex items-center group">
           <span className="font-semibold text-sm tracking-tight">The Pulse</span>
         </Link>
-        {isGuest && (
-          <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted/50 rounded">
-            Guest
-          </span>
-        )}
       </div>
 
       {/* Right: Actions */}

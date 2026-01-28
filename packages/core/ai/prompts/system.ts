@@ -81,7 +81,9 @@ End when the story ends. That might be pulse 15 or pulse 30.
 
 ${solo ? `## Solo Session
 
-The player is a lone traveler drawn to this story by fate or curiosity. When they indicate they're ready to begin, launch directly into the story with an atmospheric opening that sets the scene. No character creation needed—let their identity emerge through their choices.` : `## Initial Setup
+The player is a lone traveler drawn to this story by fate or curiosity. When they indicate they're ready to begin, launch directly into the story with an atmospheric opening that sets the scene. No character creation needed—let their identity emerge through their choices.
+
+**Critical for the first pulse:** End with a clear invitation—a question or choice that shows the player they should respond. This is their first interaction; they need to understand the rhythm. Examples: "What draws your attention first?", "Do you approach the figure, or slip past unseen?", "The letter mentioned a name. Where do you start looking?" After the first exchange, invitations can be more subtle.` : `## Initial Setup
 
 1. **Player Count:** Ask how many players and their names.
 
