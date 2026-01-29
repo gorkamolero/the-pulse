@@ -81,10 +81,10 @@ function PureMultimodalInput({
   const backgroundImage = useAtomValue(currentBackgroundImageAtom);
   const { theme: bgTheme } = useImageLuminance(backgroundImage);
 
-  // Contrast-aware border: light bg = dark border, dark bg = light border
+  // Contrast-aware border: transparent when unfocused, solid when focused
   const borderContrastClass = bgTheme === "light"
-    ? "border-zinc-800"
-    : "border-zinc-300";
+    ? "border-zinc-800/40 focus-visible:border-zinc-800"
+    : "border-zinc-300/40 focus-visible:border-zinc-300";
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -215,9 +215,11 @@ function PureMultimodalInput({
   );
 
   return (
-    <div className="relative w-full flex flex-col items-center gap-3">
-      {/* Audio-reactive Orb above input */}
-      <StoryOrb size="md" />
+    <div className="relative w-full flex flex-col items-center">
+      {/* Audio-reactive Orb floating above input */}
+      <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+        <StoryOrb size="sm" />
+      </div>
 
       {/* Hidden file input for attachments (kept for future use) */}
       <input
@@ -238,7 +240,7 @@ function PureMultimodalInput({
             onChange={handleInput}
             disabled={disabled}
             className={cx(
-              "min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pr-12 transition-colors duration-300 border",
+              "min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pr-12 transition-colors duration-300 border focus-visible:ring-0 focus-visible:ring-offset-0",
               borderContrastClass,
               disabled && "opacity-60 cursor-not-allowed",
               className

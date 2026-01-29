@@ -162,4 +162,16 @@ Narrator's Guide: Bringing It to Life
     volume: 0.15,
     fadeInMs: 4000,
   },
+  theme: {
+    accent: "168 45% 45%",
+    accentHex: "#4A9B8C",
+    typography: {
+      fontFamily: "EB Garamond",
+      weights: ["400", "500", "600"],
+      fallback: "ui-serif, Georgia, serif",
+      fontSize: 1.2,      // Larger, scholarly Lovecraftian prose
+      lineHeight: 1.85,
+      letterSpacing: 0.015,
+    },
+  },
 };

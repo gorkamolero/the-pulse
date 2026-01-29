@@ -73,7 +73,7 @@ async function generateAmbience(config: AmbienceConfig): Promise<void> {
       {
         method: "POST",
         headers: {
-          "xi-api-key": ELEVENLABS_API_KEY!,
+          "xi-api-key": ELEVENLABS_API_KEY as string,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -121,7 +121,7 @@ async function main() {
     }
   }
 
-  console.log("\n" + "=".repeat(50));
+  console.log(`\n${"=".repeat(50)}`);
   console.log("📊 Generation Complete");
   console.log(`   ✅ Success: ${results.success}/${storyAmbience.length}`);
   console.log(`   ❌ Failed: ${results.failed}/${storyAmbience.length}`);

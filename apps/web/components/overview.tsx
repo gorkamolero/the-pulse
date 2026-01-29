@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { CreateUIMessage, UIMessage } from "ai";
 import { stories, type Story } from "@pulse/core/ai/stories";
 import { Pulse } from "./ui/pulse";
+import { FogLayer, Vignette } from "./ui/fog-layer";
 import { StoryStartModal } from "./story-start-modal";
 import type { User } from "next-auth";
 
@@ -26,7 +27,7 @@ interface OverviewProps {
     message: UIMessage | CreateUIMessage<UIMessage>,
     chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
-  onSelectStory?: (storyId: string) => void;
+  onSelectStory?: (storyId: string, solo: boolean) => void;
   user?: User;
 }
 
@@ -77,7 +78,24 @@ export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps)
     window.history.replaceState({}, "", `/pulse/${chatId}`);
 
     if (onSelectStory) {
-      onSelectStory(selectedStory.id);
+      onSelectStory(selectedStory.id, true); // solo=true
+    }
+
+    append({
+      role: "user",
+      parts: [{ type: "text", text: `Let's start the story "${selectedStory.title}".` }],
+    });
+
+    setSelectedStory(null);
+  };
+
+  const handleStartGroup = () => {
+    if (!selectedStory) return;
+
+    window.history.replaceState({}, "", `/pulse/${chatId}`);
+
+    if (onSelectStory) {
+      onSelectStory(selectedStory.id, false); // solo=false (group mode)
     }
 
     append({
@@ -131,34 +149,48 @@ export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps)
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto">
+      {/* Atmospheric layers */}
+      <FogLayer opacity={0.12} speed={0.7} />
+      <Vignette intensity={0.7} />
+
+      {/* Textured background */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          opacity: 0.03,
+          zIndex: 0,
+        }}
+      />
+
+      <div className="flex-1 overflow-y-auto relative" style={{ zIndex: 10 }}>
         <motion.div
           key="overview"
           className="min-h-full flex flex-col items-center px-4 py-16 md:py-24"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8 }}
         >
           {/* Header with Pulse */}
           <motion.div
-            className="flex flex-col items-center gap-6 mb-16"
-            initial={{ opacity: 0, y: -20 }}
+            className="flex flex-col items-center gap-8 mb-20"
+            initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <Pulse />
+            <Pulse size="lg" />
             <div className="text-center">
-              <h1 className="text-3xl md:text-4xl font-serif font-light tracking-wide mb-2">
+              <h1 className="text-4xl md:text-5xl font-literary font-semibold tracking-[0.2em] uppercase mb-3 text-foreground/90">
                 The Pulse
               </h1>
-              <p className="text-muted-foreground text-sm italic">
+              <p className="text-muted-foreground/60 text-sm font-literary italic tracking-wide">
                 Interactive Fiction
               </p>
             </div>
           </motion.div>
 
-          {/* Story Cards - Vertical Stack */}
-          <div className="flex flex-col gap-4 max-w-2xl w-full">
+          {/* Story Cards - Vertical Stack with Bold Borders */}
+          <div className="flex flex-col gap-5 max-w-2xl w-full">
             {stories.map((story, index) => {
               const flavor = storyFlavor[story.id] || {
                 quote: "A story awaits...",
@@ -166,56 +198,85 @@ export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps)
               };
 
               const isComingSoon = story.comingSoon;
+              const accentColor = story.theme?.accentHex || "#888888";
 
               return (
                 <motion.button
                   key={story.id}
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index + 0.4 }}
-                  whileHover={isComingSoon ? {} : { x: 8 }}
+                  transition={{ delay: 0.15 * index + 0.5 }}
+                  whileHover={isComingSoon ? {} : { x: 6, transition: { duration: 0.2 } }}
                   whileTap={isComingSoon ? {} : { scale: 0.995 }}
                   onClick={() => !isComingSoon && handleStoryClick(story)}
                   disabled={isComingSoon}
                   className={`
                     group text-left p-6 md:p-8
-                    border-l-2 transition-all duration-300
+                    transition-all duration-300
+                    backdrop-blur-sm rounded-r-lg
                     ${isComingSoon
-                      ? "border-muted-foreground/10 opacity-50 cursor-not-allowed"
-                      : "border-muted-foreground/20 hover:border-foreground/60 bg-transparent hover:bg-muted/30"
+                      ? "opacity-40 cursor-not-allowed bg-black/20"
+                      : "bg-black/40 hover:bg-black/50"
                     }
                   `}
+                  style={{
+                    borderLeft: `5px solid ${isComingSoon ? "rgba(136, 136, 136, 0.3)" : accentColor}`,
+                    boxShadow: isComingSoon
+                      ? "none"
+                      : `inset 0 0 30px rgba(0,0,0,0.3), 0 0 20px rgba(0,0,0,0.2)`,
+                  }}
+                  type="button"
                 >
                   {/* Title */}
-                  <h2 className={`text-xl md:text-2xl font-serif font-normal mb-3 transition-colors ${
-                    isComingSoon ? "text-muted-foreground/60" : "group-hover:text-foreground"
-                  }`}>
+                  <h2
+                    className={`text-xl md:text-2xl font-literary font-semibold mb-3 transition-colors tracking-wide ${
+                      isComingSoon ? "text-muted-foreground/40" : "text-foreground/90 group-hover:text-foreground"
+                    }`}
+                  >
                     {story.title}
                   </h2>
 
                   {/* Description */}
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  <p className={`text-sm leading-relaxed mb-4 ${
+                    isComingSoon ? "text-muted-foreground/30" : "text-muted-foreground/70"
+                  }`}>
                     {story.description}
                   </p>
 
                   {/* Epigraph */}
-                  <blockquote className="border-l border-muted-foreground/30 pl-4 py-1">
-                    <p className="text-xs italic text-muted-foreground/70 mb-1">
+                  <blockquote
+                    className={`border-l-2 pl-4 py-1 ${
+                      isComingSoon ? "border-muted-foreground/10" : "border-muted-foreground/20"
+                    }`}
+                  >
+                    <p className={`text-xs font-literary italic mb-1 ${
+                      isComingSoon ? "text-muted-foreground/20" : "text-muted-foreground/50"
+                    }`}>
                       "{flavor.quote}"
                     </p>
-                    <cite className="text-xs text-muted-foreground/50 not-italic">
+                    <cite className={`text-xs not-italic ${
+                      isComingSoon ? "text-muted-foreground/15" : "text-muted-foreground/40"
+                    }`}>
                       — {flavor.author}
                     </cite>
                   </blockquote>
 
                   {/* Begin / Coming Soon indicator */}
-                  <div className={`mt-4 flex items-center gap-2 text-xs transition-colors ${
-                    isComingSoon
-                      ? "text-muted-foreground/40"
-                      : "text-muted-foreground/50 group-hover:text-muted-foreground"
-                  }`}>
-                    <span className="w-4 h-px bg-current" />
-                    <span>{isComingSoon ? "Coming Soon" : "Begin"}</span>
+                  <div
+                    className={`mt-5 flex items-center gap-3 text-xs uppercase tracking-widest transition-all ${
+                      isComingSoon
+                        ? "text-muted-foreground/20"
+                        : "text-muted-foreground/40 group-hover:text-muted-foreground/70"
+                    }`}
+                  >
+                    <span
+                      className="w-6 h-px transition-all"
+                      style={{
+                        backgroundColor: isComingSoon ? "currentColor" : accentColor,
+                        opacity: isComingSoon ? 0.3 : 0.6,
+                      }}
+                    />
+                    <span className="font-literary">{isComingSoon ? "Coming Soon" : "Begin"}</span>
                   </div>
                 </motion.button>
               );
@@ -224,12 +285,12 @@ export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps)
 
           {/* Footer */}
           <motion.div
-            className="mt-16 text-center"
+            className="mt-20 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
+            transition={{ delay: 1.4 }}
           >
-            <p className="text-xs text-muted-foreground/40 tracking-wide uppercase">
+            <p className="text-xs text-muted-foreground/30 tracking-[0.15em] uppercase font-literary">
               ~30 min · AI imagery · Your choices shape the narrative
             </p>
           </motion.div>
@@ -242,6 +303,7 @@ export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps)
           story={selectedStory}
           epigraph={storyFlavor[selectedStory.id]}
           onStartSolo={handleStartSolo}
+          onStartGroup={handleStartGroup}
           onStartMultiplayer={handleStartMultiplayer}
           onClose={handleCloseModal}
           isAuthenticated={isAuthenticated}

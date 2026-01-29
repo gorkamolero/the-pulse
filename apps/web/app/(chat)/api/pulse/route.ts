@@ -219,12 +219,14 @@ export async function POST(request: Request) {
     messages,
     selectedStoryId = DEFAULT_STORY_ID,
     language = "en",
+    solo = false,
     guestPulseCount,
   }: {
     id: string;
     messages: Array<UIMessage>;
     selectedStoryId?: string;
     language?: string;
+    solo?: boolean;
     guestPulseCount?: number;
   } = await request.json();
 
@@ -250,7 +252,7 @@ export async function POST(request: Request) {
   const systemPromptText = systemPrompt({
     storyGuide: story.storyGuide,
     language: language === "es" ? "spanish" : "english",
-    solo: isGuest, // Solo mode for guest users - skips character creation
+    solo, // Solo mode - skips multi-player character creation
   });
 
   // ============== GUEST-SPECIFIC CHECKS ==============

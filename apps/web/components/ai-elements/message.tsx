@@ -101,9 +101,9 @@ export const MessageContent = ({
         // User messages: minimal, confident
         from === "user" &&
           "text-right text-foreground/90 font-medium",
-        // Assistant messages: literary, immersive
+        // Assistant messages: literary, immersive (uses story-specific font when loaded)
         from === "assistant" &&
-          "text-foreground/85 font-serif leading-[1.8] text-[1.05rem] tracking-[0.01em]",
+          "text-foreground/85 font-story",
         // System messages: subtle, informative
         from === "system" &&
           "text-center text-muted-foreground/60 text-sm italic",
@@ -143,7 +143,7 @@ export const MessageResponse = memo(
           "prose-strong:font-semibold prose-strong:text-foreground",
           // Quote styling for story narration
           "prose-blockquote:border-l-foreground/20 prose-blockquote:text-foreground/70",
-          "prose-blockquote:italic prose-blockquote:font-serif",
+          "prose-blockquote:italic prose-blockquote:font-story",
           className
         )}
       >

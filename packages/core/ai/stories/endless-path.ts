@@ -84,5 +84,17 @@ The rain gnawed Navaluenga's darkness with hungry teeth while the comet's hum st
     volume: 0.35,
     fadeInMs: 3000,
   },
+  theme: {
+    accent: "220 20% 70%",
+    accentHex: "#A8B4C4",
+    typography: {
+      fontFamily: "Cormorant Garamond",
+      weights: ["400", "500", "600"],
+      fallback: "ui-serif, Georgia, serif",
+      fontSize: 1.15,     // Dramatic, European time-loop horror
+      lineHeight: 1.8,
+      letterSpacing: 0.02,
+    },
+  },
   comingSoon: true,
 };

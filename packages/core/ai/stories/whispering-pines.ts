@@ -153,5 +153,17 @@ export const whisperingPines = {
     volume: 0.25,
     fadeInMs: 4000,
   },
+  theme: {
+    accent: "120 30% 35%",
+    accentHex: "#5B8A5B",
+    typography: {
+      fontFamily: "Libre Baskerville",
+      weights: ["400", "700"],
+      fallback: "ui-serif, Georgia, serif",
+      fontSize: 1.1,      // Readable King-style horror
+      lineHeight: 1.75,
+      letterSpacing: 0.005,
+    },
+  },
   comingSoon: true,
 };

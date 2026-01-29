@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
+import { Crimson_Text } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
+
+const crimsonText = Crimson_Text({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-serif",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://the-pulse.vercel.ai"),
@@ -18,24 +26,17 @@ export const viewport = {
   maximumScale: 1, // Disable auto-zoom on mobile Safari
 };
 
-const LIGHT_THEME_COLOR = "hsl(0 0% 100%)";
+// Dark mode only - no light theme
 const DARK_THEME_COLOR = "hsl(240deg 10% 3.92%)";
 const THEME_COLOR_SCRIPT = `\
 (function() {
-  var html = document.documentElement;
   var meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) {
     meta = document.createElement('meta');
     meta.setAttribute('name', 'theme-color');
     document.head.appendChild(meta);
   }
-  function updateThemeColor() {
-    var isDark = html.classList.contains('dark');
-    meta.setAttribute('content', isDark ? '${DARK_THEME_COLOR}' : '${LIGHT_THEME_COLOR}');
-  }
-  var observer = new MutationObserver(updateThemeColor);
-  observer.observe(html, { attributes: true, attributeFilter: ['class'] });
-  updateThemeColor();
+  meta.setAttribute('content', '${DARK_THEME_COLOR}');
 })();`;
 
 export default async function RootLayout({
@@ -60,11 +61,11 @@ export default async function RootLayout({
         />
         <meta httpEquiv="permissions-policy" content="microphone=self" />
       </head>
-      <body className="antialiased">
+      <body className={`antialiased ${crimsonText.variable}`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
           disableTransitionOnChange
         >
           <Toaster position="top-center" />

@@ -9,7 +9,7 @@ export default function PublicLayout({
     <ThemeProvider
       attribute="class"
       defaultTheme="dark"
-      enableSystem={false}
+      forcedTheme="dark"
       disableTransitionOnChange
     >
       <div className="min-h-dvh bg-background text-foreground">

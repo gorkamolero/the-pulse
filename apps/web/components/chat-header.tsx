@@ -20,6 +20,7 @@ interface ChatHeaderProps {
   isGuest?: boolean;
   pulseCount?: number;
   maxPulses?: number;
+  storyTitle?: string;
 }
 
 export function ChatHeader({
@@ -27,16 +28,25 @@ export function ChatHeader({
   isGuest = false,
   pulseCount = 0,
   maxPulses = 5,
+  storyTitle,
 }: ChatHeaderProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   return (
     <header className="flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      {/* Left: Logo */}
-      <div className="flex items-center gap-3">
+      {/* Left: Logo + Story Title */}
+      <div className="flex items-center gap-2">
         <Link href="/" className="flex items-center group">
           <span className="font-semibold text-sm tracking-tight">The Pulse</span>
         </Link>
+        {storyTitle && (
+          <>
+            <span className="text-muted-foreground/40">—</span>
+            <span className="text-sm text-muted-foreground font-literary italic truncate max-w-[200px]">
+              {storyTitle}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Right: Actions */}
@@ -55,13 +65,13 @@ export function ChatHeader({
         {user && (
           <Popover open={historyOpen} onOpenChange={setHistoryOpen}>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                <History className="w-3.5 h-3.5 mr-1.5" />
-                <span className="hidden sm:inline">History</span>
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                <History className="w-3.5 h-3.5" />
+                <span className="sr-only">History</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-80 p-0"
+              className="w-80 p-0 z-50"
               align="end"
               sideOffset={8}
             >

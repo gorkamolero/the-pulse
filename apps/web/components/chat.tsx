@@ -13,6 +13,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useSWRConfig } from "swr";
 import { useAtomValue, useSetAtom } from "jotai";
 import { stories } from "@pulse/core/ai/stories";
+import { initStoryTypography, resetStoryTypography } from "@/lib/font-loader";
 
 import { StoryDisplay } from "@/components/story-display";
 import { StoryLoadingModal } from "@/components/story-loading-modal";
@@ -59,6 +60,7 @@ export function Chat({
 }) {
   const { mutate } = useSWRConfig();
   const [selectedStoryId, setSelectedStoryId] = useState(DEFAULT_STORY_ID);
+  const [isSoloMode, setIsSoloMode] = useState(true);
   const [language, setLanguage] = useState<string>("en");
   const [selectedStoryTitle, setSelectedStoryTitle] = useState<string>("");
   const audioEnabled = useAtomValue(audioEnabledAtom);
@@ -135,17 +137,16 @@ export function Chat({
   const guestLimitReached = isGuest && pulseCount >= maxPulses;
 
   // Create transport with custom API endpoint and body
+  // This is the solo play flow - multiplayer uses a different route
   const transport = useMemo(() => new DefaultChatTransport({
     api: '/api/pulse',
-    body: isGuest ? {
-      guestPulseCount: pulseCount,
+    body: {
       selectedStoryId,
       language,
-    } : {
-      selectedStoryId,
-      language,
+      solo: isSoloMode, // Solo mode - skips multi-player character creation
+      ...(isGuest && { guestPulseCount: pulseCount }),
     },
-  }), [isGuest, pulseCount, selectedStoryId, language]);
+  }), [isGuest, pulseCount, selectedStoryId, language, isSoloMode]);
 
   // Track when audio is ready from the stream data
   const [audioReady, setAudioReady] = useState(false);
@@ -180,20 +181,34 @@ export function Chat({
   });
 
   const handleStorySelection = useCallback(
-    async (storyId: string) => {
+    async (storyId: string, solo: boolean) => {
       setSelectedStoryId(storyId);
+      setIsSoloMode(solo);
 
       // Get story title and immediately switch to loading phase
       const story = stories.find(s => s.id === storyId);
       if (story) {
         setSelectedStoryTitle(story.title);
         setPhase('loading'); // Instantly show loading screen + modal
+
+        // Lazy-load story-specific typography (non-blocking)
+        initStoryTypography(story.theme?.typography);
       }
 
       mutate("/api/history");
     },
     [mutate]
   );
+
+  // Load story typography when returning to existing session
+  useEffect(() => {
+    if (initialMessages.length > 0 && selectedStory?.theme?.typography) {
+      initStoryTypography(selectedStory.theme.typography);
+    }
+
+    // Cleanup on unmount
+    return () => resetStoryTypography();
+  }, [initialMessages.length, selectedStory?.theme?.typography]);
 
   // Create wrapper functions to match the old API
   const handleSubmit = useCallback(
@@ -268,6 +283,7 @@ export function Chat({
           isGuest={isGuest}
           pulseCount={pulseCount}
           maxPulses={maxPulses}
+          storyTitle={phase !== 'overview' ? selectedStory?.title : undefined}
         />
 
         

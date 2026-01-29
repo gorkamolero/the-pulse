@@ -178,5 +178,17 @@ This McCarthy-Clancy mix keeps the tone grounded and tense-McCarthy's "dunes lay
     volume: 0.2,
     fadeInMs: 3000,
   },
+  theme: {
+    accent: "15 60% 45%",
+    accentHex: "#B85C3A",
+    typography: {
+      fontFamily: "Source Serif 4",
+      weights: ["400", "600"],
+      fallback: "ui-serif, Georgia, serif",
+      fontSize: 1.05,     // Clean, utilitarian McCarthy/Clancy style
+      lineHeight: 1.7,
+      letterSpacing: 0,
+    },
+  },
   comingSoon: true,
 };

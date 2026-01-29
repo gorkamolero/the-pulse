@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { User } from 'next-auth';
 import { signOut } from 'next-auth/react';
-import { useTheme } from 'next-themes';
 
 import {
   DropdownMenu,
@@ -16,8 +15,6 @@ import {
 import { Button } from '@/components/ui/button';
 
 export function SidebarUserNav({ user }: { user: User }) {
-  const { setTheme, theme } = useTheme();
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -39,13 +36,6 @@ export function SidebarUserNav({ user }: { user: User }) {
             <Settings className="h-4 w-4" />
             Settings
           </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        >
-          {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>

@@ -253,5 +253,17 @@ Write in the style of J. G. Ballard but readable for a wider audience.
     volume: 0.3,
     fadeInMs: 5000,
   },
+  theme: {
+    accent: "270 35% 50%",
+    accentHex: "#7B5AA6",
+    typography: {
+      fontFamily: "Lora",
+      weights: ["400", "500", "600"],
+      fallback: "ui-serif, Georgia, serif",
+      fontSize: 1.15,     // Elegant, slightly modern Ballard style
+      lineHeight: 1.8,
+      letterSpacing: 0.01,
+    },
+  },
   comingSoon: true,
 };
