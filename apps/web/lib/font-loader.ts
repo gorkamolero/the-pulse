@@ -3,6 +3,9 @@ import type { StoryTypography } from "@pulse/core/ai/stories";
 // Track which fonts have been loaded to avoid duplicates
 const loadedFonts = new Set<string>();
 
+// Track the current font link element for cleanup
+let currentFontLink: HTMLLinkElement | null = null;
+
 /**
  * Dynamically load a Google Font when needed
  * Uses the CSS Font Loading API for efficient loading
@@ -25,20 +28,33 @@ export async function loadStoryFont(
   const link = document.createElement("link");
   link.rel = "stylesheet";
   link.href = fontUrl;
+  link.dataset.storyFont = fontFamily;
 
   // Wait for font to actually load
   return new Promise((resolve, reject) => {
     link.onload = () => {
       loadedFonts.add(fontFamily);
+      currentFontLink = link;
 
       // Use Font Loading API to ensure font is ready
       if ("fonts" in document) {
-        document.fonts.ready.then(() => resolve());
+        try {
+          document.fonts.ready.then(() => resolve());
+        } catch {
+          // Font Loading API failed, resolve anyway
+          resolve();
+        }
       } else {
         resolve();
       }
     };
-    link.onerror = reject;
+    link.onerror = () => {
+      // Remove failed link element
+      if (link.parentNode) {
+        link.parentNode.removeChild(link);
+      }
+      reject(new Error(`Failed to load font: ${fontFamily}`));
+    };
     document.head.appendChild(link);
   });
 }
@@ -57,7 +73,7 @@ export function applyStoryTypography(typography: StoryTypography): void {
 }
 
 /**
- * Reset to default typography
+ * Reset to default typography and clean up font link elements
  */
 export function resetStoryTypography(): void {
   const root = document.documentElement;
@@ -65,6 +81,16 @@ export function resetStoryTypography(): void {
   root.style.removeProperty("--font-story-size");
   root.style.removeProperty("--font-story-line-height");
   root.style.removeProperty("--font-story-letter-spacing");
+
+  // Clean up all story font link elements
+  if (typeof document !== "undefined") {
+    const storyFontLinks = document.querySelectorAll('link[data-story-font]');
+    for (const link of storyFontLinks) {
+      link.parentNode?.removeChild(link);
+    }
+    currentFontLink = null;
+    loadedFonts.clear();
+  }
 }
 
 /**

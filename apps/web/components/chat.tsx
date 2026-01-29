@@ -44,6 +44,8 @@ export function Chat({
   user,
   disabled,
   disabledReason,
+  initialStoryId,
+  initialSoloMode = true,
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
@@ -57,10 +59,12 @@ export function Chat({
   };
   disabled?: boolean;
   disabledReason?: string;
+  initialStoryId?: string;
+  initialSoloMode?: boolean;
 }) {
   const { mutate } = useSWRConfig();
-  const [selectedStoryId, setSelectedStoryId] = useState(DEFAULT_STORY_ID);
-  const [isSoloMode, setIsSoloMode] = useState(true);
+  const [selectedStoryId, setSelectedStoryId] = useState(initialStoryId ?? DEFAULT_STORY_ID);
+  const [isSoloMode, setIsSoloMode] = useState(initialSoloMode);
   const [language, setLanguage] = useState<string>("en");
   const [selectedStoryTitle, setSelectedStoryTitle] = useState<string>("");
   const audioEnabled = useAtomValue(audioEnabledAtom);
@@ -200,15 +204,19 @@ export function Chat({
     [mutate]
   );
 
-  // Load story typography when returning to existing session
+  // Load story typography when returning to existing session (runs once on mount)
   useEffect(() => {
     if (initialMessages.length > 0 && selectedStory?.theme?.typography) {
       initStoryTypography(selectedStory.theme.typography);
     }
+    // Only run on mount - don't re-run when story changes (handleStorySelection handles that)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // Cleanup on unmount
+  // Cleanup typography only on unmount (separate effect)
+  useEffect(() => {
     return () => resetStoryTypography();
-  }, [initialMessages.length, selectedStory?.theme?.typography]);
+  }, []);
 
   // Create wrapper functions to match the old API
   const handleSubmit = useCallback(

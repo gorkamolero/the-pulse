@@ -74,10 +74,14 @@ export async function saveChat({
   id,
   userId,
   title,
+  storyId,
+  soloMode,
 }: {
   id: string;
   userId: string;
   title: string;
+  storyId?: string;
+  soloMode?: boolean;
 }) {
   try {
     return await db.insert(chat).values({
@@ -85,9 +89,31 @@ export async function saveChat({
       createdAt: new Date(),
       userId,
       title,
+      storyId: storyId ?? null,
+      soloMode: soloMode ?? true,
     });
   } catch (error) {
     console.error('Failed to save chat in database');
+    throw error;
+  }
+}
+
+export async function updateChatStoryInfo({
+  id,
+  storyId,
+  soloMode,
+}: {
+  id: string;
+  storyId: string;
+  soloMode: boolean;
+}) {
+  try {
+    return await db
+      .update(chat)
+      .set({ storyId, soloMode })
+      .where(eq(chat.id, id));
+  } catch (error) {
+    console.error('Failed to update chat story info in database');
     throw error;
   }
 }

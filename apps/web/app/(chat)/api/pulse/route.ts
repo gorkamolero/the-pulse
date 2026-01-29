@@ -23,6 +23,7 @@ import {
   saveMessages,
   updateMessageImageUrl,
   updateMessageAudioUrl,
+  updateChatStoryInfo,
   startFreeStory,
   addMisuseWarning,
   getUserSettings,
@@ -371,7 +372,20 @@ export async function POST(request: Request) {
     }
     // Ensure guest user exists and get the ID
     const effectiveUserId = userId || await ensureGuestUser();
-    await saveChat({ id, userId: effectiveUserId, title });
+    await saveChat({
+      id,
+      userId: effectiveUserId,
+      title,
+      storyId: selectedStoryId,
+      soloMode: solo,
+    });
+  } else if (!chat.storyId) {
+    // Existing chat without story info - update it (migration for old chats)
+    await updateChatStoryInfo({
+      id,
+      storyId: selectedStoryId,
+      soloMode: solo,
+    });
   }
 
   // ============== SAVE USER MESSAGE ==============
