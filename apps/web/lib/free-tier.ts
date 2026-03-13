@@ -63,20 +63,8 @@ export async function getModelTierForUser(userId: string): Promise<ModelTier> {
     };
   }
 
-  // Check free tier status
-  const freeStatus = await canUseFreeStory(userId);
-
-  if (!freeStatus.allowed) {
-    return {
-      canUse: false,
-      usingUserKey: false,
-      isDegraded: false,
-      reason: 'Free story already used. Please add your own API key to continue.',
-    };
-  }
-
-  // User in degraded mode uses free model
-  if (freeStatus.reason === 'degraded_mode') {
+  // User in degraded mode (misuse detected) - still allowed but on cheap model
+  if (settings?.degradedMode) {
     return {
       canUse: true,
       usingUserKey: false,
@@ -85,7 +73,7 @@ export async function getModelTierForUser(userId: string): Promise<ModelTier> {
     };
   }
 
-  // User can use free tier with full model
+  // All authenticated users play free — no gate for launch
   return {
     canUse: true,
     usingUserKey: false,

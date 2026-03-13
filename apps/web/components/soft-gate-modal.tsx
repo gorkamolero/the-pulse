@@ -52,8 +52,8 @@ export function SoftGateModal({ onClose, pulseCount }: SoftGateModalProps) {
             <span className="text-foreground font-medium">
               Shadow Over Innsmouth
             </span>
-            . Create a free account to continue your adventure and unlock all
-            five stories.
+            . Create a free account to continue your adventure, save your
+            progress, and unlock all five stories.
           </p>
 
           {/* Teaser quote */}
