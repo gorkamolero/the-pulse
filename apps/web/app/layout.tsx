@@ -13,13 +13,51 @@ const crimsonText = Crimson_Text({
   display: "swap",
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://the-pulse.vercel.app";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://the-pulse.vercel.ai"),
-  title: "The Pulse",
-  description: ".",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "The Pulse — AI-Powered Interactive Fiction",
+    template: "%s | The Pulse",
+  },
+  description:
+    "No prep. No DM. Just play. An AI narrator runs the story in real-time — you make the choices, the story adapts. Solo or with friends. 5 story worlds.",
+  keywords: [
+    "interactive fiction",
+    "AI storytelling",
+    "multiplayer",
+    "tabletop RPG",
+    "D&D",
+    "AI narrator",
+    "collaborative fiction",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "The Pulse",
+    title: "The Pulse — AI-Powered Interactive Fiction",
+    description:
+      "No prep. No DM. Just play. An AI narrator runs the story in real-time — you make the choices, the story adapts. Solo or with friends.",
+    url: SITE_URL,
+    images: [
+      {
+        url: "/images/pulse.jpg",
+        width: 1024,
+        height: 768,
+        alt: "The Pulse — AI-Powered Interactive Fiction",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Pulse — AI-Powered Interactive Fiction",
+    description:
+      "No prep. No DM. Just play. An AI narrator runs the story — you make the choices.",
+    images: ["/images/pulse.jpg"],
+  },
   other: {
-    'permissions-policy': 'microphone=self'
-  }
+    "permissions-policy": "microphone=self",
+  },
 };
 
 export const viewport = {
