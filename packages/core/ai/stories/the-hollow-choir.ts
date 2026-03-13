@@ -265,5 +265,4 @@ Write in the style of J. G. Ballard but readable for a wider audience.
       letterSpacing: 0.01,
     },
   },
-  comingSoon: true,
 };

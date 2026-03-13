@@ -165,5 +165,4 @@ export const whisperingPines = {
       letterSpacing: 0.005,
     },
   },
-  comingSoon: true,
 };

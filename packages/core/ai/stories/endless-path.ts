@@ -96,5 +96,4 @@ The rain gnawed Navaluenga's darkness with hungry teeth while the comet's hum st
       letterSpacing: 0.02,
     },
   },
-  comingSoon: true,
 };

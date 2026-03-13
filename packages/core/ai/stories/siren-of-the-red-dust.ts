@@ -190,5 +190,4 @@ This McCarthy-Clancy mix keeps the tone grounded and tense-McCarthy's "dunes lay
       letterSpacing: 0,
     },
   },
-  comingSoon: true,
 };
