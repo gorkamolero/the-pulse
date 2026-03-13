@@ -13,7 +13,7 @@ const crimsonText = Crimson_Text({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://the-pulse.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://the-pulse.games";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
