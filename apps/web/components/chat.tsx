@@ -18,6 +18,7 @@ import { initStoryTypography, resetStoryTypography } from "@/lib/font-loader";
 
 import { StoryDisplay } from "@/components/story-display";
 import { StoryLoadingModal } from "@/components/story-loading-modal";
+import { ShareCard } from "@/components/share-card";
 import { audioEnabledAtom, storyBegunAtom } from "@/lib/atoms";
 import { ChatHeader } from "@/components/chat-header";
 import { getUIMessageContent } from "@/lib/utils";
@@ -303,6 +304,14 @@ export function Chat({
           pulseCount={pulseCount}
           maxPulses={maxPulses}
           storyTitle={phase !== 'overview' ? selectedStory?.title : undefined}
+          shareSlot={phase === 'chat' && hasNarratorResponse ? (
+            <ShareCard
+              chatId={id}
+              story={selectedStory}
+              pulseCount={messages.filter(m => m.role === 'assistant').length}
+              soloMode={isSoloMode}
+            />
+          ) : undefined}
         />
 
         

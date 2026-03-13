@@ -1,6 +1,7 @@
 'use client';
 
 import type { User } from 'next-auth';
+import type React from 'react';
 import Link from 'next/link';
 import { History } from 'lucide-react';
 import { useState } from 'react';
@@ -21,6 +22,7 @@ interface ChatHeaderProps {
   pulseCount?: number;
   maxPulses?: number;
   storyTitle?: string;
+  shareSlot?: React.ReactNode;
 }
 
 export function ChatHeader({
@@ -29,6 +31,7 @@ export function ChatHeader({
   pulseCount = 0,
   maxPulses = 5,
   storyTitle,
+  shareSlot,
 }: ChatHeaderProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -60,6 +63,9 @@ export function ChatHeader({
             <span className="ml-1 hidden sm:inline">pulses</span>
           </div>
         )}
+
+        {/* Share slot — rendered when in active session */}
+        {shareSlot}
 
         {/* History Popover - only for authenticated users */}
         {user && (
