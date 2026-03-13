@@ -23,11 +23,13 @@ export async function generateMetadata(props: {
       title: `${storyTitle} — The Pulse`,
       description: 'AI-powered interactive fiction. No prep. No DM. Just play.',
       type: 'website',
+      images: [{ url: '/images/pulse.jpg', width: 1024, height: 768, alt: `${storyTitle} — The Pulse` }],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${storyTitle} — The Pulse`,
       description: 'AI-powered interactive fiction. No prep. No DM. Just play.',
+      images: ['/images/pulse.jpg'],
     },
   };
 }
