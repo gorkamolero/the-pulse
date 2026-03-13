@@ -10,6 +10,7 @@ type Attachment = {
   contentType?: string;
 };
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { BookOpen, MessageSquare } from "lucide-react";
 import { useSWRConfig } from "swr";
 import { useAtomValue, useSetAtom } from "jotai";
 import { stories } from "@pulse/core/ai/stories";
@@ -35,6 +36,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export function Chat({
   id,
@@ -63,6 +65,8 @@ export function Chat({
   initialSoloMode?: boolean;
 }) {
   const { mutate } = useSWRConfig();
+  const isMobile = useIsMobile();
+  const [mobilePanelView, setMobilePanelView] = useState<'story' | 'messages'>('messages');
   const [selectedStoryId, setSelectedStoryId] = useState(initialStoryId ?? DEFAULT_STORY_ID);
   const [isSoloMode, setIsSoloMode] = useState(initialSoloMode);
   const [language, setLanguage] = useState<string>("en");
@@ -148,9 +152,9 @@ export function Chat({
       selectedStoryId,
       language,
       solo: isSoloMode, // Solo mode - skips multi-player character creation
-      ...(isGuest && { guestPulseCount: pulseCount }),
+      ...(isGuest && { guestPulseCount: pulseCount, guestSessionId: guestSession?.id }),
     },
-  }), [isGuest, pulseCount, selectedStoryId, language, isSoloMode]);
+  }), [guestSession?.id, isGuest, pulseCount, selectedStoryId, language, isSoloMode]);
 
   // Track when audio is ready from the stream data
   const [audioReady, setAudioReady] = useState(false);
@@ -258,6 +262,13 @@ export function Chat({
 
   const isLoading = status === 'streaming';
 
+  // On mobile, switch back to messages view when narrator finishes responding
+  useEffect(() => {
+    if (isMobile && !isLoading && messages.some(m => m.role === 'assistant')) {
+      setMobilePanelView('messages');
+    }
+  }, [isMobile, isLoading, messages]);
+
   const currentMessageId = useMemo(() => {
     // Get the most recent assistant message ID for image/audio display
     const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop()
@@ -313,24 +324,68 @@ export function Chat({
         <div className="flex-1 bg-black" />
       )}
       {phase === 'chat' && (
-        <ResizablePanelGroup direction="horizontal" className="h-full">
-          <ResizablePanel defaultSize={50}>
-            <Messages
-              chatId={id}
-              isLoading={isLoading}
-              messages={messages}
-              storyId={selectedStoryId}
-            />
-          </ResizablePanel>
-
-          <ResizableHandle />
-
-          <ResizablePanel defaultSize={50}>
-            <div className="flex flex-col items-center justify-center h-full overflow-hidden">
-              <StoryDisplay currentMessageId={currentMessageId} />
+        isMobile ? (
+          <div className="flex-1 flex flex-col min-h-0 relative">
+            {/* Mobile panel toggle */}
+            <div className="flex border-b border-border/50 bg-background/95">
+              <button
+                type="button"
+                onClick={() => setMobilePanelView('messages')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
+                  mobilePanelView === 'messages'
+                    ? 'text-foreground border-b-2 border-primary'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                Story
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobilePanelView('story')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
+                  mobilePanelView === 'story'
+                    ? 'text-foreground border-b-2 border-primary'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Visuals
+              </button>
             </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+            {mobilePanelView === 'messages' ? (
+              <Messages
+                chatId={id}
+                isLoading={isLoading}
+                messages={messages}
+                storyId={selectedStoryId}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center flex-1 overflow-hidden">
+                <StoryDisplay currentMessageId={currentMessageId} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <ResizablePanelGroup direction="horizontal" className="h-full">
+            <ResizablePanel defaultSize={50}>
+              <Messages
+                chatId={id}
+                isLoading={isLoading}
+                messages={messages}
+                storyId={selectedStoryId}
+              />
+            </ResizablePanel>
+
+            <ResizableHandle />
+
+            <ResizablePanel defaultSize={50}>
+              <div className="flex flex-col items-center justify-center h-full overflow-hidden">
+                <StoryDisplay currentMessageId={currentMessageId} />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )
       )}
 
         

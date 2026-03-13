@@ -71,7 +71,7 @@ export function StorySelector({
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[300px]">
+      <DropdownMenuContent align="start" className="min-w-[300px] max-w-[calc(100vw-2rem)]">
         {stories.map((story) => {
           const { id } = story;
 

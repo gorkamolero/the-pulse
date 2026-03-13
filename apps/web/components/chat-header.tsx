@@ -42,7 +42,7 @@ export function ChatHeader({
         {storyTitle && (
           <>
             <span className="text-muted-foreground/40">—</span>
-            <span className="text-sm text-muted-foreground font-literary italic truncate max-w-[200px]">
+            <span className="text-sm text-muted-foreground font-literary italic truncate max-w-[120px] sm:max-w-[200px]">
               {storyTitle}
             </span>
           </>
@@ -71,7 +71,7 @@ export function ChatHeader({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-80 p-0 z-50"
+              className="w-[min(320px,calc(100vw-1rem))] p-0 z-50"
               align="end"
               sideOffset={8}
             >

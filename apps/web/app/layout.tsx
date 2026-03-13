@@ -61,6 +61,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
+  width: "device-width",
+  initialScale: 1,
   maximumScale: 1, // Disable auto-zoom on mobile Safari
 };
 
