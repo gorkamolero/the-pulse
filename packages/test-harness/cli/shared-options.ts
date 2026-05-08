@@ -16,7 +16,7 @@ export const DEFAULTS = {
   players: 3,
   maxTurns: 50,
   language: 'english',
-  narrator: 'deepseek-v3.2' as NarratorModel,
+  narrator: 'deepseek-v4-flash' as NarratorModel,
   promptStyle: 'mechanical',
   geminiEval: true,
 } as const;

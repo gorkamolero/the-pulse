@@ -8,12 +8,12 @@ import { createUser, getUser } from '@/lib/db/queries';
 import { signIn } from './auth';
 
 const authFormSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),
 });
 
 const registerFormSchema = authFormSchema.extend({
-  inviteCode: z.string().refine(
+  inviteCode: z.string().trim().toUpperCase().refine(
     (code) => VALID_INVITE_CODES.includes(code),
     {
       message: 'Invalid invite code',

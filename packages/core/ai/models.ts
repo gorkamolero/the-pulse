@@ -8,7 +8,7 @@
 // ============================================================================
 
 /** Default narrator model when story doesn't specify */
-export const DEFAULT_NARRATOR_MODEL = "deepseek/deepseek-v3.2-thinking";
+export const DEFAULT_NARRATOR_MODEL = "deepseek/deepseek-v4-flash";
 
 /** Model for generating chat titles */
 export const TITLE_MODEL = "google/gemini-2.5-flash-lite";

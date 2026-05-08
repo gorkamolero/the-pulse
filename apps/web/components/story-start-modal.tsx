@@ -1,6 +1,6 @@
 "use client";
 
-import { Volume2, VolumeX, Users, UserRound, Loader2 } from "lucide-react";
+import { Link2, Loader2, UserRound, Users, Volume2, VolumeX } from "lucide-react";
 import { useAtom } from "jotai";
 import Link from "next/link";
 import { audioEnabledAtom } from "@/lib/atoms";
@@ -130,61 +130,93 @@ export function StoryStartModal({
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-col gap-3">
-              {/* Row 1: Solo options */}
-              <div className="flex flex-row gap-3">
-                {/* Begin Alone (narrator treats as single traveler) */}
+            <div className="space-y-3">
+              <div className="text-center">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/50">
+                  Choose play mode
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Button
                   size="lg"
                   onClick={onStartSolo}
-                  className="flex-1 font-literary text-base gap-2 tracking-wide"
+                  className="group h-auto min-h-20 items-center justify-start gap-3 whitespace-normal rounded-lg px-5 py-4 text-left font-literary tracking-wide shadow-[0_1px_0_rgba(255,255,255,0.16)_inset,0_14px_36px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,background-color] duration-200 active:scale-[0.96]"
                   style={{
                     backgroundColor: accentColor,
                     borderColor: accentColor,
                   }}
                   disabled={isCreatingRoom}
                 >
-                  <UserRound className="w-4 h-4" />
-                  <span>Begin Alone</span>
+                  <UserRound className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                  <span className="flex min-w-0 flex-1 flex-col leading-tight">
+                    <span className="text-lg">Solo</span>
+                    <span className="mt-1 max-w-full text-xs font-sans font-normal leading-relaxed opacity-75">
+                      Play by yourself
+                    </span>
+                  </span>
                 </Button>
 
-                {/* Begin with Group (narrator treats as multiple travelers, for Discord etc) */}
                 <Button
                   size="lg"
                   variant="outline"
                   onClick={onStartGroup}
-                  className="flex-1 font-literary text-base gap-2 tracking-wide"
+                  className="group h-auto min-h-20 items-center justify-start gap-3 whitespace-normal rounded-lg border bg-background/70 px-5 py-4 text-left font-literary tracking-wide shadow-[0_1px_0_rgba(255,255,255,0.08)_inset,0_12px_30px_rgba(0,0,0,0.18)] transition-[transform,box-shadow,background-color,border-color] duration-200 hover:bg-background active:scale-[0.96]"
                   style={{
                     borderColor: `${accentColor}60`,
                   }}
                   disabled={isCreatingRoom}
-                  title="Play with friends on Discord or voice chat"
+                  title="One browser session for friends playing together in person or over voice chat"
                 >
-                  <Users className="w-4 h-4" />
-                  <span>With Group</span>
+                  <Users className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                  <span className="flex min-w-0 flex-1 flex-col leading-tight">
+                    <span className="text-lg">Same Screen</span>
+                    <span className="mt-1 max-w-full text-xs font-sans font-normal leading-relaxed opacity-75">
+                      Pass the device around
+                    </span>
+                  </span>
                 </Button>
               </div>
 
-              {/* Row 2: Multiplayer room (requires auth) */}
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={onStartMultiplayer}
-                className="w-full font-literary text-sm gap-2 tracking-wide text-muted-foreground/70 hover:text-foreground"
-                disabled={!isAuthenticated || isCreatingRoom}
-                title={!isAuthenticated ? "Sign in to host a gathering" : "Create a room for others to join"}
-              >
-                {isCreatingRoom ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Creating room...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Or create a shared room</span>
-                  </>
-                )}
-              </Button>
+              <div>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={onStartMultiplayer}
+                  className="group h-auto min-h-14 w-full items-center justify-center gap-3 whitespace-normal rounded-lg border bg-background/45 px-5 py-3 text-center font-literary tracking-wide shadow-[0_1px_0_rgba(255,255,255,0.08)_inset,0_12px_30px_rgba(0,0,0,0.18)] transition-[transform,box-shadow,background-color,border-color,opacity] duration-200 hover:bg-background active:scale-[0.96] disabled:cursor-not-allowed"
+                  style={{
+                    borderColor: isAuthenticated
+                      ? `${accentColor}60`
+                      : "hsl(var(--border) / 0.5)",
+                  }}
+                  disabled={!isAuthenticated || isCreatingRoom}
+                  title={
+                    !isAuthenticated
+                      ? "Sign in to create an invite room"
+                      : "Create a room with an invite link for others to join from their own devices"
+                  }
+                >
+                  {isCreatingRoom ? (
+                    <>
+                      <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                      <span className="min-w-0 leading-tight">
+                        Creating invite room...
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                      <span className="min-w-0 leading-tight">
+                        Invite Room
+                        <span className="font-sans text-xs font-normal text-muted-foreground">
+                          {" "}
+                          · friends join by link
+                        </span>
+                      </span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
             {/* Sign in link for guests */}

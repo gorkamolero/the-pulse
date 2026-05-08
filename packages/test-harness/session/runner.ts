@@ -216,6 +216,23 @@ function buildNarratorSystemPrompt(systemPrompt: string): string {
   return systemPrompt;
 }
 
+function buildFirstTurnPrompt(conversationHistory: Message[]): string {
+  const preGameContext = conversationHistory
+    .filter((message) => message.turn === 0)
+    .map((message) => `${message.role}: ${message.content}`)
+    .join('\n\n');
+
+  if (!preGameContext.trim()) {
+    return 'Begin the story now at Pulse 1. Do not ask setup questions.';
+  }
+
+  return `The group has already completed pre-game setup. Use this context as the established player and character material:
+
+${preGameContext}
+
+Begin the story now at Pulse 1. Do not ask for player count, player names, character backstories, or gear unless a detail is genuinely absent.`;
+}
+
 /**
  * Generate narrator response
  */
@@ -290,6 +307,7 @@ async function generateNarratorResponse(
 
   // For first turn (no messages), use a minimal user prompt to trigger narrator
   const isFirstTurn = messages.length === 0;
+  const firstTurnPrompt = buildFirstTurnPrompt(conversationHistory);
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     // Add delay before retry (not on first attempt)
@@ -303,7 +321,7 @@ async function generateNarratorResponse(
       const result = streamText({
         model,
         system: fullSystemPrompt,
-        ...(isFirstTurn ? { prompt: 'Hi' } : { messages }),
+        ...(isFirstTurn ? { prompt: firstTurnPrompt } : { messages }),
         temperature: narratorConfig.temperature,
         ...(needsThinkMiddleware && {
           providerOptions: {
@@ -315,20 +333,13 @@ async function generateNarratorResponse(
       let fullText = '';
       let reasoning = '';
       const retryNote = attempt > 1 ? ` [retry ${attempt}]` : '';
-      let hasStartedReasoning = false;
       let hasStartedText = false;
 
       for await (const part of result.fullStream) {
         if (part.type === 'reasoning-delta') {
-          if (!hasStartedReasoning) {
-            process.stdout.write(`\n🧠 Narrator thinking${retryNote}:\n\x1b[2m`);
-            hasStartedReasoning = true;
-          }
-          process.stdout.write(part.text);
           reasoning += part.text;
         } else if (part.type === 'text-delta') {
           if (!hasStartedText) {
-            if (hasStartedReasoning) process.stdout.write('\x1b[0m\n');
             process.stdout.write(`\n📖 Narrator${retryNote}: `);
             hasStartedText = true;
           }

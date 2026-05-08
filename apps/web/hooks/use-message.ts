@@ -4,6 +4,8 @@ import useSWR from 'swr';
 import { useCallback, useMemo } from 'react';
 import type { Message } from '@/lib/db/schema';
 
+const MEDIA_GENERATION_TIMEOUT_MS = 90 * 1000;
+
 export const initialMessageData: Message = {
   id: '',
   chatId: '',
@@ -12,6 +14,7 @@ export const initialMessageData: Message = {
   createdAt: new Date(),
   imageUrl: null,
   audioUrl: null,
+  wordTimings: null,
 };
 
 type Selector<T> = (state: Message) => T;
@@ -61,8 +64,10 @@ export function useMessage(messageId: string | null) {
         if (data === null) {
           return 2000;
         }
-        const needsImage = !data?.imageUrl && messageId;
-        const needsAudio = !data?.audioUrl && messageId;
+        const createdAt = data?.createdAt ? new Date(data.createdAt).getTime() : Date.now();
+        const mediaTimedOut = Date.now() - createdAt > MEDIA_GENERATION_TIMEOUT_MS;
+        const needsImage = !data?.imageUrl && messageId && !mediaTimedOut;
+        const needsAudio = !data?.audioUrl && messageId && !mediaTimedOut;
         if (needsImage || needsAudio) {
           return 2000;
         }
@@ -89,9 +94,14 @@ export function useMessage(messageId: string | null) {
   // Message is loading if we have an ID but no data yet (null = still polling for DB save)
   const isLoading = !!messageId && (message === undefined || message === null);
   // Image is generating when we have a message but no imageUrl yet
-  const isGeneratingImage = !!messageId && !!message && !message.imageUrl;
+  const messageAgeMs = message?.createdAt
+    ? Date.now() - new Date(message.createdAt).getTime()
+    : 0;
+  const mediaTimedOut = messageAgeMs > MEDIA_GENERATION_TIMEOUT_MS;
+  const isGeneratingImage = !!messageId && !!message && !message.imageUrl && !mediaTimedOut;
   // Audio is generating when we have a message but no audioUrl yet
-  const isGeneratingAudio = !!messageId && !!message && !message.audioUrl;
+  const isGeneratingAudio = !!messageId && !!message && !message.audioUrl && !mediaTimedOut;
+  const isAudioUnavailable = !!messageId && !!message && !message.audioUrl && mediaTimedOut;
 
   return useMemo(
     () => ({
@@ -100,8 +110,9 @@ export function useMessage(messageId: string | null) {
       isError: !!error,
       isGeneratingImage,
       isGeneratingAudio,
+      isAudioUnavailable,
       updateMessage,
     }),
-    [message, error, isLoading, isGeneratingImage, isGeneratingAudio, updateMessage]
+    [message, error, isLoading, isGeneratingImage, isGeneratingAudio, isAudioUnavailable, updateMessage]
   );
 }

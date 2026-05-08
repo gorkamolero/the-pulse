@@ -14,7 +14,7 @@ import { resolve } from "node:path";
 
 // Load .env.local from project root
 config({ path: resolve(process.cwd(), "../../.env.local") });
-import { generateText } from "ai";
+import { generateText, type LanguageModel } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { systemPrompt } from "@pulse/core/ai/prompts/system";
 import { getStoryById } from "@pulse/core/ai/stories";
@@ -63,7 +63,7 @@ async function testModel(modelKey: ModelKey): Promise<{ model: string; output: s
 
   try {
     const result = await generateText({
-      model: openrouter(modelId),
+      model: openrouter(modelId) as unknown as LanguageModel,
       system,
       messages: [{ role: "user", content: USER_MESSAGE }],
       maxOutputTokens: 500,

@@ -19,6 +19,7 @@ type Attachment = {
 
 type ChatRequestOptions = {
   experimental_attachments?: Attachment[];
+  body?: Record<string, unknown>;
 };
 
 interface OverviewProps {
@@ -84,6 +85,8 @@ export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps)
     append({
       role: "user",
       parts: [{ type: "text", text: `Let's start the story "${selectedStory.title}".` }],
+    }, {
+      body: { selectedStoryId: selectedStory.id, solo: true },
     });
 
     setSelectedStory(null);
@@ -100,7 +103,12 @@ export const Overview = ({ chatId, append, onSelectStory, user }: OverviewProps)
 
     append({
       role: "user",
-      parts: [{ type: "text", text: `Let's start the story "${selectedStory.title}".` }],
+      parts: [{
+        type: "text",
+        text: `Let's start the group session for "${selectedStory.title}". Ask for the number of players and each player's name before beginning the story.`,
+      }],
+    }, {
+      body: { selectedStoryId: selectedStory.id, solo: false },
     });
 
     setSelectedStory(null);

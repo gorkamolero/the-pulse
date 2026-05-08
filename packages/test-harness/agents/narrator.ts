@@ -5,7 +5,12 @@
  * story content. All models are accessed through Vercel AI Gateway.
  */
 
-export type NarratorModel = 'opus-4.5' | 'xai/grok-4-fast-reasoning' | 'deepseek-v3.2' | 'moonshotai/kimi-k2-thinking';
+export type NarratorModel =
+  | 'opus-4.6'
+  | 'xai/grok-4.3'
+  | 'deepseek-v4-pro'
+  | 'deepseek-v4-flash'
+  | 'moonshotai/kimi-k2.6';
 
 export interface NarratorConfig {
   model: NarratorModel;
@@ -20,16 +25,17 @@ export interface NarratorConfig {
  * All narrator models use Vercel AI Gateway for unified access
  */
 export const NARRATOR_MODEL_MAP: Record<NarratorModel, string> = {
-  'opus-4.5': 'anthropic/claude-opus-4.5',
-  'xai/grok-4-fast-reasoning': 'xai/grok-4-fast-reasoning',
-  'deepseek-v3.2': 'deepseek/deepseek-v3.2-thinking',
-  'moonshotai/kimi-k2-thinking': 'moonshotai/kimi-k2-thinking',
+  'opus-4.6': 'anthropic/claude-opus-4.6',
+  'xai/grok-4.3': 'xai/grok-4.3',
+  'deepseek-v4-pro': 'deepseek/deepseek-v4-pro',
+  'deepseek-v4-flash': 'deepseek/deepseek-v4-flash',
+  'moonshotai/kimi-k2.6': 'moonshotai/kimi-k2.6',
 };
 
 /**
  * Models that use <think> tags for reasoning (need extractReasoningMiddleware)
  */
-export const THINK_TAG_MODELS: NarratorModel[] = ['deepseek-v3.2', 'moonshotai/kimi-k2-thinking'];
+export const THINK_TAG_MODELS: NarratorModel[] = [];
 
 /**
  * All narrator models use AI Gateway

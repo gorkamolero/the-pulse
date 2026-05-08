@@ -61,7 +61,7 @@ export async function createUserModel({
       const decryptedKey = decrypt(settings.openrouterApiKey);
       const openrouter = createOpenRouter({ apiKey: decryptedKey });
       return {
-        model: openrouter(modelId),
+        model: openrouter(modelId) as unknown as LanguageModel,
         usingUserKey: true,
         isDegraded: false,
         provider: 'openrouter',

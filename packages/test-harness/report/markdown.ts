@@ -207,7 +207,7 @@ function formatDuration(ms: number): string {
 function estimateCost(result: SessionResult): number {
   // Rough estimates based on model pricing
   const narratorCostPerTurn =
-    result.config.narratorConfig.model === 'opus-4.5' ? 0.15 : 0.02;
+    result.config.narratorConfig.model === 'opus-4.6' ? 0.08 : 0.02;
   const playerCostPerTurn = 0.01;
 
   return (

@@ -5,9 +5,9 @@ import {
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
+  gateway,
 } from "ai";
 import { after } from "next/server";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 import { auth } from "@/app/(auth)/auth";
 import { systemPrompt } from "@pulse/core/ai/prompts/system";
@@ -92,6 +92,7 @@ async function saveUserMessage(
         chatId,
         imageUrl: null,
         audioUrl: null,
+        wordTimings: null,
       },
     ],
   });
@@ -136,6 +137,7 @@ function createOnFinishHandler({
             createdAt: new Date(),
             imageUrl: null,
             audioUrl: null,
+            wordTimings: null,
           },
         ],
       });
@@ -168,7 +170,7 @@ function createOnFinishHandler({
             messageId,
           });
 
-          if (imageResult?.url) {
+          if (imageResult.success) {
             await updateMessageImageUrl({
               id: messageId,
               imageUrl: imageResult.url,
@@ -190,6 +192,7 @@ function createOnFinishHandler({
             await updateMessageAudioUrl({
               id: messageId,
               audioUrl: audioResult.url,
+              wordTimings: audioResult.wordTimings,
             });
           }
         } catch {
@@ -290,11 +293,7 @@ export async function POST(request: Request) {
   let usingUserKey = false;
 
   if (isGuest) {
-    // Kimi K2: fast (2.6s), atmospheric prose, great for horror narrative
-    const openrouter = createOpenRouter({
-      apiKey: process.env.OPENROUTER_API_KEY,
-    });
-    model = openrouter("moonshotai/kimi-k2");
+    model = gateway(narratorConfig.modelId);
   } else {
     // Get user model based on their tier
     try {
@@ -404,7 +403,8 @@ export async function POST(request: Request) {
         const result = streamText({
           model,
           system: systemPromptText,
-          messages: convertToModelMessages(messages),
+          messages: await convertToModelMessages(messages),
+          maxOutputTokens: 700,
           ...(isGuest ? {} : {
             experimental_telemetry: {
               isEnabled: true,
@@ -416,6 +416,7 @@ export async function POST(request: Request) {
         // Merge the text stream and wait for it to complete
         const mergedStream = result.toUIMessageStream({
           generateMessageId: () => messageId,
+          sendReasoning: false,
         });
 
         // Collect the full text while streaming
@@ -471,6 +472,7 @@ export async function POST(request: Request) {
               createdAt: new Date(),
               imageUrl: null,
               audioUrl: null,
+              wordTimings: null,
             }],
           });
         } catch (e) {
@@ -489,6 +491,7 @@ export async function POST(request: Request) {
             await updateMessageAudioUrl({
               id: messageId,
               audioUrl: audioResult.url,
+              wordTimings: audioResult.wordTimings,
             });
 
             // Send audio URL to client via data stream (type must start with 'data-')
@@ -496,9 +499,22 @@ export async function POST(request: Request) {
               type: 'data-audio-ready',
               data: { messageId, audioUrl: audioResult.url },
             });
+          } else {
+            writer.write({
+              type: 'data-audio-ready',
+              data: { messageId, audioUrl: null, error: audioResult?.error ?? "Audio unavailable" },
+            });
           }
         } catch (e) {
           console.error("Audio generation failed:", e);
+          writer.write({
+            type: 'data-audio-ready',
+            data: {
+              messageId,
+              audioUrl: null,
+              error: e instanceof Error ? e.message : "Audio generation failed",
+            },
+          });
         }
 
         // Generate image in background (using early prompt if available)
@@ -528,7 +544,7 @@ export async function POST(request: Request) {
               messageId,
             });
 
-            if (imageResult?.url) {
+            if (imageResult.success) {
               await updateMessageImageUrl({
                 id: messageId,
                 imageUrl: imageResult.url,

@@ -47,7 +47,12 @@ export async function generatePulseAudio({
       access: "public",
     });
 
-    return { success: true, url, provider: ttsProvider.name };
+    return {
+      success: true,
+      url,
+      provider: ttsProvider.name,
+      wordTimings: result.wordTimings ?? null,
+    };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to generate audio";

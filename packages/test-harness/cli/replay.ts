@@ -31,7 +31,7 @@ program
   .requiredOption('--checkpoint <path>', 'Path to checkpoint file')
   .option(
     '--narrator <model>',
-    'Override narrator model (opus-4.5, grok-4, deepseek-v3.2)',
+    'Override narrator model (opus-4.6, xai/grok-4.3, deepseek-v4-pro, deepseek-v4-flash, moonshotai/kimi-k2.6)',
   )
   .option('--temperature <number>', 'Override temperature', Number.parseFloat)
   .parse();

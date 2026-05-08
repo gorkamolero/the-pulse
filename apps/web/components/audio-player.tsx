@@ -5,27 +5,53 @@ import { Pause, Play, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "./ui/tooltip";
 import { useAtom } from "jotai";
-import { audioEnabledAtom, selectedVoiceAtom } from "@/lib/atoms";
+import { audioEnabledAtom } from "@/lib/atoms";
 import { useMessage } from "@/hooks/use-message";
+import type { WordTiming } from "./timed-narration";
 
 interface AudioPlayerProps {
   content: string;
   autoplay?: boolean;
   chatId: string;
   id: string;
+  onPlaybackTimeChange?: (timeMs: number) => void;
 }
 
-export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlayerProps) {
+export function AudioPlayer({
+  autoplay = false,
+  id,
+  onPlaybackTimeChange,
+}: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [audioEnabled] = useAtom(audioEnabledAtom);
-  const [selectedVoice] = useAtom(selectedVoiceAtom);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasAutoplayedRef = useRef(false);
+  const animationFrameRef = useRef<number | null>(null);
 
   // Poll for pre-generated audio URL from database
-  const { message, isGeneratingAudio } = useMessage(id);
+  const { message, isGeneratingAudio, updateMessage } = useMessage(id);
   const audioUrl = message?.audioUrl;
+
+  const stopPlaybackClock = () => {
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+  };
+
+  const startPlaybackClock = () => {
+    stopPlaybackClock();
+
+    const tick = () => {
+      if (audioRef.current) {
+        onPlaybackTimeChange?.(audioRef.current.currentTime * 1000);
+      }
+      animationFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    tick();
+  };
 
   // Autoplay when audio becomes available
   useEffect(() => {
@@ -45,6 +71,7 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
   // Cleanup audio element on unmount
   useEffect(() => {
     return () => {
+      stopPlaybackClock();
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -58,6 +85,7 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
     if (isPlaying && audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);
+      stopPlaybackClock();
       return;
     }
 
@@ -68,23 +96,32 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
       if (!urlToPlay) {
         setIsLoading(true);
 
-        const response = await fetch("/api/tts", {
+        const response = await fetch(`/api/messages/${id}/audio`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            text: content,
-            voiceId: selectedVoice,
-          }),
         });
 
         if (!response.ok) {
           throw new Error("Failed to generate audio");
         }
 
-        const blob = await response.blob();
-        urlToPlay = URL.createObjectURL(blob);
+        const result = (await response.json()) as {
+          audioUrl?: string;
+          wordTimings?: WordTiming[] | null;
+        };
+
+        if (!result.audioUrl) {
+          throw new Error("Audio generation did not return a URL");
+        }
+
+        urlToPlay = result.audioUrl;
+        updateMessage((currentMessage) => ({
+          ...currentMessage,
+          audioUrl: result.audioUrl ?? currentMessage.audioUrl,
+          wordTimings: result.wordTimings ?? currentMessage.wordTimings,
+        }));
         setIsLoading(false);
       }
 
@@ -93,6 +130,12 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
         audioRef.current = new Audio(urlToPlay);
         audioRef.current.onended = () => {
           setIsPlaying(false);
+          stopPlaybackClock();
+          onPlaybackTimeChange?.(0);
+        };
+        audioRef.current.onpause = () => {
+          if (audioRef.current?.ended) return;
+          stopPlaybackClock();
         };
       } else {
         audioRef.current.src = urlToPlay;
@@ -101,10 +144,12 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
       // Play the audio
       await audioRef.current.play();
       setIsPlaying(true);
+      startPlaybackClock();
     } catch (error) {
       console.error("Error playing audio:", error);
       setIsPlaying(false);
       setIsLoading(false);
+      stopPlaybackClock();
     }
   };
 
@@ -123,6 +168,7 @@ export function AudioPlayer({ content, autoplay = false, chatId, id }: AudioPlay
             variant="outline"
             onClick={playAudio}
             disabled={isLoading || showGenerating}
+            type="button"
           >
             {isLoading || showGenerating ? (
               <Loader2 size={16} className="animate-spin" />

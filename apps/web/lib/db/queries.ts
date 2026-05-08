@@ -183,14 +183,16 @@ export async function updateMessageImageUrl({
 export async function updateMessageAudioUrl({
   id,
   audioUrl,
+  wordTimings,
 }: {
   id: string;
   audioUrl: string;
+  wordTimings?: Message['wordTimings'];
 }) {
   try {
     return await db
       .update(message)
-      .set({ audioUrl })
+      .set({ audioUrl, ...(wordTimings !== undefined ? { wordTimings } : {}) })
       .where(eq(message.id, id));
   } catch (error) {
     console.error('Failed to update message audio URL in database', error);

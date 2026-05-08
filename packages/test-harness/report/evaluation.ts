@@ -253,11 +253,7 @@ export function formatTranscript(messages: Message[]): string {
             ? `**${m.player}** (to narrator)`
             : `**${m.player}**`;
 
-      const reasoningBlock = m.reasoning
-        ? `<details>\n<summary>🧠 Thinking</summary>\n\n${m.reasoning}\n\n</details>\n\n`
-        : '';
-
-      return `### Turn ${m.turn} - ${speaker}\n\n${reasoningBlock}${m.content}`;
+      return `### Turn ${m.turn} - ${speaker}\n\n${m.content}`;
     })
     .join('\n\n---\n\n');
 }

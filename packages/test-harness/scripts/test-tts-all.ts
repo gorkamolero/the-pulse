@@ -144,7 +144,10 @@ async function testMiniMax(): Promise<TestResult> {
 
     if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
 
-    const result = await response.json();
+    const result = (await response.json()) as {
+      data?: { audio?: string };
+      audio_file?: string;
+    };
     const hexAudio = result.data?.audio || result.audio_file;
     if (!hexAudio) throw new Error("No audio data");
 

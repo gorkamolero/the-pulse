@@ -104,14 +104,23 @@ export function ChatHeader({
           </>
         )}
 
-        {/* Sign in link for guests */}
+        {/* Auth links for guests */}
         {isGuest && (
-          <Link
-            href="/register"
-            className="text-xs text-primary hover:underline ml-2"
-          >
-            Create Account
-          </Link>
+          <div className="ml-2 flex items-center gap-2 text-xs">
+            <Link
+              href="/login"
+              className="text-muted-foreground hover:text-foreground hover:underline underline-offset-4 transition-colors"
+            >
+              Sign in
+            </Link>
+            <span className="text-muted-foreground/40">/</span>
+            <Link
+              href="/register"
+              className="text-primary hover:underline underline-offset-4 transition-colors"
+            >
+              Create account
+            </Link>
+          </div>
         )}
       </div>
     </header>

@@ -3,7 +3,7 @@
 import type { UIMessage } from "ai";
 import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 import {
   convertUIMessageToLegacyFormat,
   getUIMessageContent,
@@ -20,6 +20,8 @@ import { Weather, type WeatherAtLocation } from "./weather";
 import equal from "fast-deep-equal";
 import { cn } from "@/lib/utils";
 import { MessageReasoning } from "./message-reasoning";
+import { useMessage } from "@/hooks/use-message";
+import { getValidWordTimings, TimedNarration } from "./timed-narration";
 
 type ChatRequestOptions = {
   experimental_attachments?: Attachment[];
@@ -48,6 +50,11 @@ const PurePreviewMessage = ({
 }) => {
   // Convert UIMessage to legacy format for compatibility
   const message = useMemo(() => convertUIMessageToLegacyFormat(uiMessage), [uiMessage]);
+  const [playbackTimeMs, setPlaybackTimeMs] = useState(0);
+  const { message: storedMessage } = useMessage(
+    message.role === "assistant" ? message.id : null
+  );
+  const wordTimings = getValidWordTimings(storedMessage.wordTimings);
 
   return (
     <AnimatePresence>
@@ -95,7 +102,15 @@ const PurePreviewMessage = ({
                     message.role === "user",
                 })}
               >
-                <Markdown>{message.content as string}</Markdown>
+                {message.role === "assistant" && wordTimings.length > 0 ? (
+                  <TimedNarration
+                    currentTimeMs={playbackTimeMs}
+                    text={message.content as string}
+                    wordTimings={wordTimings}
+                  />
+                ) : (
+                  <Markdown>{message.content as string}</Markdown>
+                )}
               </div>
             )}
 
@@ -142,6 +157,7 @@ const PurePreviewMessage = ({
                 message={message}
                 isLoading={isLoading}
                 autoplay={autoplay}
+                onPlaybackTimeChange={setPlaybackTimeMs}
               />
             )}
           </div>

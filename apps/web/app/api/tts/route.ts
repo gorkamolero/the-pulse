@@ -1,7 +1,6 @@
-import { experimental_generateSpeech as generateSpeech } from "ai";
-import { elevenlabs } from "@ai-sdk/elevenlabs";
 import { type NextRequest, NextResponse } from "next/server";
 import { DEFAULT_VOICE_ID } from "@pulse/core/ai/models";
+import { ElevenLabsProvider } from "@/lib/ai/tts";
 
 /**
  * POST handler for text-to-speech API (ElevenLabs only)
@@ -15,17 +14,17 @@ export async function POST(request: NextRequest) {
     }
 
     const voice = voiceId || DEFAULT_VOICE_ID;
+    const provider = new ElevenLabsProvider();
 
-    const { audio } = await generateSpeech({
-      model: elevenlabs.speech("eleven_flash_v2_5"),
+    const audio = await provider.generateSpeech({
       text,
-      voice,
+      voiceId: voice,
     });
 
-    return new NextResponse(Buffer.from(audio.base64, "base64"), {
+    return new NextResponse(Buffer.from(audio.audioBase64, "base64"), {
       headers: {
-        "Content-Type": audio.mediaType,
-        "Content-Disposition": `attachment; filename="speech.${audio.format}"`,
+        "Content-Type": audio.contentType,
+        "Content-Disposition": "attachment; filename=\"speech.mp3\"",
       },
     });
   } catch (error) {

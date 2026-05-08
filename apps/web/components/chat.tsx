@@ -9,6 +9,10 @@ type Attachment = {
   name?: string;
   contentType?: string;
 };
+type ChatRequestOptions = {
+  experimental_attachments?: Array<Attachment>;
+  body?: Record<string, unknown>;
+};
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { BookOpen, MessageSquare } from "lucide-react";
 import { useSWRConfig } from "swr";
@@ -198,6 +202,7 @@ export function Chat({
       const story = stories.find(s => s.id === storyId);
       if (story) {
         setSelectedStoryTitle(story.title);
+        setAudioReady(false);
         setPhase('loading'); // Instantly show loading screen + modal
 
         // Lazy-load story-specific typography (non-blocking)
@@ -225,7 +230,7 @@ export function Chat({
 
   // Create wrapper functions to match the old API
   const handleSubmit = useCallback(
-    (event?: { preventDefault?: () => void }, chatRequestOptions?: { experimental_attachments?: Array<Attachment> }) => {
+    (event?: { preventDefault?: () => void }, chatRequestOptions?: ChatRequestOptions) => {
       event?.preventDefault?.();
       if (!input.trim() && !attachments.length) return;
 
@@ -233,6 +238,8 @@ export function Chat({
       // For now, sending just text - file handling needs to be implemented
       sendMessage({
         text: input,
+      }, {
+        body: chatRequestOptions?.body,
       });
 
       setInput("");
@@ -243,10 +250,12 @@ export function Chat({
   );
 
   const append = useCallback(
-    async (message: UIMessage | CreateUIMessage<UIMessage>, chatRequestOptions?: { experimental_attachments?: Array<Attachment> }) => {
+    async (message: UIMessage | CreateUIMessage<UIMessage>, chatRequestOptions?: ChatRequestOptions) => {
       const textContent = getUIMessageContent(message as UIMessage);
       await sendMessage({
         text: textContent,
+      }, {
+        body: chatRequestOptions?.body,
       });
       return null;
     },
@@ -276,6 +285,21 @@ export function Chat({
     return lastAssistantMessage?.id ?? null
   }, [messages]);
 
+  const isGroupSetupPrompt = useMemo(() => {
+    if (isSoloMode) return false;
+
+    const assistantMessages = messages.filter((m) => m.role === "assistant");
+    if (assistantMessages.length !== 1) return false;
+
+    const content = getUIMessageContent(assistantMessages[0]).toLowerCase();
+    return (
+      content.includes("how many players") ||
+      content.includes("player") && content.includes("name")
+    );
+  }, [isSoloMode, messages]);
+
+  const storyDisplayMessageId = isGroupSetupPrompt ? null : currentMessageId;
+
   // Check if narrator has responded
   const hasNarratorResponse = useMemo(() => {
     return messages.some(m => m.role === 'assistant');
@@ -287,8 +311,9 @@ export function Chat({
   const isStoryReady = useMemo(() => {
     if (!hasNarratorResponse) return false;
     if (!audioEnabled) return true;
-    return audioReady;
-  }, [hasNarratorResponse, audioEnabled, audioReady]);
+    if (audioReady) return true;
+    return status === 'ready' || status === 'error';
+  }, [hasNarratorResponse, audioEnabled, audioReady, status]);
 
   const handleBeginStory = useCallback(() => {
     setStoryBegun(true); // Enable audio autoplay
@@ -333,7 +358,17 @@ export function Chat({
         <div className="flex-1 bg-black" />
       )}
       {phase === 'chat' && (
-        isMobile ? (
+        isGroupSetupPrompt ? (
+          <div className="flex-1 min-h-0">
+            <Messages
+              chatId={id}
+              isLoading={isLoading}
+              messages={messages}
+              storyId={selectedStoryId}
+              setupMode
+            />
+          </div>
+        ) : isMobile ? (
           <div className="flex-1 flex flex-col min-h-0 relative">
             {/* Mobile panel toggle */}
             <div className="flex border-b border-border/50 bg-background/95">
@@ -368,10 +403,11 @@ export function Chat({
                 isLoading={isLoading}
                 messages={messages}
                 storyId={selectedStoryId}
+                setupMode={isGroupSetupPrompt}
               />
             ) : (
               <div className="flex flex-col items-center justify-center flex-1 overflow-hidden">
-                <StoryDisplay currentMessageId={currentMessageId} />
+                <StoryDisplay currentMessageId={storyDisplayMessageId} />
               </div>
             )}
           </div>
@@ -390,7 +426,7 @@ export function Chat({
 
             <ResizablePanel defaultSize={50}>
               <div className="flex flex-col items-center justify-center h-full overflow-hidden">
-                <StoryDisplay currentMessageId={currentMessageId} />
+                <StoryDisplay currentMessageId={storyDisplayMessageId} />
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>

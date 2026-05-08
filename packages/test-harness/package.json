@@ -34,16 +34,17 @@
     "cli:eval": "tsx cli/eval.ts",
     "cli:speed": "tsx scripts/test-narrator-speed.ts",
     "cli:tts-speed": "tsx scripts/test-tts-speed.ts",
-    "cli:tts-all": "tsx scripts/test-tts-all.ts"
+    "cli:tts-all": "tsx scripts/test-tts-all.ts",
+    "cli:compare-latest-narrators": "tsx scripts/compare-latest-narrators.ts"
   },
   "dependencies": {
     "@ai-sdk/elevenlabs": "2.0.0-beta.47",
     "@ai-sdk/hume": "^2.0.12",
     "@ai-sdk/lmnt": "^2.0.12",
     "@faker-js/faker": "^10.1.0",
-    "@openrouter/ai-sdk-provider": "^1.5.4",
+    "@openrouter/ai-sdk-provider": "^2.9.0",
     "@pulse/core": "workspace:*",
-    "ai": "6.0.0-beta.150",
+    "ai": "6.0.176",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",

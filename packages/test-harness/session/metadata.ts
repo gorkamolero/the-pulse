@@ -27,7 +27,13 @@ export const TagCategories = {
   PROMPT: ['production'],
 
   /** Narrator model */
-  NARRATOR: ['opus-4.5', 'grok-4', 'deepseek-v3.2'],
+  NARRATOR: [
+    'opus-4.6',
+    'xai/grok-4.3',
+    'deepseek-v4-pro',
+    'deepseek-v4-flash',
+    'moonshotai/kimi-k2.6',
+  ],
 
   /** Story being tested */
   STORY: [

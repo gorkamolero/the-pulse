@@ -6,7 +6,7 @@
  * Runs the same session config with multiple narrator models for A/B comparison.
  * Same story, same archetypes, same prompt - only narrator model differs.
  *
- * Command: pnpm test:compare-narrators --story [id] --narrators deepseek-v3.2,kimi-k2-thinking
+ * Command: pnpm test:compare-narrators --story [id] --narrators moonshotai/kimi-k2.6,deepseek-v4-pro
  */
 
 import { Command } from 'commander';
@@ -22,7 +22,7 @@ import { getSystemPrompt, type PromptStyle } from '../prompts/loader';
 import { generateGroup } from '../agents/player';
 import type { StoryContext as GeneratorStoryContext } from '../agents/character-generator';
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import {
   DEFAULTS,
   withStoryRequired,
@@ -31,9 +31,10 @@ import {
   withArchetypes,
   withMaxTurns,
   withLanguage,
+  withGeminiEval,
 } from './shared-options';
 
-config({ path: '.env.local' });
+config({ path: resolve(import.meta.dirname, '../../../.env.local') });
 
 const program = new Command();
 
@@ -46,11 +47,16 @@ program.requiredOption(
   '--narrators <models>',
   `Comma-separated narrator models to compare (${AVAILABLE_NARRATORS})`,
 );
+program.option(
+  '--parallel',
+  'Run narrator sessions in parallel. Faster, but console output is interleaved.',
+);
 withPromptStyle(program);
 withPlayers(program);
 withArchetypes(program);
 withMaxTurns(program);
 withLanguage(program);
+withGeminiEval(program);
 program.parse();
 
 const options = program.opts();
@@ -79,6 +85,8 @@ async function runComparison() {
   const promptStyle = options.prompt as PromptStyle;
   const language = options.language;
   const maxTurns = options.maxTurns;
+  const geminiEval = options.geminiEval;
+  const parallel = options.parallel;
 
   // Parse narrator models
   const narrators = options.narrators.split(',').map((s: string) => s.trim()) as NarratorModel[];
@@ -144,11 +152,12 @@ async function runComparison() {
   const systemPrompt = getSystemPrompt(storyGuide, language, promptStyle);
 
   console.log(
-    chalk.bold.yellow(`▶ Running ${narrators.length} sessions in parallel with same group...\n`),
+    chalk.bold.yellow(
+      `▶ Running ${narrators.length} sessions ${parallel ? 'in parallel' : 'sequentially'} with same group...\n`,
+    ),
   );
 
-  // Run all narrator models in parallel with SAME group and prompt
-  const sessionPromises = narrators.map(async (narratorModel): Promise<ComparisonResult> => {
+  const runNarrator = async (narratorModel: NarratorModel): Promise<ComparisonResult> => {
     try {
       const result = await runSession({
         story,
@@ -165,7 +174,7 @@ async function runComparison() {
       });
 
       // Save individual report
-      const reportPath = await saveSessionReport(result);
+      const reportPath = await saveSessionReport(result, undefined, { geminiEval });
       console.log(chalk.green(`\n✓ ${narratorModel} complete: ${reportPath}`));
 
       // Extract metrics for comparison
@@ -191,9 +200,16 @@ async function runComparison() {
         duration: 'N/A',
       };
     }
-  });
+  };
 
-  const results = await Promise.all(sessionPromises);
+  const results: ComparisonResult[] = [];
+  if (parallel) {
+    results.push(...(await Promise.all(narrators.map(runNarrator))));
+  } else {
+    for (const narrator of narrators) {
+      results.push(await runNarrator(narrator));
+    }
+  }
 
   // Generate comparison report
   generateComparisonReport(results, storyId, promptStyle);

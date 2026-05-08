@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     if (provider === 'openrouter') {
       const openrouter = createOpenRouter({ apiKey });
-      model = openrouter(TEST_MODEL);
+      model = openrouter(TEST_MODEL) as unknown as LanguageModel;
     } else {
       const customGateway = createGateway({ apiKey });
       model = customGateway(TEST_MODEL);

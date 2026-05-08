@@ -8,48 +8,171 @@ import { config } from "dotenv";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeFileSync, mkdirSync } from "node:fs";
+import { fal } from "@fal-ai/client";
+import { generateImagePrompt } from "../lib/ai/tools/generate-image";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Load .env.local
+// Load env from app first, then repo root as fallback.
+config({ path: resolve(__dirname, "../.env.local") });
 config({ path: resolve(__dirname, "../../../.env.local") });
 
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 const FIREWORKS_API_KEY = process.env.FIREWORKS_API_KEY;
+const FAL_KEY = process.env.FAL_KEY;
 
-if (!REPLICATE_API_TOKEN) {
-  console.error("Missing REPLICATE_API_TOKEN");
-  process.exit(1);
+if (FAL_KEY) {
+  fal.config({ credentials: FAL_KEY });
 }
 
 // Test prompt - atmospheric horror scene
 const TEST_PROMPT =
   "A foggy New England coastal town at dusk, decrepit Victorian buildings, gas lamps casting yellow light, ominous shadows, Lovecraftian atmosphere, cinematic lighting, photorealistic";
 
+const GAME_PULSE = `The bus wheezes to a halt where the asphalt crumbles into weedy gravel, and the driver stares straight ahead, knuckles white on the wheel. Through the fog, a tilting signpost reads INNSMOUTH in flaking paint, while the letter in your pocket—your cousin's final, frantic scrawl—grows damp in the salt air. The cipher at its bottom, all shifting waves and lidless eyes, still tugs at your mind with meanings half-glimpsed. From the marsh beyond the roadside, a chorus of croaks rises, then falls into a silence deeper than the fog itself.
+
+Do you step down into the mist, or demand the driver tell you why he won't look toward the town?`;
+
+const shouldUseGamePrompt = process.argv.includes("--game-prompt");
+const shouldRunFastOnly =
+  process.argv.includes("--fast") || process.env.FAL_ONLY_FAST === "1";
+const runId = String(Date.now());
+const FAST_MODEL_NAMES = new Set([
+  "fal/flux-schnell",
+  "fal/imagen4-fast",
+  "fal/seedream-v4",
+  "replicate/flux-2-klein-4b",
+]);
+
 // Models to test
 const MODELS = {
-  // Flux 2 models (newest)
-  "replicate/flux-2-klein-4b": {
-    provider: "replicate",
-    model: "black-forest-labs/flux-2-klein-4b",
-  },
-  "replicate/flux-2-dev": {
-    provider: "replicate",
-    model: "black-forest-labs/flux-2-dev",
-  },
-  "replicate/flux-2-pro": {
-    provider: "replicate",
-    model: "black-forest-labs/flux-2-pro",
-  },
-  // Flux 1 models
-  "replicate/flux-schnell": {
-    provider: "replicate",
-    model: "black-forest-labs/flux-schnell",
-  },
-  "replicate/flux-1.1-pro": {
-    provider: "replicate",
-    model: "black-forest-labs/flux-1.1-pro",
-  },
+  ...(FAL_KEY
+    ? {
+        // Best current fal-hosted candidates
+        "fal/nano-banana-2": {
+          provider: "fal",
+          model: "fal-ai/nano-banana-2",
+          costPerImageUsd: 0.039,
+          input: {
+            aspect_ratio: "9:16",
+            num_images: 1,
+            output_format: "png",
+            resolution: "1K",
+            safety_tolerance: "4",
+          },
+        },
+        "fal/nano-banana-pro": {
+          provider: "fal",
+          model: "fal-ai/nano-banana-pro",
+          costPerImageUsd: 0.15,
+          input: {
+            aspect_ratio: "9:16",
+            num_images: 1,
+            output_format: "png",
+            resolution: "1K",
+            safety_tolerance: "4",
+          },
+        },
+        "fal/openai-gpt-image-1.5-high": {
+          provider: "fal",
+          model: "fal-ai/gpt-image-1.5",
+          costPerImageUsd: 0.2,
+          input: {
+            image_size: "1024x1536",
+            quality: "high",
+            num_images: 1,
+            output_format: "png",
+          },
+        },
+        "fal/openai-gpt-image-1.5-medium": {
+          provider: "fal",
+          model: "fal-ai/gpt-image-1.5",
+          costPerImageUsd: 0.051,
+          input: {
+            image_size: "1024x1536",
+            quality: "medium",
+            num_images: 1,
+            output_format: "png",
+          },
+        },
+        "fal/flux-schnell": {
+          provider: "fal",
+          model: "fal-ai/flux/schnell",
+          costPerImageUsd: 0.003,
+          input: {
+            image_size: "portrait_16_9",
+            num_images: 1,
+            output_format: "png",
+          },
+        },
+        "fal/flux-2-pro": {
+          provider: "fal",
+          model: "fal-ai/flux-2-pro",
+          costPerImageUsd: 0.04,
+          input: {
+            prompt: TEST_PROMPT,
+            aspect_ratio: "9:16",
+            num_images: 1,
+            output_format: "png",
+          },
+        },
+        "fal/flux-2-flex": {
+          provider: "fal",
+          model: "fal-ai/flux-2-flex",
+          costPerImageUsd: 0.04,
+          input: {
+            prompt: TEST_PROMPT,
+            aspect_ratio: "9:16",
+            num_images: 1,
+            output_format: "png",
+          },
+        },
+        "fal/seedream-v4": {
+          provider: "fal",
+          model: "fal-ai/bytedance/seedream/v4/text-to-image",
+          costPerImageUsd: 0.03,
+          input: {
+            image_size: "portrait_16_9",
+            num_images: 1,
+          },
+        },
+        "fal/imagen4-fast": {
+          provider: "fal",
+          model: "fal-ai/imagen4/preview/fast",
+          costPerImageUsd: 0.02,
+          input: {
+            image_size: "portrait_16_9",
+            num_images: 1,
+          },
+        },
+      }
+    : {}),
+  ...(REPLICATE_API_TOKEN
+    ? {
+        // Flux 2 models (newest)
+        "replicate/flux-2-klein-4b": {
+          provider: "replicate",
+          model: "black-forest-labs/flux-2-klein-4b",
+        },
+        "replicate/flux-2-dev": {
+          provider: "replicate",
+          model: "black-forest-labs/flux-2-dev",
+        },
+        "replicate/flux-2-pro": {
+          provider: "replicate",
+          model: "black-forest-labs/flux-2-pro",
+        },
+        // Flux 1 models
+        "replicate/flux-schnell": {
+          provider: "replicate",
+          model: "black-forest-labs/flux-schnell",
+        },
+        "replicate/flux-1.1-pro": {
+          provider: "replicate",
+          model: "black-forest-labs/flux-1.1-pro",
+        },
+      }
+    : {}),
   // Fireworks models
   ...(FIREWORKS_API_KEY
     ? {
@@ -70,6 +193,7 @@ interface TestResult {
   provider: string;
   totalTimeMs: number;
   success: boolean;
+  estimatedCostUsd?: number | null;
   error?: string;
   imagePath?: string;
 }
@@ -144,7 +268,7 @@ async function testReplicateModel(
           const imgResponse = await fetch(imageUrl);
           const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
           const safeName = modelName.replace(/\//g, "-");
-          const imagePath = resolve(OUTPUT_DIR, `${safeName}.webp`);
+          const imagePath = resolve(OUTPUT_DIR, `${runId}-${safeName}.webp`);
           writeFileSync(imagePath, imgBuffer);
           return { success: true, timeMs: endTime - startTime, imagePath };
         } catch {
@@ -205,7 +329,61 @@ async function testFireworksModel(
     // Save the image
     const imgBuffer = Buffer.from(await response.arrayBuffer());
     const safeName = modelName.replace(/\//g, "-");
-    const imagePath = resolve(OUTPUT_DIR, `${safeName}.webp`);
+    const imagePath = resolve(OUTPUT_DIR, `${runId}-${safeName}.webp`);
+    writeFileSync(imagePath, imgBuffer);
+
+    return { success: true, timeMs: endTime - startTime, imagePath };
+  } catch (err) {
+    return {
+      success: false,
+      timeMs: performance.now() - startTime,
+      error: String(err),
+    };
+  }
+}
+
+async function testFalModel(
+  modelId: string,
+  modelName: string,
+  prompt: string,
+  input: Record<string, unknown> = {}
+): Promise<{ success: boolean; timeMs: number; error?: string; imagePath?: string }> {
+  const startTime = performance.now();
+
+  try {
+    const result = await fal.subscribe(modelId, {
+      input: {
+        ...input,
+        prompt,
+      },
+    });
+    const endTime = performance.now();
+    const data = result.data as {
+      images?: Array<{
+        url?: string;
+        content_type?: string;
+      }>;
+    };
+    const imageUrl = data.images?.[0]?.url;
+
+    if (!imageUrl) {
+      return {
+        success: false,
+        timeMs: endTime - startTime,
+        error: "No image URL returned",
+      };
+    }
+
+    const imgResponse = await fetch(imageUrl);
+    const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
+    const safeName = modelName.replace(/\//g, "-");
+    const contentType = data.images?.[0]?.content_type || "image/png";
+    const extension = contentType.includes("webp")
+      ? "webp"
+      : contentType.includes("jpeg")
+        ? "jpg"
+        : "png";
+    const imagePath = resolve(OUTPUT_DIR, `${runId}-${safeName}.${extension}`);
     writeFileSync(imagePath, imgBuffer);
 
     return { success: true, timeMs: endTime - startTime, imagePath };
@@ -220,16 +398,24 @@ async function testFireworksModel(
 
 async function runTest(
   name: string,
-  config: { provider: string; model: string }
+  config: {
+    provider: string;
+    model: string;
+    costPerImageUsd?: number | null;
+    input?: Record<string, unknown>;
+  },
+  prompt: string
 ): Promise<TestResult> {
   console.log(`\n━━━ Testing: ${name} ━━━`);
 
   let result: { success: boolean; timeMs: number; error?: string; imagePath?: string };
 
   if (config.provider === "replicate") {
-    result = await testReplicateModel(config.model, name, TEST_PROMPT);
+    result = await testReplicateModel(config.model, name, prompt);
+  } else if (config.provider === "fal") {
+    result = await testFalModel(config.model, name, prompt, config.input);
   } else if (config.provider === "fireworks") {
-    result = await testFireworksModel(config.model, name, TEST_PROMPT);
+    result = await testFireworksModel(config.model, name, prompt);
   } else {
     result = { success: false, timeMs: 0, error: "Unknown provider" };
   }
@@ -248,6 +434,7 @@ async function runTest(
     provider: config.provider,
     totalTimeMs: result.timeMs,
     success: result.success,
+    estimatedCostUsd: config.costPerImageUsd,
     error: result.error,
     imagePath: result.imagePath,
   };
@@ -256,13 +443,36 @@ async function runTest(
 async function main() {
   console.log("🖼️  Image Generation Speed Test");
   console.log("================================");
-  console.log(`Prompt: "${TEST_PROMPT.slice(0, 50)}..."`);
-  console.log(`Models to test: ${Object.keys(MODELS).length}`);
+  const prompt = shouldUseGamePrompt
+    ? await generateImagePrompt({
+        storyId: "shadow-over-innsmouth",
+        pulse: GAME_PULSE,
+      })
+    : TEST_PROMPT;
+
+  console.log(`Prompt: "${prompt.slice(0, 120)}..."`);
+  const modelsToRun = Object.entries(MODELS).filter(
+    ([name]) => !shouldRunFastOnly || FAST_MODEL_NAMES.has(name)
+  );
+
+  console.log(`Models to test: ${modelsToRun.length}`);
+  if (!FAL_KEY) console.log("FAL_KEY missing - skipping fal models");
+  if (!REPLICATE_API_TOKEN) console.log("REPLICATE_API_TOKEN missing - skipping Replicate models");
 
   const results: TestResult[] = [];
+  const outputDir = resolve(__dirname, "../../../test-results");
+  mkdirSync(outputDir, { recursive: true });
+  const startedAt = Number(runId);
 
-  for (const [name, config] of Object.entries(MODELS)) {
-    const result = await runTest(name, config);
+  if (shouldUseGamePrompt) {
+    writeFileSync(
+      resolve(outputDir, `image-game-prompt-${startedAt}.txt`),
+      prompt
+    );
+  }
+
+  for (const [name, config] of modelsToRun) {
+    const result = await runTest(name, config, prompt);
     results.push(result);
   }
 
@@ -278,7 +488,11 @@ async function main() {
     const r = successful[i];
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "  ";
     console.log(
-      `${medal} ${(r.totalTimeMs / 1000).toFixed(2)}s  ${r.model}`
+      `${medal} ${(r.totalTimeMs / 1000).toFixed(2)}s  ${r.model}  ${
+        typeof r.estimatedCostUsd === "number"
+          ? `$${r.estimatedCostUsd.toFixed(3)}/image`
+          : "cost TBD"
+      }`
     );
   }
 
@@ -291,11 +505,9 @@ async function main() {
   }
 
   // Save results
-  const outputDir = resolve(__dirname, "../../../test-results");
-  mkdirSync(outputDir, { recursive: true });
   const outputPath = resolve(
     outputDir,
-    `image-speed-${Date.now()}.json`
+    `image-speed-${startedAt}.json`
   );
   writeFileSync(outputPath, JSON.stringify(results, null, 2));
   console.log(`\n📁 Results saved to ${outputPath}`);

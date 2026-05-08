@@ -9,7 +9,7 @@ import { resolve } from "node:path";
 // Load .env.local from apps/web
 config({ path: resolve(import.meta.dirname, "../../../apps/web/.env.local") });
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { streamText } from "ai";
+import { streamText, type LanguageModel } from "ai";
 import { systemPrompt } from "@pulse/core/ai/prompts/system";
 import { getStory } from "../stories/loader";
 
@@ -54,10 +54,10 @@ async function testModel(modelKey: string, modelId: string) {
 
   try {
     const result = streamText({
-      model: openrouter(modelId),
+      model: openrouter(modelId) as unknown as LanguageModel,
       system,
       messages: [{ role: "user", content: userMessage }],
-      maxTokens: 500,
+      maxOutputTokens: 500,
     });
 
     for await (const chunk of result.textStream) {

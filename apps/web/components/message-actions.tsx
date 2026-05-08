@@ -17,12 +17,14 @@ export function PureMessageActions({
   chatId,
   message,
   isLoading,
-  autoplay
+  autoplay,
+  onPlaybackTimeChange,
 }: {
   chatId: string;
   message: LegacyMessage;
   isLoading: boolean;
-  autoplay?: boolean
+  autoplay?: boolean;
+  onPlaybackTimeChange?: (timeMs: number) => void;
 }) {
   if (isLoading) return null;
 
@@ -65,7 +67,13 @@ export function PureMessageActions({
   }
 
   return (
-    <AudioPlayer content={message.content as string} chatId={chatId} autoplay={autoplay} id={message.id} />
+    <AudioPlayer
+      autoplay={autoplay}
+      chatId={chatId}
+      content={message.content as string}
+      id={message.id}
+      onPlaybackTimeChange={onPlaybackTimeChange}
+    />
   );
 }
 
@@ -73,6 +81,7 @@ export const MessageActions = memo(
   PureMessageActions,
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
+    if (prevProps.onPlaybackTimeChange !== nextProps.onPlaybackTimeChange) return false;
 
     return true;
   }

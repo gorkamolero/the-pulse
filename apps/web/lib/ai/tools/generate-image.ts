@@ -1,8 +1,129 @@
 import { generateText, experimental_generateImage } from "ai";
 import { replicate } from "@ai-sdk/replicate";
+import { fal } from "@fal-ai/client";
 import { getStoryById } from "@pulse/core/ai/stories";
 import { TITLE_MODEL } from "@pulse/core/ai/models";
 import { put } from "@vercel/blob";
+
+type ImageProvider = "fal" | "replicate";
+
+type ImageModel =
+  | "nano-banana"
+  | "nano-banana-2"
+  | "gpt-image-1.5"
+  | "gpt-image-2"
+  | "flux-schnell"
+  | "flux-2-klein-4b";
+
+type FalImageResult = {
+  images?: Array<{
+    url?: string;
+    content_type?: string;
+    file_name?: string;
+  }>;
+};
+
+type ImageGenerationResult =
+  | { success: true; url: string }
+  | { success: false; error: string };
+
+const FAL_MODEL_IDS: Record<Exclude<ImageModel, "flux-2-klein-4b">, string> = {
+  "nano-banana": "fal-ai/nano-banana",
+  "nano-banana-2": "fal-ai/nano-banana-2",
+  "gpt-image-1.5": "fal-ai/gpt-image-1.5",
+  "gpt-image-2": "openai/gpt-image-2",
+  "flux-schnell": "fal-ai/flux/schnell",
+};
+
+const getImageProvider = (): ImageProvider =>
+  process.env.IMAGE_PROVIDER === "replicate" ? "replicate" : "fal";
+
+const getImageModel = (): ImageModel => {
+  const model = process.env.IMAGE_MODEL;
+
+  if (
+    model === "nano-banana" ||
+    model === "nano-banana-2" ||
+    model === "gpt-image-1.5" ||
+    model === "gpt-image-2" ||
+    model === "flux-schnell" ||
+    model === "flux-2-klein-4b"
+  ) {
+    return model;
+  }
+
+  return "flux-schnell";
+};
+
+function getFalInput(model: ImageModel, prompt: string) {
+  if (model === "gpt-image-1.5") {
+    return {
+      prompt,
+      image_size: "1024x1536",
+      quality: "high",
+      num_images: 1,
+      output_format: "png",
+    };
+  }
+
+  if (model === "gpt-image-2") {
+    return {
+      prompt,
+      image_size: "portrait_16_9",
+      quality: "high",
+      num_images: 1,
+      output_format: "png",
+    };
+  }
+
+  if (model === "flux-schnell") {
+    return {
+      prompt,
+      image_size: "portrait_16_9",
+      num_images: 1,
+      output_format: "png",
+    };
+  }
+
+  return {
+    prompt,
+    aspect_ratio: "9:16",
+    num_images: 1,
+    output_format: "png",
+    safety_tolerance: "4",
+    resolution: "1K",
+  };
+}
+
+async function uploadImageUrl({
+  imageUrl,
+  messageId,
+  contentType = "image/png",
+}: {
+  imageUrl: string;
+  messageId: string;
+  contentType?: string;
+}): Promise<ImageGenerationResult> {
+  const imageResponse = await fetch(imageUrl);
+
+  if (!imageResponse.ok) {
+    throw new Error(`Failed to fetch generated image: ${imageResponse.status}`);
+  }
+
+  const buffer = Buffer.from(await imageResponse.arrayBuffer());
+  const extension = contentType.includes("webp")
+    ? "webp"
+    : contentType.includes("jpeg")
+      ? "jpg"
+      : "png";
+  const filename = `pulse-image-${messageId}.${extension}`;
+  const { url } = await put(filename, buffer, {
+    contentType,
+    access: "public",
+  });
+
+  return { success: true, url };
+}
 
 /**
  * Generate an image prompt from scene text.
@@ -56,7 +177,44 @@ export async function generateImageFromPrompt({
 }: {
   imagePrompt: string;
   messageId: string;
-}) {
+}): Promise<ImageGenerationResult> {
+  const provider = getImageProvider();
+  const model = getImageModel();
+
+  if (provider === "fal" && model !== "flux-2-klein-4b") {
+    const falKey = process.env.FAL_KEY;
+
+    if (!falKey) {
+      return { success: false, error: "FAL_KEY is not configured" };
+    }
+
+    fal.config({ credentials: falKey });
+
+    try {
+      const result = await fal.subscribe(FAL_MODEL_IDS[model], {
+        input: getFalInput(model, imagePrompt),
+      });
+      const data = result.data as FalImageResult;
+      const generatedImage = data.images?.[0];
+
+      if (!generatedImage?.url) {
+        return { success: false, error: "No image URL received from fal" };
+      }
+
+      return await uploadImageUrl({
+        imageUrl: generatedImage.url,
+        messageId,
+        contentType: generatedImage.content_type,
+      });
+    } catch (error) {
+      console.error("fal image generation failed:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "fal image generation failed",
+      };
+    }
+  }
+
   // Generate image using Flux 2 Klein 4B - fastest + cheapest option
   // Speed: 0.78s | Cost: ~$0.0006/image | Quality: Excellent
   const { image } = await experimental_generateImage({
@@ -74,7 +232,7 @@ export async function generateImageFromPrompt({
   // Check if image and base64 data exist before proceeding
   if (!image || !image.base64) {
     console.error("Image generation failed: No base64 data received");
-    return { success: false, error: "No image data received" };
+      return { success: false, error: "No image data received" };
   }
 
   // Upload the image to Vercel Blob

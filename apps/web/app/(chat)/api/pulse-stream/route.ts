@@ -177,6 +177,7 @@ export async function POST(request: Request) {
         chatId: id,
         imageUrl: null,
         audioUrl: null,
+        wordTimings: null,
       },
     ],
   });
@@ -187,7 +188,7 @@ export async function POST(request: Request) {
       language: language === "es" ? "spanish" : "english",
     });
 
-  const modelMessages = convertToModelMessages(messages);
+  const modelMessages = await convertToModelMessages(messages);
   const assistantMessageId = crypto.randomUUID();
 
   // Create a TransformStream for the multiplexed response
@@ -337,6 +338,7 @@ export async function POST(request: Request) {
               createdAt: new Date(),
               imageUrl: null,
               audioUrl: null,
+              wordTimings: null,
             },
           ],
         });
@@ -368,7 +370,7 @@ export async function POST(request: Request) {
               messageId: assistantMessageId,
             });
 
-            if (imageResult?.url) {
+            if (imageResult.success) {
               await updateMessageImageUrl({
                 id: assistantMessageId,
                 imageUrl: imageResult.url,

@@ -13,7 +13,6 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnPulse = nextUrl.pathname.startsWith('/pulse');
       const isOnSettings = nextUrl.pathname === '/settings';
       const isOnRegister = nextUrl.pathname.startsWith('/register');
       const isOnLogin = nextUrl.pathname.startsWith('/login');
@@ -30,7 +29,7 @@ export const authConfig = {
         return true;
       }
 
-      // Protected routes: / (home), /settings
+      // Protected routes
       if (isOnSettings) {
         if (isLoggedIn) return true;
         return false; // Redirect unauthenticated users to login page

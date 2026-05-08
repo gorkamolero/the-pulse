@@ -18,6 +18,23 @@ export interface TTSRequest {
   voiceId: string;
   /** Optional model override (provider-specific) */
   model?: string;
+  /** Optional speech speed where supported */
+  speed?: number;
+  /** Optional ElevenLabs voice tuning */
+  elevenLabsVoiceSettings?: {
+    stability?: number;
+    similarityBoost?: number;
+    style?: number;
+    useSpeakerBoost?: boolean;
+  };
+}
+
+export interface WordTiming {
+  word: string;
+  startMs: number;
+  endMs: number;
+  startChar: number;
+  endChar: number;
 }
 
 export interface TTSResult {
@@ -25,6 +42,8 @@ export interface TTSResult {
   audioBase64: string;
   /** MIME type (e.g., "audio/mpeg") */
   contentType: string;
+  /** Optional exact word timings from providers that expose alignment data */
+  wordTimings?: WordTiming[];
 }
 
 export interface TTSProviderConfig {

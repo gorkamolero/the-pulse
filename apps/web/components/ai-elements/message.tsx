@@ -97,13 +97,13 @@ export const MessageContent = ({
   return (
     <div
       className={cn(
-        "max-w-[90%] md:max-w-[85%]",
+        "max-w-[92%] md:max-w-[760px]",
         // User messages: minimal, confident
         from === "user" &&
           "text-right text-foreground/90 font-medium",
         // Assistant messages: literary, immersive (uses story-specific font when loaded)
         from === "assistant" &&
-          "text-foreground/85 font-story",
+          "text-foreground font-story",
         // System messages: subtle, informative
         from === "system" &&
           "text-center text-muted-foreground/60 text-sm italic",
@@ -134,12 +134,13 @@ export const MessageResponse = memo(
       <div
         className={cn(
           // Prose styling for markdown
-          "prose prose-sm md:prose-base dark:prose-invert max-w-none",
+          "prose prose-base dark:prose-invert max-w-none",
           // Literary styling
-          "prose-p:leading-[1.8] prose-p:mb-4 prose-p:last:mb-0",
-          "prose-p:text-foreground/85",
+          "prose-p:leading-[1.72] prose-p:mb-5 prose-p:last:mb-0",
+          "prose-p:text-[hsl(var(--foreground)/0.9)]",
+          "prose-p:text-pretty",
           // Emphasis styling
-          "prose-em:text-foreground/70 prose-em:not-italic prose-em:font-light",
+          "prose-em:text-[hsl(var(--foreground)/0.78)] prose-em:not-italic prose-em:font-light",
           "prose-strong:font-semibold prose-strong:text-foreground",
           // Quote styling for story narration
           "prose-blockquote:border-l-foreground/20 prose-blockquote:text-foreground/70",
