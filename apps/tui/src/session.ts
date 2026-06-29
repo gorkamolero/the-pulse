@@ -45,6 +45,7 @@ import {
   type SessionResult,
   type SessionProgressEvent,
 } from '@pulse/test-harness/session/runner';
+import type { Message } from '@pulse/test-harness/session/turn';
 import {
   generateGroup,
   type GeneratedGroup,
@@ -128,6 +129,12 @@ export interface TuiSessionConfig {
 // ============================================================================
 // Real Session Runner
 // ============================================================================
+
+function countNarratorPulses(messages: Message[]): number {
+  return messages.filter(
+    (message) => message.role === 'narrator' && message.classification === 'pulse',
+  ).length;
+}
 
 /**
  * Run a real session using the test-harness runner
@@ -311,10 +318,6 @@ async function runRealSession(
         });
         break;
 
-      case 'pulse':
-        pulseCount = event.pulseCount;
-        break;
-
       case 'completed':
         emitter.emit('session:progress', {
           sessionId,
@@ -322,7 +325,7 @@ async function runRealSession(
           phase: 'completed',
           turn: event.turn,
           maxTurns,
-          pulses: event.pulses,
+          pulses: pulseCount,
           group: groupInfo,
         } satisfies SessionProgress);
         break;
@@ -407,13 +410,14 @@ async function runRealSession(
   // Check if session failed internally
   if (result.error) {
     console.error(`[TUI] Session ${sessionKey} internal error:`, result.error);
+    const resultPulses = countNarratorPulses(result.conversationHistory);
     emitter.emit('session:progress', {
       sessionId: result.sessionId,
       sessionKey,
       phase: 'failed',
       turn: result.finalTurn,
       maxTurns,
-      pulses: result.detectedPulses.length,
+      pulses: resultPulses,
       error: result.error,
     } satisfies SessionProgress);
   }
@@ -423,12 +427,13 @@ async function runRealSession(
 
   // Calculate cost from breakdown if available
   const cost = result.costBreakdown?.total.cost ?? 0;
+  const resultPulses = countNarratorPulses(result.conversationHistory);
 
   const complete: SessionComplete = {
     sessionId: result.sessionId,
     sessionKey,
     turns: result.finalTurn,
-    pulses: result.detectedPulses.length,
+    pulses: resultPulses,
     score: Math.round(score * 10) / 10,
     cost: Math.round(cost * 1000) / 1000,
     duration,

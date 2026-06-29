@@ -1,61 +1,204 @@
-<a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Next.js AI Chatbot</h1>
-</a>
+# The Pulse
 
-<p align="center">
-  An Open-Source AI Chatbot Template Built With Next.js and the AI SDK by Vercel.
-</p>
+AI-powered interactive fiction for solo and multiplayer story sessions. Pick a curated world, create a character, and let an AI narrator run the game in real time with text, images, voice, atmosphere, and group decision-making.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
-</p>
-<br/>
+The Pulse started from the Vercel AI Chatbot template, then grew into a story-game platform: narrator prompts, story guides, model routing, multiplayer rooms, voice narration, image generation, ambient audio, and an automated playtest harness that simulates groups of AI players.
 
-## Features
+## What It Proves
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://sdk.vercel.ai/docs)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports OpenAI (default), Anthropic, Cohere, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Vercel Postgres powered by Neon](https://vercel.com/storage/postgres) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [NextAuth.js](https://github.com/nextauthjs/next-auth)
-  - Simple and secure authentication
+- Product taste for AI-native entertainment: story selection, no-prep play, narrator voice, atmosphere, invite rooms, and a tight "pulse" concept.
+- Deep prompt/system design: narrator constraints, story guides, model comparisons, agency-preserving narration, and fourth-wall research.
+- Multiplayer AI UX: rooms, invite codes, spokesperson flow, player chat, player lists, and host/lobby states.
+- Multimodal execution: AI narration, image generation, TTS, ambient audio, audio controls, generated thumbnails, and story-specific themes.
+- Evaluation discipline: a full test harness that simulates player groups, runs sessions, saves checkpoints, generates reports, and compares narrator models/prompts.
 
-## Model Providers
+## Product Model
 
-This template ships with OpenAI `gpt-4o` as the default. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
+```text
+story guide
+  -> player or group starts a session
+  -> AI narrator delivers a pulse
+  -> players discuss and choose
+  -> spokesperson sends group action
+  -> narrator resolves the world
+  -> text, voice, images, ambience, and state update
+```
 
-## Deploy Your Own
+Test harness model:
 
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
+```text
+story + narrator model + prompt style
+  -> generated player group
+  -> simulated discussion
+  -> narrator response
+  -> checkpoint
+  -> issue detection
+  -> markdown/html report
+  -> prompt or model iteration
+```
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot&env=AUTH_SECRET,OPENAI_API_KEY&envDescription=Learn%20more%20about%20how%20to%20get%20the%20API%20Keys%20for%20the%20application&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot%2Fblob%2Fmain%2F.env.example&demo-title=AI%20Chatbot&demo-description=An%20Open-Source%20AI%20Chatbot%20Template%20Built%20With%20Next.js%20and%20the%20AI%20SDK%20by%20Vercel.&demo-url=https%3A%2F%2Fchat.vercel.ai&stores=[{%22type%22:%22postgres%22},{%22type%22:%22blob%22}])
+## Stories
 
-## Running locally
+Current story worlds:
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+- **Shadow Over Innsmouth** - Lovecraftian mystery in a decaying seaport.
+- **The Hollow Choir** - spectral mystery in a flooded city.
+- **Whispering Pines** - psychological horror in a remote cabin.
+- **Siren of the Red Dust** - sci-fi thriller on a silent Mars colony.
+- **The Endless Path** - cosmic horror with fractured time.
 
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various OpenAI and authentication provider accounts.
+Stories live in `packages/core/ai/stories/` and include story guide, description, narrator defaults, ambient audio, and visual theme data.
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+## Main Features
+
+- Story selector with persistent selection.
+- Solo play and multiplayer room flow.
+- Invite modal, lobby, player list, player chat, and spokesperson indicator.
+- AI narrator API routes for pulse generation and streaming.
+- Guest/soft-gate flow for low-friction play.
+- Voice narration and audio controls.
+- Ambient audio and story atmosphere.
+- AI image generation and story image display.
+- Model routing through OpenRouter, Vercel AI Gateway, Replicate, ElevenLabs, and other providers.
+- Test harness for simulated sessions and narrator evaluation.
+- TUI experiment for terminal-based harness interaction.
+
+## Monorepo Structure
+
+```text
+apps/web                 Next.js 16 web app, auth, game UI, rooms, APIs
+apps/tui                 OpenTUI experiment for terminal interaction
+packages/core            shared stories, narrator logic, prompts, model config
+packages/test-harness    simulated playtesting, reports, checkpoints, CLI tools
+docs                     narrator/model research and interaction design notes
+specs                    product and harness specs
+```
+
+Key web routes and APIs:
+
+```text
+apps/web/app/(chat)/api/pulse/route.ts
+apps/web/app/(chat)/api/pulse-stream/route.ts
+apps/web/app/api/room/route.ts
+apps/web/app/api/room/[roomId]/route.ts
+apps/web/app/api/room/join/[inviteCode]/route.ts
+apps/web/app/api/tts/route.ts
+apps/web/app/api/liveblocks-auth/route.ts
+```
+
+## Test Harness
+
+The harness is one of the strongest parts of the project. It lets the game be tested as a system, not only as a UI.
+
+It supports:
+
+- AI player archetypes with different play styles.
+- Random 2-5 player group composition.
+- Spokesperson selection.
+- Narrator model comparison.
+- Prompt-style comparison.
+- Story comparison.
+- Checkpoint/replay.
+- Cost tracking.
+- Tangent/private-moment/issue detection.
+- Markdown, transcript, HTML, and Gemini evaluation reports.
+
+Example commands:
+
+```bash
+pnpm --filter @pulse/test-harness cli:run --story shadow-over-innsmouth --narrator deepseek-v4-flash
+pnpm --filter @pulse/test-harness cli:compare --story shadow-over-innsmouth
+pnpm --filter @pulse/test-harness cli:compare-narrators --story shadow-over-innsmouth
+pnpm --filter @pulse/test-harness cli:eval --latest
+```
+
+See [`packages/test-harness/README.md`](packages/test-harness/README.md) and [`specs/the-pulse-test-harness-spec.md`](specs/the-pulse-test-harness-spec.md).
+
+## Narrator Research
+
+Useful docs:
+
+- [`docs/narrator-model-comparison.md`](docs/narrator-model-comparison.md) - first-pulse model comparison and current guest narrator choice.
+- [`docs/the-fourth-wall.md`](docs/the-fourth-wall.md) - agency-preserving narration framework.
+- [`specs/the-pulse-test-harness-spec.md`](specs/the-pulse-test-harness-spec.md) - automated playtesting spec.
+
+The project treats the narrator as a product surface: speed, prose quality, agency boundaries, tone, and session stability all matter.
+
+## Development
+
+Requirements:
+
+- Node.js 20+
+- pnpm 9+
+
+Install:
 
 ```bash
 pnpm install
-pnpm dev
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000/).
+Run the web app:
+
+```bash
+PORT=7272 pnpm dev:web
+```
+
+Run the TUI experiment:
+
+```bash
+pnpm tui
+```
+
+Verify:
+
+```bash
+pnpm typecheck
+```
+
+The root `pnpm lint` script currently runs Biome with write flags, so use it intentionally when you want formatting/lint fixes applied.
+
+## Environment
+
+The web app and harness use provider credentials depending on the feature being exercised:
+
+```env
+OPENROUTER_API_KEY=
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+REPLICATE_API_TOKEN=
+ELEVENLABS_API_KEY=
+POSTGRES_URL=
+AUTH_SECRET=
+LIVEBLOCKS_SECRET_KEY=
+```
+
+Use `.env.example` as the starting point and keep local `.env*` files out of public commits.
+
+## Status
+
+Active prototype.
+
+Working or substantially implemented:
+
+- Next.js web app and game UI.
+- Five story definitions.
+- Pulse/narrator APIs.
+- Multiplayer room surfaces.
+- Voice/audio components.
+- Image/story components.
+- Narrator model comparison scripts.
+- Automated test harness with checkpointing and reports.
+
+Needs public packaging work:
+
+- Replace remaining chatbot-template docs in `docs/01-quick-start.md` and `docs/02-update-models.md`.
+- Capture clean screenshots from `apps/web/screenshots/` or a fresh run.
+- Add a short demo clip showing story selection, lobby, and gameplay.
+- Decide which deployed URL should be public.
+- Scrub local `.env.local`, `.next`, generated test sessions, and audio artifacts before broader promotion.
+
+## Portfolio Context
+
+The Pulse is the strongest AI game/product proof in this portfolio. It shows creative product direction, serious narrator-system design, multiplayer UX, and an engineering loop for measuring whether the AI experience is actually good.
+
+The key signal is not "chatbot with a story prompt." The key signal is the surrounding system: story guides, model selection, agency rules, multimodal output, multiplayer coordination, and an automated harness that turns subjective narrative quality into inspectable reports.

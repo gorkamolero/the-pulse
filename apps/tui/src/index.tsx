@@ -52,20 +52,28 @@ interface TestConfig {
 // Data
 // ============================================================================
 
-const NARRATOR_MODELS: NarratorModel[] = ['opus-4.5', 'xai/grok-4-fast-reasoning', 'deepseek-v3.2', 'moonshotai/kimi-k2-thinking'];
+const NARRATOR_MODELS: NarratorModel[] = [
+  'opus-4.6',
+  'xai/grok-4.3',
+  'deepseek-v4-pro',
+  'deepseek-v4-flash',
+  'moonshotai/kimi-k2.6',
+];
 
 const MODEL_LABELS: Record<NarratorModel, string> = {
-  'opus-4.5': 'Opus 4.5',
-  'xai/grok-4-fast-reasoning': 'Grok 4',
-  'deepseek-v3.2': 'DeepSeek v3.2',
-  'moonshotai/kimi-k2-thinking': 'Kimi K2',
+  'opus-4.6': 'Opus 4.6',
+  'xai/grok-4.3': 'Grok 4.3',
+  'deepseek-v4-pro': 'DeepSeek v4 Pro',
+  'deepseek-v4-flash': 'DeepSeek v4 Flash',
+  'moonshotai/kimi-k2.6': 'Kimi K2.6',
 };
 
 const MODEL_DESCRIPTIONS: Record<NarratorModel, string> = {
-  'opus-4.5': 'Premium quality',
-  'xai/grok-4-fast-reasoning': 'xAI fast reasoning',
-  'deepseek-v3.2': 'Thinking model',
-  'moonshotai/kimi-k2-thinking': 'Moonshot thinking',
+  'opus-4.6': 'Premium quality',
+  'xai/grok-4.3': 'xAI latest',
+  'deepseek-v4-pro': 'DeepSeek quality',
+  'deepseek-v4-flash': 'DeepSeek fast',
+  'moonshotai/kimi-k2.6': 'Moonshot latest',
 };
 
 // ============================================================================
@@ -78,11 +86,11 @@ function App() {
     storyId: 'innsmouth-nonlinear',
     comparisonMode: 'models',
     // Prompt comparison settings
-    model: 'deepseek-v3.2',
+    model: 'deepseek-v4-flash',
     promptStyles: ['mechanical', 'philosophical', 'minimal'],
     // Model comparison settings
     promptStyle: 'mechanical',
-    models: ['xai/grok-4-fast-reasoning', 'deepseek-v3.2', 'moonshotai/kimi-k2-thinking'],
+    models: ['xai/grok-4.3', 'deepseek-v4-flash', 'moonshotai/kimi-k2.6'],
   });
   useKeyboard((key) => {
     if (key.name === 'q' && key.ctrl) {
