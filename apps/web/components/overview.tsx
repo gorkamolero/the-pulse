@@ -113,7 +113,7 @@ export const Overview = ({
   const handleStartMultiplayer = async () => {
     if (!selectedStory) return;
     if (!isAuthenticated) {
-      toast.error('Sign in to host a gathering');
+      toast.error('Sign in to host a room');
       return;
     }
 
@@ -131,7 +131,7 @@ export const Overview = ({
 
       if (!response.ok) {
         const data = await response.json();
-        toast.error(data.error || 'Failed to create gathering');
+        toast.error(data.error || 'Failed to create room');
         return;
       }
 
@@ -139,7 +139,7 @@ export const Overview = ({
       router.push(`/room/${room.id}/lobby`);
     } catch (error) {
       console.error('Failed to create room:', error);
-      toast.error('Failed to create gathering');
+      toast.error('Failed to create room');
     } finally {
       setIsCreatingRoom(false);
     }
@@ -165,7 +165,7 @@ export const Overview = ({
             The Pulse
           </h1>
           <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.35em] pl-[0.35em] text-white/30">
-            An anthology of living stories · Choose a door
+            Five stories · One narrator · Pick a door
           </p>
         </motion.header>
 

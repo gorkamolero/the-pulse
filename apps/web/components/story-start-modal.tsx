@@ -245,7 +245,7 @@ export function StoryStartModal({
 
           {/* Meta */}
           <p className="mt-6 font-mono text-[9px] uppercase tracking-[0.25em] pl-[0.25em] text-white/20">
-            ~30 minutes · Your choices shape the narrative
+            About 30 minutes · Longer if you poke things
           </p>
 
           {/* Sign in link for guests */}
@@ -257,7 +257,7 @@ export function StoryStartModal({
               >
                 Sign in
               </Link>{' '}
-              to host a gathering or save your progress
+              to host a room or save your progress
             </p>
           )}
         </div>

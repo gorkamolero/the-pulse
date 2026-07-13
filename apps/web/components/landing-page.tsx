@@ -63,18 +63,18 @@ const SAMPLE_CHOICES = [
 const HOW_IT_PLAYS = [
   {
     numeral: 'I',
-    title: 'Choose a story',
+    title: 'Pick a story',
     detail: 'Five worlds, from a drowned seaport to the red dust of Mars.',
   },
   {
     numeral: 'II',
-    title: 'The narrator speaks',
-    detail: 'A living voice reads the scene aloud and paints it as you go.',
+    title: 'The narrator reads',
+    detail: 'Out loud, with pictures. It sets the scene and waits.',
   },
   {
     numeral: 'III',
-    title: 'You decide',
-    detail: 'Every pulse ends with a choice. The story bends around yours.',
+    title: 'You answer',
+    detail: 'Type what you do. The narrator deals with it.',
   },
 ];
 
@@ -195,7 +195,7 @@ export function LandingPage() {
           </h1>
 
           <p className="mt-5 text-[10px] uppercase tracking-[0.45em] pl-[0.45em] text-white/50">
-            An Anthology of Living Stories
+            An Anthology of Unwritten Stories
           </p>
 
           <div className="mt-8 text-white/50">
@@ -203,9 +203,8 @@ export function LandingPage() {
           </div>
 
           <p className="mt-8 font-literary italic text-lg md:text-xl leading-relaxed text-white/70 max-w-xl text-balance">
-            Play a story with your friends. No preparation, no dungeon master —
-            a narrator that listens, speaks, and bends the tale around every
-            choice you make.
+            An AI narrator tells the story out loud and makes it up around you
+            as you play. No prep. No DM. Nobody knows the ending — not even us.
           </p>
 
           <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
@@ -298,7 +297,7 @@ export function LandingPage() {
           </div>
 
           <p className="mt-8 text-center font-literary italic text-sm text-white/30">
-            Every pulse ends with a choice. The story bends around yours.
+            Then it&rsquo;s your turn.
           </p>
         </motion.div>
       </section>

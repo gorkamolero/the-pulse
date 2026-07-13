@@ -14,17 +14,17 @@ const StoryOrb = dynamic(
 );
 
 const LOADING_PHRASES = [
-  'The fog rolls in...',
-  'Something stirs in the darkness...',
-  'Listen closely...',
-  'The threshold beckons...',
-  'Ancient echoes call...',
+  'The narrator clears its throat...',
+  'Setting the scene...',
+  'Choosing its words...',
+  'Turning to the first page...',
+  'Lighting the lamps...',
 ];
 
 const READY_PHRASES = [
-  'The story awaits your presence...',
-  'Step into the darkness...',
-  'Your journey begins...',
+  'Ready when you are.',
+  'The first page is open.',
+  'It starts when you decide.',
 ];
 
 interface StoryLoadingModalProps {
