@@ -40,7 +40,9 @@ export function ChatHeader({
       {/* Left: Logo + Story Title */}
       <div className="flex items-center gap-2">
         <Link href="/" className="flex items-center group">
-          <span className="font-semibold text-sm tracking-tight">The Pulse</span>
+          <span className="font-literary uppercase tracking-[0.25em] text-xs text-foreground/90 group-hover:text-foreground transition-colors">
+            The Pulse
+          </span>
         </Link>
         {storyTitle && (
           <>
@@ -56,8 +58,8 @@ export function ChatHeader({
       <div className="flex items-center gap-1">
         {/* Pulse counter for guests */}
         {isGuest && (
-          <div className="text-xs text-muted-foreground mr-2">
-            <span className="font-medium text-foreground">{pulseCount}</span>
+          <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground mr-2">
+            <span className="text-foreground">{pulseCount}</span>
             <span className="mx-0.5">/</span>
             <span>{maxPulses}</span>
             <span className="ml-1 hidden sm:inline">pulses</span>
@@ -89,7 +91,10 @@ export function ChatHeader({
 
                 {/* History List */}
                 <div className="overflow-y-auto p-2">
-                  <SidebarHistory user={user} onClose={() => setHistoryOpen(false)} />
+                  <SidebarHistory
+                    user={user}
+                    onClose={() => setHistoryOpen(false)}
+                  />
                 </div>
               </div>
             </PopoverContent>
@@ -106,17 +111,17 @@ export function ChatHeader({
 
         {/* Auth links for guests */}
         {isGuest && (
-          <div className="ml-2 flex items-center gap-2 text-xs">
+          <div className="ml-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em]">
             <Link
               href="/login"
-              className="text-muted-foreground hover:text-foreground hover:underline underline-offset-4 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Sign in
             </Link>
             <span className="text-muted-foreground/40">/</span>
             <Link
               href="/register"
-              className="text-primary hover:underline underline-offset-4 transition-colors"
+              className="text-foreground/80 hover:text-foreground transition-colors"
             >
               Create account
             </Link>

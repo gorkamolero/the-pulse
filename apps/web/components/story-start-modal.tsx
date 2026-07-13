@@ -1,11 +1,14 @@
-"use client";
+'use client';
 
-import { Link2, Loader2, UserRound, Users, Volume2, VolumeX } from "lucide-react";
-import { useAtom } from "jotai";
-import Link from "next/link";
-import { audioEnabledAtom } from "@/lib/atoms";
-import { Button } from "./ui/button";
-import type { Story } from "@pulse/core/ai/stories";
+import { Loader2, Volume2, VolumeX, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useAtom } from 'jotai';
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { audioEnabledAtom } from '@/lib/atoms';
+import { storyTitleStyle } from '@/lib/story-fonts';
+import { coverSrc, Ornament, STORY_META } from './story-index';
+import type { Story } from '@pulse/core/ai/stories';
 
 interface StoryStartModalProps {
   story: Story | null;
@@ -16,6 +19,57 @@ interface StoryStartModalProps {
   onClose: () => void;
   isAuthenticated: boolean;
   isCreatingRoom?: boolean;
+}
+
+function ModeRow({
+  name,
+  detail,
+  onClick,
+  disabled,
+  primary,
+  accent,
+  loading,
+}: {
+  name: string;
+  detail: string;
+  onClick: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+  accent: string;
+  loading?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`group w-full flex items-center justify-between gap-4 px-3 py-4 border-t border-white/[0.08] text-left transition-colors duration-300 ${
+        disabled ? 'cursor-not-allowed opacity-40' : 'hover:bg-white/[0.03]'
+      }`}
+    >
+      <span className="flex min-w-0 flex-col">
+        <span
+          className="font-literary text-lg leading-snug transition-colors duration-300"
+          style={{ color: primary ? accent : 'rgba(255,255,255,0.85)' }}
+        >
+          {name}
+        </span>
+        <span className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">
+          {detail}
+        </span>
+      </span>
+      {loading ? (
+        <Loader2 className="w-4 h-4 shrink-0 animate-spin text-white/40" />
+      ) : (
+        <span
+          aria-hidden
+          className="shrink-0 text-white/25 group-hover:translate-x-1 transition-all duration-300 group-hover:text-[color:var(--ink)]"
+        >
+          →
+        </span>
+      )}
+    </button>
+  );
 }
 
 export function StoryStartModal({
@@ -30,207 +84,184 @@ export function StoryStartModal({
 }: StoryStartModalProps) {
   const [audioEnabled, setAudioEnabled] = useAtom(audioEnabledAtom);
 
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
   if (!story) return null;
 
-  const accentColor = story.theme?.accentHex || "#888888";
+  const accent = story.theme?.accentHex || '#888888';
+  const genre = STORY_META[story.id]?.genre;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label="Close modal"
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md"
-        onClick={onClose}
-        onKeyDown={(e) => e.key === "Escape" && onClose()}
+    <motion.div
+      role="presentation"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/90 backdrop-blur-md p-4"
+      onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
+      <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label={story.title}
+        className="relative w-full max-w-lg my-auto overflow-hidden bg-[#0b0b0d] border border-white/10 px-7 py-10 md:px-12 md:py-12"
+        style={{ '--ink': accent } as React.CSSProperties}
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, y: 16, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
       >
-        {/* Modal content */}
+        {/* The story's plate behind the title */}
         <div
-          role="dialog"
-          aria-modal="true"
-          className="max-w-lg w-full mx-4 p-8 md:p-10 bg-background/95 rounded-lg shadow-2xl relative overflow-hidden"
-          style={{
-            borderLeft: `4px solid ${accentColor}`,
-            boxShadow: `0 0 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.2), 0 0 30px ${accentColor}20`,
-          }}
-          onClick={(e) => e.stopPropagation()}
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-72 pointer-events-none"
         >
-          {/* Vignette inside modal */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.3) 100%)`,
-            }}
+          <img
+            src={coverSrc(story.id)}
+            alt=""
+            className="h-full w-full object-cover object-top opacity-45"
           />
-
-          {/* Content */}
-          <div className="relative z-10">
-            {/* Title */}
-            <h2 className="text-2xl md:text-3xl font-literary font-semibold text-center mb-8 tracking-wide">
-              {story.title}
-            </h2>
-
-            {/* Epigraph */}
-            {epigraph && (
-              <blockquote
-                className="pl-5 mb-8"
-                style={{ borderLeft: `3px solid ${accentColor}60` }}
-              >
-                <p className="text-base font-literary italic text-muted-foreground/80 mb-2 leading-relaxed">
-                  "{epigraph.quote}"
-                </p>
-                <cite className="text-sm text-muted-foreground/60 not-italic">
-                  — {epigraph.author}
-                </cite>
-              </blockquote>
-            )}
-
-            {/* Description */}
-            <p className="text-sm text-muted-foreground/70 text-center mb-8 leading-relaxed">
-              {story.description}
-            </p>
-
-            {/* Audio Toggle */}
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <button
-                type="button"
-                onClick={() => setAudioEnabled(!audioEnabled)}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-full text-sm
-                  transition-all duration-200
-                  ${
-                    audioEnabled
-                      ? "bg-foreground/10 text-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }
-                `}
-                style={{
-                  borderColor: audioEnabled ? accentColor : undefined,
-                  borderWidth: audioEnabled ? "1px" : undefined,
-                }}
-              >
-                {audioEnabled ? (
-                  <>
-                    <Volume2 className="w-4 h-4" />
-                    <span>Audio On</span>
-                  </>
-                ) : (
-                  <>
-                    <VolumeX className="w-4 h-4" />
-                    <span>Audio Off</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Duration hint */}
-            <p className="text-xs text-muted-foreground/40 text-center mb-6 tracking-wide">
-              ~30 minutes · Your choices shape the narrative
-            </p>
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <div className="text-center">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/50">
-                  Choose play mode
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Button
-                  size="lg"
-                  onClick={onStartSolo}
-                  className="group h-auto min-h-20 items-center justify-start gap-3 whitespace-normal rounded-lg px-5 py-4 text-left font-literary tracking-wide shadow-[0_1px_0_rgba(255,255,255,0.16)_inset,0_14px_36px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,background-color] duration-200 active:scale-[0.96]"
-                  style={{
-                    backgroundColor: accentColor,
-                    borderColor: accentColor,
-                  }}
-                  disabled={isCreatingRoom}
-                >
-                  <UserRound className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
-                  <span className="flex min-w-0 flex-1 flex-col leading-tight">
-                    <span className="text-lg">Solo</span>
-                    <span className="mt-1 max-w-full text-xs font-sans font-normal leading-relaxed opacity-75">
-                      Play by yourself
-                    </span>
-                  </span>
-                </Button>
-
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={onStartGroup}
-                  className="group h-auto min-h-20 items-center justify-start gap-3 whitespace-normal rounded-lg border bg-background/70 px-5 py-4 text-left font-literary tracking-wide shadow-[0_1px_0_rgba(255,255,255,0.08)_inset,0_12px_30px_rgba(0,0,0,0.18)] transition-[transform,box-shadow,background-color,border-color] duration-200 hover:bg-background active:scale-[0.96]"
-                  style={{
-                    borderColor: `${accentColor}60`,
-                  }}
-                  disabled={isCreatingRoom}
-                  title="One browser session for friends playing together in person or over voice chat"
-                >
-                  <Users className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
-                  <span className="flex min-w-0 flex-1 flex-col leading-tight">
-                    <span className="text-lg">Same Screen</span>
-                    <span className="mt-1 max-w-full text-xs font-sans font-normal leading-relaxed opacity-75">
-                      Pass the device around
-                    </span>
-                  </span>
-                </Button>
-              </div>
-
-              <div>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={onStartMultiplayer}
-                  className="group h-auto min-h-14 w-full items-center justify-center gap-3 whitespace-normal rounded-lg border bg-background/45 px-5 py-3 text-center font-literary tracking-wide shadow-[0_1px_0_rgba(255,255,255,0.08)_inset,0_12px_30px_rgba(0,0,0,0.18)] transition-[transform,box-shadow,background-color,border-color,opacity] duration-200 hover:bg-background active:scale-[0.96] disabled:cursor-not-allowed"
-                  style={{
-                    borderColor: isAuthenticated
-                      ? `${accentColor}60`
-                      : "hsl(var(--border) / 0.5)",
-                  }}
-                  disabled={!isAuthenticated || isCreatingRoom}
-                  title={
-                    !isAuthenticated
-                      ? "Sign in to create an invite room"
-                      : "Create a room with an invite link for others to join from their own devices"
-                  }
-                >
-                  {isCreatingRoom ? (
-                    <>
-                      <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-                      <span className="min-w-0 leading-tight">
-                        Creating invite room...
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Link2 className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
-                      <span className="min-w-0 leading-tight">
-                        Invite Room
-                        <span className="font-sans text-xs font-normal text-muted-foreground">
-                          {" "}
-                          · friends join by link
-                        </span>
-                      </span>
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Sign in link for guests */}
-            {!isAuthenticated && (
-              <p className="text-xs text-muted-foreground/50 text-center mt-5">
-                <Link href="/login" className="text-foreground/70 hover:text-foreground hover:underline transition-colors">
-                  Sign in
-                </Link>
-                {" "}to host a gathering or save your progress
-              </p>
-            )}
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#0b0b0d]/70 to-[#0b0b0d]" />
         </div>
-      </div>
-    </>
+
+        {/* Ink hairline across the top */}
+        <span
+          aria-hidden
+          className="absolute top-0 left-0 right-0 h-px"
+          style={{
+            background: `linear-gradient(to right, transparent, ${accent}, transparent)`,
+          }}
+        />
+
+        {/* Close */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-4 right-4 p-1 text-white/30 hover:text-white transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="relative flex flex-col items-center text-center">
+          {/* Genre credit line */}
+          {genre && (
+            <p
+              className="text-[10px] uppercase tracking-[0.35em] pl-[0.35em]"
+              style={{ color: accent }}
+            >
+              {genre}
+            </p>
+          )}
+
+          {/* Title */}
+          <h2
+            className="mt-4 uppercase tracking-[0.15em] text-2xl md:text-3xl leading-snug text-white/95 text-balance"
+            style={storyTitleStyle(story.id)}
+          >
+            {story.title}
+          </h2>
+
+          <div className="mt-6" style={{ color: accent }}>
+            <Ornament />
+          </div>
+
+          {/* Epigraph */}
+          {epigraph && (
+            <blockquote className="mt-6 max-w-sm">
+              <p
+                className="italic text-[15px] leading-relaxed text-white/60"
+                style={{ fontFamily: storyTitleStyle(story.id).fontFamily }}
+              >
+                &ldquo;{epigraph.quote}&rdquo;
+              </p>
+              <cite className="mt-2 block text-xs not-italic text-white/30">
+                — {epigraph.author}
+              </cite>
+            </blockquote>
+          )}
+
+          {/* Description */}
+          <p className="mt-6 font-literary text-[15px] leading-relaxed text-white/45 max-w-md text-balance">
+            {story.description}
+          </p>
+
+          {/* Modes */}
+          <div className="mt-10 w-full">
+            <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.4em] pl-[0.4em] text-white/30">
+              Choose how to play
+            </p>
+
+            <div className="border-b border-white/[0.08] text-left">
+              <ModeRow
+                name="Solo"
+                detail="Play by yourself"
+                onClick={onStartSolo}
+                disabled={isCreatingRoom}
+                primary
+                accent={accent}
+              />
+              <ModeRow
+                name="Same Screen"
+                detail="Pass the device around"
+                onClick={onStartGroup}
+                disabled={isCreatingRoom}
+                accent={accent}
+              />
+              <ModeRow
+                name="Invite Room"
+                detail={
+                  isAuthenticated ? 'Friends join by link' : 'Sign in to host'
+                }
+                onClick={onStartMultiplayer}
+                disabled={!isAuthenticated || isCreatingRoom}
+                accent={accent}
+                loading={isCreatingRoom}
+              />
+            </div>
+          </div>
+
+          {/* Narration toggle */}
+          <button
+            type="button"
+            onClick={() => setAudioEnabled(!audioEnabled)}
+            className={`mt-8 flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.3em] pl-[0.3em] transition-colors duration-300 ${
+              audioEnabled ? 'text-white/70' : 'text-white/30'
+            } hover:text-white`}
+          >
+            {audioEnabled ? (
+              <Volume2 className="w-3.5 h-3.5" style={{ color: accent }} />
+            ) : (
+              <VolumeX className="w-3.5 h-3.5" />
+            )}
+            Narration {audioEnabled ? 'On' : 'Off'}
+          </button>
+
+          {/* Meta */}
+          <p className="mt-6 font-mono text-[9px] uppercase tracking-[0.25em] pl-[0.25em] text-white/20">
+            ~30 minutes · Your choices shape the narrative
+          </p>
+
+          {/* Sign in link for guests */}
+          {!isAuthenticated && (
+            <p className="mt-4 font-literary text-xs text-white/35">
+              <Link
+                href="/login"
+                className="text-white/60 hover:text-white underline underline-offset-4 decoration-white/20 transition-colors"
+              >
+                Sign in
+              </Link>{' '}
+              to host a gathering or save your progress
+            </p>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

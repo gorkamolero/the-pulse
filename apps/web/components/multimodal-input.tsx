@@ -92,7 +92,7 @@ function PureMultimodalInput({
     }
   }, []);
 
-  const MIN_HEIGHT = 56; // Fixed minimum height to prevent jumping
+  const MIN_HEIGHT = 44; // Single line by default; grows with content
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -240,7 +240,7 @@ function PureMultimodalInput({
             onChange={handleInput}
             disabled={disabled}
             className={cx(
-              "min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pr-12 transition-colors duration-300 border focus-visible:ring-0 focus-visible:ring-offset-0",
+              "min-h-[44px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-[22px] !text-base leading-6 py-2.5 pl-4 pr-12 transition-colors duration-300 border focus-visible:ring-0 focus-visible:ring-offset-0",
               borderContrastClass,
               disabled && "opacity-60 cursor-not-allowed",
               className
@@ -265,7 +265,7 @@ function PureMultimodalInput({
             }}
           />
 
-          <div className="absolute top-0 right-0 p-2 w-fit flex flex-row justify-end">
+          <div className="absolute bottom-[7px] right-2 w-fit flex flex-row justify-end">
             {isLoading ? (
               <StopButton stop={stop} setMessages={setMessages} />
             ) : (

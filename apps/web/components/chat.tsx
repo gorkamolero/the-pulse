@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import type { UIMessage, CreateUIMessage } from "ai";
-import { DefaultChatTransport } from "ai";
-import { useChat } from "@ai-sdk/react";
+import type { UIMessage, CreateUIMessage } from 'ai';
+import { DefaultChatTransport } from 'ai';
+import { useChat } from '@ai-sdk/react';
 
 type Attachment = {
   url: string;
@@ -13,35 +13,35 @@ type ChatRequestOptions = {
   experimental_attachments?: Array<Attachment>;
   body?: Record<string, unknown>;
 };
-import { useState, useCallback, useEffect, useMemo } from "react";
-import { BookOpen, MessageSquare } from "lucide-react";
-import { useSWRConfig } from "swr";
-import { useAtomValue, useSetAtom } from "jotai";
-import { stories } from "@pulse/core/ai/stories";
-import { initStoryTypography, resetStoryTypography } from "@/lib/font-loader";
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { BookOpen, MessageSquare } from 'lucide-react';
+import { useSWRConfig } from 'swr';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { stories } from '@pulse/core/ai/stories';
+import { initStoryTypography, resetStoryTypography } from '@/lib/font-loader';
 
-import { StoryDisplay } from "@/components/story-display";
-import { StoryLoadingModal } from "@/components/story-loading-modal";
-import { ShareCard } from "@/components/share-card";
-import { audioEnabledAtom, storyBegunAtom } from "@/lib/atoms";
-import { ChatHeader } from "@/components/chat-header";
-import { getUIMessageContent } from "@/lib/utils";
-import { DEFAULT_STORY_ID } from "@pulse/core/ai/stories";
-import { useGuestSession } from "@/hooks/use-guest-session";
-import { useAmbientAudio } from "@/hooks/use-ambient-audio";
-import { SoftGateModal } from "./soft-gate-modal";
+import { StoryDisplay } from '@/components/story-display';
+import { StoryLoadingModal } from '@/components/story-loading-modal';
+import { ShareCard } from '@/components/share-card';
+import { audioEnabledAtom, storyAccentAtom, storyBegunAtom } from '@/lib/atoms';
+import { ChatHeader } from '@/components/chat-header';
+import { getUIMessageContent } from '@/lib/utils';
+import { DEFAULT_STORY_ID } from '@pulse/core/ai/stories';
+import { useGuestSession } from '@/hooks/use-guest-session';
+import { useAmbientAudio } from '@/hooks/use-ambient-audio';
+import { SoftGateModal } from './soft-gate-modal';
 
-import { Overview } from "./overview";
-import { MultimodalInput } from "./multimodal-input";
-import { Messages } from "./messages";
-import type { VisibilityType } from "./visibility-selector";
+import { Overview } from './overview';
+import { MultimodalInput } from './multimodal-input';
+import { Messages } from './messages';
+import type { VisibilityType } from './visibility-selector';
 
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { useIsMobile } from "@/hooks/use-mobile"
+} from '@/components/ui/resizable';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function Chat({
   id,
@@ -71,11 +71,14 @@ export function Chat({
 }) {
   const { mutate } = useSWRConfig();
   const isMobile = useIsMobile();
-  const [mobilePanelView, setMobilePanelView] = useState<'story' | 'messages'>('messages');
-  const [selectedStoryId, setSelectedStoryId] = useState(initialStoryId ?? DEFAULT_STORY_ID);
+  const [mobilePanelView, setMobilePanelView] = useState<'story' | 'messages'>(
+    'messages',
+  );
+  const [selectedStoryId, setSelectedStoryId] = useState(
+    initialStoryId ?? DEFAULT_STORY_ID,
+  );
   const [isSoloMode, setIsSoloMode] = useState(initialSoloMode);
-  const [language, setLanguage] = useState<string>("en");
-  const [selectedStoryTitle, setSelectedStoryTitle] = useState<string>("");
+  const [language, setLanguage] = useState<string>('en');
   const audioEnabled = useAtomValue(audioEnabledAtom);
   const setStoryBegun = useSetAtom(storyBegunAtom);
 
@@ -84,7 +87,7 @@ export function Chat({
   // - 'loading': Black screen + loading modal (story starting)
   // - 'chat': Full chat interface
   const [phase, setPhase] = useState<'overview' | 'loading' | 'chat'>(
-    initialMessages.length > 0 ? 'chat' : 'overview'
+    initialMessages.length > 0 ? 'chat' : 'overview',
   );
 
   // If returning to existing session, mark story as begun for audio autoplay
@@ -97,11 +100,17 @@ export function Chat({
   // Get selected story for ambient audio
   const selectedStory = useMemo(
     () => stories.find((s) => s.id === selectedStoryId),
-    [selectedStoryId]
+    [selectedStoryId],
   );
 
+  // Tint the narrator orb with the story's ink
+  const setStoryAccent = useSetAtom(storyAccentAtom);
+  useEffect(() => {
+    setStoryAccent(selectedStory?.theme?.accentHex ?? null);
+  }, [selectedStory, setStoryAccent]);
+
   // Play ambient audio when in chat phase
-  useAmbientAudio(phase === "chat" ? selectedStory?.ambientAudio : undefined);
+  useAmbientAudio(phase === 'chat' ? selectedStory?.ambientAudio : undefined);
 
   // Guest session tracking
   const isGuest = !user?.id;
@@ -134,16 +143,16 @@ export function Chat({
   // Load the language preference from cookies on component mount
   useEffect(() => {
     const languageCookie = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("language="));
+      .split('; ')
+      .find((row) => row.startsWith('language='));
 
     if (languageCookie) {
-      const language = languageCookie.split("=")[1];
+      const language = languageCookie.split('=')[1];
       setLanguage(language);
     }
   }, []);
 
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
 
   // Guest limit check
@@ -151,57 +160,64 @@ export function Chat({
 
   // Create transport with custom API endpoint and body
   // This is the solo play flow - multiplayer uses a different route
-  const transport = useMemo(() => new DefaultChatTransport({
-    api: '/api/pulse',
-    body: {
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: '/api/pulse',
+        body: {
+          selectedStoryId,
+          language,
+          solo: isSoloMode, // Solo mode - skips multi-player character creation
+          ...(isGuest && {
+            guestPulseCount: pulseCount,
+            guestSessionId: guestSession?.id,
+          }),
+        },
+      }),
+    [
+      guestSession?.id,
+      isGuest,
+      pulseCount,
       selectedStoryId,
       language,
-      solo: isSoloMode, // Solo mode - skips multi-player character creation
-      ...(isGuest && { guestPulseCount: pulseCount, guestSessionId: guestSession?.id }),
-    },
-  }), [guestSession?.id, isGuest, pulseCount, selectedStoryId, language, isSoloMode]);
+      isSoloMode,
+    ],
+  );
 
   // Track when audio is ready from the stream data
   const [audioReady, setAudioReady] = useState(false);
 
-  const {
-    messages,
-    setMessages,
-    sendMessage,
-    status,
-    stop,
-    regenerate,
-  } = useChat({
-    id,
-    transport,
-    messages: initialMessages,
-    experimental_throttle: 100,
-    // Handle custom data parts from the stream
-    onData: (dataPart) => {
-      // Check for audio-ready signal
-      if (dataPart && typeof dataPart === 'object' && 'type' in dataPart) {
-        if ((dataPart as { type: string }).type === 'data-audio-ready') {
-          setAudioReady(true);
+  const { messages, setMessages, sendMessage, status, stop, regenerate } =
+    useChat({
+      id,
+      transport,
+      messages: initialMessages,
+      experimental_throttle: 100,
+      // Handle custom data parts from the stream
+      onData: (dataPart) => {
+        // Check for audio-ready signal
+        if (dataPart && typeof dataPart === 'object' && 'type' in dataPart) {
+          if ((dataPart as { type: string }).type === 'data-audio-ready') {
+            setAudioReady(true);
+          }
         }
-      }
-    },
-    // Track assistant responses for guest pulse counting
-    onFinish: ({ message }) => {
-      if (isGuest && message.role === 'assistant') {
-        addGuestMessage({ role: 'assistant', content: '' });
-      }
-    },
-  });
+      },
+      // Track assistant responses for guest pulse counting
+      onFinish: ({ message }) => {
+        if (isGuest && message.role === 'assistant') {
+          addGuestMessage({ role: 'assistant', content: '' });
+        }
+      },
+    });
 
   const handleStorySelection = useCallback(
     async (storyId: string, solo: boolean) => {
       setSelectedStoryId(storyId);
       setIsSoloMode(solo);
 
-      // Get story title and immediately switch to loading phase
-      const story = stories.find(s => s.id === storyId);
+      // Get story and immediately switch to loading phase
+      const story = stories.find((s) => s.id === storyId);
       if (story) {
-        setSelectedStoryTitle(story.title);
         setAudioReady(false);
         setPhase('loading'); // Instantly show loading screen + modal
 
@@ -209,9 +225,9 @@ export function Chat({
         initStoryTypography(story.theme?.typography);
       }
 
-      mutate("/api/history");
+      mutate('/api/history');
     },
-    [mutate]
+    [mutate],
   );
 
   // Load story typography when returning to existing session (runs once on mount)
@@ -230,71 +246,91 @@ export function Chat({
 
   // Create wrapper functions to match the old API
   const handleSubmit = useCallback(
-    (event?: { preventDefault?: () => void }, chatRequestOptions?: ChatRequestOptions) => {
+    (
+      event?: { preventDefault?: () => void },
+      chatRequestOptions?: ChatRequestOptions,
+    ) => {
       event?.preventDefault?.();
       if (!input.trim() && !attachments.length) return;
 
       // Convert attachments to files format if needed
       // For now, sending just text - file handling needs to be implemented
-      sendMessage({
-        text: input,
-      }, {
-        body: chatRequestOptions?.body,
-      });
+      sendMessage(
+        {
+          text: input,
+        },
+        {
+          body: chatRequestOptions?.body,
+        },
+      );
 
-      setInput("");
+      setInput('');
       setAttachments([]);
-      mutate("/api/history");
+      mutate('/api/history');
     },
-    [input, attachments, sendMessage, mutate]
+    [input, attachments, sendMessage, mutate],
   );
 
   const append = useCallback(
-    async (message: UIMessage | CreateUIMessage<UIMessage>, chatRequestOptions?: ChatRequestOptions) => {
+    async (
+      message: UIMessage | CreateUIMessage<UIMessage>,
+      chatRequestOptions?: ChatRequestOptions,
+    ) => {
       const textContent = getUIMessageContent(message as UIMessage);
-      await sendMessage({
-        text: textContent,
-      }, {
-        body: chatRequestOptions?.body,
-      });
+      await sendMessage(
+        {
+          text: textContent,
+        },
+        {
+          body: chatRequestOptions?.body,
+        },
+      );
       return null;
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const reload = useCallback(
-    async (chatRequestOptions?: { experimental_attachments?: Array<Attachment> }) => {
+    async (chatRequestOptions?: {
+      experimental_attachments?: Array<Attachment>;
+    }) => {
       await regenerate();
       return null;
     },
-    [regenerate]
+    [regenerate],
   );
 
   const isLoading = status === 'streaming';
 
   // On mobile, switch back to messages view when narrator finishes responding
   useEffect(() => {
-    if (isMobile && !isLoading && messages.some(m => m.role === 'assistant')) {
+    if (
+      isMobile &&
+      !isLoading &&
+      messages.some((m) => m.role === 'assistant')
+    ) {
       setMobilePanelView('messages');
     }
   }, [isMobile, isLoading, messages]);
 
   const currentMessageId = useMemo(() => {
     // Get the most recent assistant message ID for image/audio display
-    const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop()
-    return lastAssistantMessage?.id ?? null
+    const lastAssistantMessage = messages
+      .filter((m) => m.role === 'assistant')
+      .pop();
+    return lastAssistantMessage?.id ?? null;
   }, [messages]);
 
   const isGroupSetupPrompt = useMemo(() => {
     if (isSoloMode) return false;
 
-    const assistantMessages = messages.filter((m) => m.role === "assistant");
+    const assistantMessages = messages.filter((m) => m.role === 'assistant');
     if (assistantMessages.length !== 1) return false;
 
     const content = getUIMessageContent(assistantMessages[0]).toLowerCase();
     return (
-      content.includes("how many players") ||
-      content.includes("player") && content.includes("name")
+      content.includes('how many players') ||
+      (content.includes('player') && content.includes('name'))
     );
   }, [isSoloMode, messages]);
 
@@ -302,7 +338,7 @@ export function Chat({
 
   // Check if narrator has responded
   const hasNarratorResponse = useMemo(() => {
-    return messages.some(m => m.role === 'assistant');
+    return messages.some((m) => m.role === 'assistant');
   }, [messages]);
 
   // Story is ready when:
@@ -317,7 +353,7 @@ export function Chat({
 
   const handleBeginStory = useCallback(() => {
     setStoryBegun(true); // Enable audio autoplay
-    setPhase('chat');    // Transition to chat interface
+    setPhase('chat'); // Transition to chat interface
   }, [setStoryBegun]);
 
   return (
@@ -329,115 +365,113 @@ export function Chat({
           pulseCount={pulseCount}
           maxPulses={maxPulses}
           storyTitle={phase !== 'overview' ? selectedStory?.title : undefined}
-          shareSlot={phase === 'chat' && hasNarratorResponse ? (
-            <ShareCard
-              chatId={id}
-              story={selectedStory}
-              pulseCount={messages.filter(m => m.role === 'assistant').length}
-              soloMode={isSoloMode}
-            />
-          ) : undefined}
+          shareSlot={
+            phase === 'chat' && hasNarratorResponse ? (
+              <ShareCard
+                chatId={id}
+                story={selectedStory}
+                pulseCount={
+                  messages.filter((m) => m.role === 'assistant').length
+                }
+                soloMode={isSoloMode}
+              />
+            ) : undefined
+          }
         />
 
-        
-      {/*
+        {/*
         Simple 3-phase layout (no race conditions):
         - 'overview': Story selection screen
         - 'loading': Black screen (modal covers this)
         - 'chat': Full chat interface
       */}
-      {phase === 'overview' && (
-        <Overview
-          chatId={id}
-          append={append}
-          onSelectStory={handleStorySelection}
-          user={user}
-        />
-      )}
-      {phase === 'loading' && (
-        <div className="flex-1 bg-black" />
-      )}
-      {phase === 'chat' && (
-        isGroupSetupPrompt ? (
-          <div className="flex-1 min-h-0">
-            <Messages
-              chatId={id}
-              isLoading={isLoading}
-              messages={messages}
-              storyId={selectedStoryId}
-              setupMode
-            />
-          </div>
-        ) : isMobile ? (
-          <div className="flex-1 flex flex-col min-h-0 relative">
-            {/* Mobile panel toggle */}
-            <div className="flex border-b border-border/50 bg-background/95">
-              <button
-                type="button"
-                onClick={() => setMobilePanelView('messages')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
-                  mobilePanelView === 'messages'
-                    ? 'text-foreground border-b-2 border-primary'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                Story
-              </button>
-              <button
-                type="button"
-                onClick={() => setMobilePanelView('story')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
-                  mobilePanelView === 'story'
-                    ? 'text-foreground border-b-2 border-primary'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-                Visuals
-              </button>
+        {phase === 'overview' && (
+          <Overview
+            chatId={id}
+            append={append}
+            onSelectStory={handleStorySelection}
+            user={user}
+          />
+        )}
+        {phase === 'loading' && <div className="flex-1 bg-black" />}
+        {phase === 'chat' &&
+          (isGroupSetupPrompt ? (
+            <div className="flex-1 min-h-0">
+              <Messages
+                chatId={id}
+                isLoading={isLoading}
+                messages={messages}
+                storyId={selectedStoryId}
+                setupMode
+              />
             </div>
-            {mobilePanelView === 'messages' ? (
-              <Messages
-                chatId={id}
-                isLoading={isLoading}
-                messages={messages}
-                storyId={selectedStoryId}
-                setupMode={isGroupSetupPrompt}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center flex-1 overflow-hidden">
-                <StoryDisplay currentMessageId={storyDisplayMessageId} />
+          ) : isMobile ? (
+            <div className="flex-1 flex flex-col min-h-0 relative">
+              {/* Mobile panel toggle */}
+              <div className="flex border-b border-border/50 bg-background/95">
+                <button
+                  type="button"
+                  onClick={() => setMobilePanelView('messages')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
+                    mobilePanelView === 'messages'
+                      ? 'text-foreground border-b-2 border-primary'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  Story
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobilePanelView('story')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
+                    mobilePanelView === 'story'
+                      ? 'text-foreground border-b-2 border-primary'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Visuals
+                </button>
               </div>
-            )}
-          </div>
-        ) : (
-          <ResizablePanelGroup direction="horizontal" className="h-full">
-            <ResizablePanel defaultSize={50}>
-              <Messages
-                chatId={id}
-                isLoading={isLoading}
-                messages={messages}
-                storyId={selectedStoryId}
-              />
-            </ResizablePanel>
+              {mobilePanelView === 'messages' ? (
+                <Messages
+                  chatId={id}
+                  isLoading={isLoading}
+                  messages={messages}
+                  storyId={selectedStoryId}
+                  setupMode={isGroupSetupPrompt}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center flex-1 overflow-hidden">
+                  <StoryDisplay currentMessageId={storyDisplayMessageId} />
+                </div>
+              )}
+            </div>
+          ) : (
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              <ResizablePanel defaultSize={50}>
+                <Messages
+                  chatId={id}
+                  isLoading={isLoading}
+                  messages={messages}
+                  storyId={selectedStoryId}
+                />
+              </ResizablePanel>
 
-            <ResizableHandle />
+              <ResizableHandle />
 
-            <ResizablePanel defaultSize={50}>
-              <div className="flex flex-col items-center justify-center h-full overflow-hidden">
-                <StoryDisplay currentMessageId={storyDisplayMessageId} />
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        )
-      )}
-
-        
+              <ResizablePanel defaultSize={50}>
+                <div className="flex flex-col items-center justify-center h-full overflow-hidden">
+                  <StoryDisplay currentMessageId={storyDisplayMessageId} />
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ))}
 
         {phase === 'chat' && !isReadonly && (
           <form
-            className="flex mx-auto bg-background p-4 md:p-6 gap-2 w-full md:max-w-3xl"
+            className="flex mx-auto bg-background p-3 md:p-4 gap-2 w-full md:max-w-3xl"
             onSubmit={(e) => {
               e.preventDefault();
             }}
@@ -455,11 +489,14 @@ export function Chat({
               setMessages={setMessages}
               append={append}
               disabled={disabled || guestLimitReached}
-              disabledReason={guestLimitReached ? "Create an account to continue your adventure" : disabledReason}
+              disabledReason={
+                guestLimitReached
+                  ? 'Create an account to continue your adventure'
+                  : disabledReason
+              }
             />
           </form>
         )}
-
       </div>
 
       {/* Soft Gate Modal for guests */}
@@ -474,7 +511,7 @@ export function Chat({
       <StoryLoadingModal
         isVisible={phase === 'loading'}
         isReady={isStoryReady}
-        storyTitle={selectedStoryTitle}
+        story={selectedStory}
         onBegin={handleBeginStory}
       />
     </>

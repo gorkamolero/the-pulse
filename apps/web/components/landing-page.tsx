@@ -1,457 +1,385 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import {
-  Mic,
-  Sparkles,
-  Users,
-  Compass,
-  Play,
-  UserRound,
-  BookOpen,
-  Headphones,
-  MousePointerClick,
-} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Pulse } from './ui/pulse';
+import {
+  coverSrc,
+  Ornament,
+  StoryDoor,
+  type StoryIndexItem,
+} from './story-index';
 
-const STORIES = [
+/* The brand's red ink — used sparingly, like the covers */
+const INK = '#B04A50';
+
+/* Lightweight story list for the public page (no story guides in this bundle) */
+const STORIES: StoryIndexItem[] = [
   {
+    id: 'shadow-over-innsmouth',
     title: 'Shadow Over Innsmouth',
-    genre: 'Lovecraftian Horror',
-    tagline: 'A decaying seaport hides a pact with the Deep Ones.',
-    quote: '"The smell of salt and rot hung in the air. The locals wouldn\'t meet your eyes."',
+    description:
+      'A decaying seaport hides a pact with the Deep Ones. Drawn by a cryptic call, players uncover a dread truth—or their own watery doom.',
     accentHex: '#4A9B8C',
   },
   {
+    id: 'the-hollow-choir',
     title: 'The Hollow Choir',
-    genre: 'Spectral Mystery',
-    tagline: 'A flooded city echoes with a song that should not exist.',
-    quote: '"The melody rose from the water — beautiful, impossible, and very old."',
+    description:
+      'A flooded city echoes with a spectral song. Adrift on a raft with name-etched shards, players face a sunken mystery—or its haunting pull.',
     accentHex: '#7B5AA6',
   },
   {
+    id: 'whispering-pines',
     title: 'The Whispering Pines',
-    genre: 'Psychological Horror',
-    tagline: 'A remote cabin where the forest whispers and the past returns.',
-    quote: '"The trees leaned in closer at night. You were sure they hadn\'t been that close before."',
+    description:
+      'Strangers drawn to a remote cabin where the forest whispers secrets and the past refuses to stay buried.',
     accentHex: '#5B8A5B',
   },
   {
+    id: 'siren-of-the-red-dust',
     title: 'Siren of the Red Dust',
-    genre: 'Sci-Fi Thriller',
-    tagline: 'A Mars colony falls silent. Something calls from the dunes.',
-    quote: '"Colony New Cydonia went quiet on Sol 847. The last transmission was just breathing."',
+    description:
+      'A Mars colony stood firm until a siren called from the dunes. Crews faced dust chanters—and a traitor holding the reins.',
     accentHex: '#B85C3A',
   },
   {
+    id: 'endless-path',
     title: 'The Endless Path',
-    genre: 'Cosmic Horror',
-    tagline: 'The comet returns. Time fractures. You become hunter and hunted.',
-    quote: '"You saw yourself crossing the plaza. But you hadn\'t left the room yet."',
+    description:
+      "Every century, Taggart's Comet returns—and with it, a night where time fractures and you become both hunter and hunted.",
     accentHex: '#A8B4C4',
   },
 ];
 
-const HOW_IT_WORKS = [
+const SAMPLE_CHOICES = [
+  'Walk down into the town before the light fails',
+  'Ask the driver what he knows — and why he won’t stay',
+  'Follow the sound of the bell',
+];
+
+const HOW_IT_PLAYS = [
   {
-    icon: BookOpen,
-    step: '1',
-    title: 'Pick a story',
-    description: '5 worlds — from Lovecraftian horror to Mars thrillers. Solo or with friends.',
+    numeral: 'I',
+    title: 'Choose a story',
+    detail: 'Five worlds, from a drowned seaport to the red dust of Mars.',
   },
   {
-    icon: Headphones,
-    step: '2',
-    title: 'The AI narrates',
-    description: 'A living narrator reads aloud, reacts to your choices, and shapes the story around you.',
+    numeral: 'II',
+    title: 'The narrator speaks',
+    detail: 'A living voice reads the scene aloud and paints it as you go.',
   },
   {
-    icon: MousePointerClick,
-    step: '3',
+    numeral: 'III',
     title: 'You decide',
-    description: 'Every choice matters. The story branches, twists, and never plays the same way twice.',
+    detail: 'Every pulse ends with a choice. The story bends around yours.',
   },
 ];
 
-const FEATURES = [
-  {
-    icon: Sparkles,
-    title: 'AI Narrator',
-    description: 'A living narrator that reacts to every choice. No two sessions are alike.',
-  },
-  {
-    icon: Mic,
-    title: 'Voice Narration',
-    description: 'The story is read aloud with expressive AI voices. Just listen and play.',
-  },
-  {
-    icon: Users,
-    title: 'Solo or Multiplayer',
-    description: 'Play alone or invite friends. Share a link — they join in seconds.',
-  },
-  {
-    icon: Compass,
-    title: '5 Story Worlds',
-    description: 'Lovecraft horror, sci-fi thriller, psychological mystery, and more.',
-  },
-];
+function InkButton({
+  children,
+  onClick,
+  primary,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  primary?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="px-8 py-3.5 font-mono text-[11px] uppercase tracking-[0.3em] pl-[calc(2rem+0.3em)] border transition-colors duration-300 cursor-pointer"
+      style={
+        primary
+          ? { borderColor: `${INK}99`, color: '#d98a8e' }
+          : {
+              borderColor: 'rgba(255,255,255,0.25)',
+              color: 'rgba(255,255,255,0.75)',
+            }
+      }
+    >
+      {children}
+    </button>
+  );
+}
 
-const fadeUp = {
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-};
+/** Slow crossfading slideshow of the five plates behind the hero. */
+function HeroPlates() {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setActive((a) => (a + 1) % STORIES.length);
+    }, 7000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden" aria-hidden>
+      {STORIES.map((s, i) => (
+        <motion.img
+          key={s.id}
+          src={coverSrc(s.id)}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-top"
+          initial={false}
+          animate={{
+            opacity: i === active ? 0.45 : 0,
+            scale: i === active ? 1.06 : 1,
+          }}
+          transition={{ duration: 2.4, ease: 'easeInOut' }}
+        />
+      ))}
+      {/* Keep the title legible */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_60%_at_50%_45%,rgba(0,0,0,0.75)_0%,rgba(0,0,0,0.35)_60%,rgba(0,0,0,0.1)_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[hsl(240,10%,3.9%)] to-transparent" />
+    </div>
+  );
+}
 
 export function LandingPage() {
   const router = useRouter();
 
-  const handlePlayNow = () => {
-    router.push('/');
-  };
+  const begin = () => router.push('/');
 
   return (
-    <div className="min-h-dvh flex flex-col">
+    <div className="relative min-h-dvh">
+      {/* Film grain */}
+      <div
+        className="fixed inset-0 pointer-events-none z-20"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          opacity: 0.03,
+        }}
+      />
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-4 flex items-center justify-between bg-background/80 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <Pulse />
-          <span className="font-serif text-lg tracking-wide">The Pulse</span>
-        </div>
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-gradient-to-b from-black/70 to-transparent">
+        <span className="font-literary uppercase tracking-[0.3em] text-xs text-white/70">
+          The Pulse
+        </span>
         <Link
           href="/login"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/40 hover:text-white transition-colors"
         >
           Sign in
         </Link>
       </header>
 
-      {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-6 pt-28 pb-16 md:pt-32 md:pb-20">
+      {/* ————— The cover ————— */}
+      <section className="relative min-h-dvh flex flex-col items-center justify-center px-6 py-24 text-center">
+        <HeroPlates />
+
         <motion.div
-          className="flex flex-col items-center text-center max-w-3xl"
+          className="relative flex flex-col items-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 1.2 }}
         >
-          {/* Pulse animation */}
-          <motion.div
-            className="mb-8"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-          >
-            <Pulse size="lg" />
-          </motion.div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.5em] pl-[0.5em] text-white/40">
+            AI-narrated interactive fiction
+          </p>
 
-          {/* Headline — what it IS */}
-          <motion.h1
-            className="text-3xl md:text-5xl lg:text-6xl font-serif font-light tracking-tight mb-5 leading-tight"
-            {...fadeUp}
-            transition={{ delay: 0.2, duration: 0.6 }}
-          >
-            Play a story with your friends.
-            <br />
-            <span className="text-muted-foreground">No prep. No DM. Just play.</span>
-          </motion.h1>
+          <div className="my-8">
+            <Pulse size="md" />
+          </div>
 
-          {/* Subhead — how it works */}
-          <motion.p
-            className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-10 max-w-2xl"
-            {...fadeUp}
-            transition={{ delay: 0.4, duration: 0.6 }}
+          <h1
+            className="font-literary uppercase tracking-[0.25em] pl-[0.25em] text-4xl md:text-6xl leading-tight"
+            style={{ color: INK, textShadow: `0 0 50px ${INK}55` }}
           >
-            An AI narrator runs the game in real-time. You make the choices.
-            The story adapts. Think D&D — without the 4 hours of setup.
-          </motion.p>
+            The Pulse
+          </h1>
 
-          {/* Dual CTAs */}
-          <motion.div
-            className="flex flex-col sm:flex-row items-center gap-4 mb-4"
-            {...fadeUp}
-            transition={{ delay: 0.6, duration: 0.6 }}
-          >
-            {/* Primary: Play Now (solo) */}
-            <motion.button
-              type="button"
-              onClick={handlePlayNow}
-              className="
-                inline-flex items-center gap-3
-                px-8 py-4
-                bg-foreground text-background
-                font-serif text-lg
-                rounded-md
-                hover:bg-foreground/90
-                transition-colors
-                cursor-pointer
-                w-full sm:w-auto justify-center
-              "
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Play className="w-5 h-5" />
-              <span>Play Now</span>
-            </motion.button>
+          <p className="mt-5 text-[10px] uppercase tracking-[0.45em] pl-[0.45em] text-white/50">
+            An Anthology of Living Stories
+          </p>
 
-            {/* Secondary: Start a Room (multiplayer) */}
-            <motion.button
-              type="button"
-              onClick={handlePlayNow}
-              className="
-                inline-flex items-center gap-3
-                px-8 py-4
-                border border-foreground/20 text-foreground
-                font-serif text-lg
-                rounded-md
-                hover:border-foreground/50 hover:bg-foreground/5
-                transition-colors
-                cursor-pointer
-                w-full sm:w-auto justify-center
-              "
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Users className="w-5 h-5" />
-              <span>Start a Room</span>
-            </motion.button>
-          </motion.div>
+          <div className="mt-8 text-white/50">
+            <Ornament />
+          </div>
 
-          <motion.p
-            className="text-xs text-muted-foreground/50"
-            {...fadeUp}
-            transition={{ delay: 0.7, duration: 0.5 }}
-          >
-            No account required — start playing in seconds
-          </motion.p>
+          <p className="mt-8 font-literary italic text-lg md:text-xl leading-relaxed text-white/70 max-w-xl text-balance">
+            Play a story with your friends. No preparation, no dungeon master —
+            a narrator that listens, speaks, and bends the tale around every
+            choice you make.
+          </p>
+
+          <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
+            <InkButton onClick={begin} primary>
+              Begin a story
+            </InkButton>
+            <InkButton onClick={begin}>Start a room</InkButton>
+          </div>
+
+          <p className="mt-6 font-mono text-[9px] uppercase tracking-[0.3em] pl-[0.3em] text-white/35">
+            Free to play · No account required
+          </p>
         </motion.div>
       </section>
 
-      {/* How It Works */}
-      <section className="px-6 md:px-12 py-16 border-t border-border/20">
-        <div className="max-w-4xl mx-auto">
-          <motion.h2
-            className="font-serif text-2xl md:text-3xl font-light text-center mb-12"
-            {...fadeUp}
-            whileInView="animate"
-            viewport={{ once: true }}
-            initial="initial"
-          >
-            Three steps. That&apos;s it.
-          </motion.h2>
-
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12"
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ staggerChildren: 0.15 }}
-          >
-            {HOW_IT_WORKS.map((step) => (
-              <motion.div
-                key={step.step}
-                className="text-center"
-                variants={fadeUp}
-                transition={{ duration: 0.5 }}
-              >
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full border border-foreground/10 mb-4">
-                  <step.icon className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <h3 className="font-serif text-lg mb-2">{step.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {step.description}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="px-6 md:px-12 py-16 border-t border-border/20">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-12"
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ staggerChildren: 0.1 }}
-          >
-            {FEATURES.map((feature) => (
-              <motion.div
-                key={feature.title}
-                className="flex gap-4"
-                variants={fadeUp}
-                transition={{ duration: 0.5 }}
-              >
-                <div className="shrink-0 mt-1">
-                  <feature.icon className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-serif text-lg mb-1">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Story Worlds */}
-      <section className="px-6 md:px-12 py-16 border-t border-border/20">
-        <div className="max-w-4xl mx-auto">
-          <motion.h2
-            className="font-serif text-2xl md:text-3xl font-light text-center mb-12"
-            {...fadeUp}
-            whileInView="animate"
-            viewport={{ once: true }}
-            initial="initial"
-          >
-            5 worlds. Each one different.
-          </motion.h2>
-
-          <motion.div
-            className="grid grid-cols-1 gap-4"
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ staggerChildren: 0.08 }}
-          >
-            {STORIES.map((story) => (
-              <motion.button
-                key={story.title}
-                type="button"
-                onClick={handlePlayNow}
-                className="
-                  text-left w-full
-                  border-l-4 pl-6 md:pl-8 py-6
-                  hover:bg-foreground/[0.03]
-                  transition-all duration-300
-                  cursor-pointer group
-                  rounded-r-md
-                "
-                style={{ borderColor: `${story.accentHex}40` }}
-                variants={fadeUp}
-                transition={{ duration: 0.4 }}
-                whileHover={{
-                  borderColor: story.accentHex,
-                }}
-              >
-                <div className="flex items-baseline justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground/50 block mb-1.5">
-                      {story.genre}
-                    </span>
-                    <h3 className="font-serif text-lg md:text-xl group-hover:text-foreground transition-colors">
-                      {story.title}
-                    </h3>
-                  </div>
-                  <span className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0 hidden sm:block">
-                    →
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground/60 mt-1.5 leading-relaxed">
-                  {story.tagline}
-                </p>
-                <p
-                  className="text-xs italic mt-3 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ color: story.accentHex }}
-                >
-                  {story.quote}
-                </p>
-              </motion.button>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Social Proof / Why It Works */}
-      <section className="px-6 md:px-12 py-16 border-t border-border/20">
-        <motion.div
-          className="max-w-3xl mx-auto text-center"
-          {...fadeUp}
-          whileInView="animate"
+      {/* ————— Contents: the shelf of doors ————— */}
+      <section className="px-3 md:px-5 py-20 md:py-28">
+        <motion.p
+          className="mb-8 text-center font-mono text-[10px] uppercase tracking-[0.5em] pl-[0.5em] text-white/30"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          initial="initial"
+          transition={{ duration: 0.9 }}
         >
-          <p className="text-muted-foreground/60 text-sm uppercase tracking-widest mb-6">
-            Every session is unique
-          </p>
-          <p className="font-serif text-xl md:text-2xl font-light leading-relaxed mb-10">
-            No scripts. No rails. The AI narrator reads the room and adapts the story
-            to your choices. What happens is up to you.
+          Contents · Five doors
+        </motion.p>
+
+        <motion.div
+          className="h-[78vh] min-h-[540px] max-h-[900px] flex flex-col md:flex-row gap-2 md:gap-2.5 max-w-[1800px] mx-auto"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 1 }}
+        >
+          {STORIES.map((story, index) => (
+            <StoryDoor
+              key={story.id}
+              story={story}
+              index={index}
+              onSelect={begin}
+            />
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ————— A pulse, shown not told ————— */}
+      <section className="px-6 py-20 md:py-28">
+        <motion.div
+          className="mx-auto max-w-xl"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.9 }}
+        >
+          <p className="font-mono text-[10px] uppercase tracking-[0.4em] pl-[0.4em] text-white/30 mb-8 text-center">
+            How a pulse reads — Shadow Over Innsmouth
           </p>
 
-          {/* Player quotes / atmosphere */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12 text-left">
-            <motion.div
-              className="border border-border/20 rounded-md p-5"
-              variants={fadeUp}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <p className="text-sm text-muted-foreground italic leading-relaxed">
-                &ldquo;We lost two players in Innsmouth and the narrator turned our grief into a plot twist.&rdquo;
-              </p>
-              <p className="text-xs text-muted-foreground/40 mt-3">— 4-player session, 47 min</p>
-            </motion.div>
-            <motion.div
-              className="border border-border/20 rounded-md p-5"
-              variants={fadeUp}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
-              <p className="text-sm text-muted-foreground italic leading-relaxed">
-                &ldquo;The voice narration made it feel like someone was actually running the game for us.&rdquo;
-              </p>
-              <p className="text-xs text-muted-foreground/40 mt-3">— Solo session, The Hollow Choir</p>
-            </motion.div>
-            <motion.div
-              className="border border-border/20 rounded-md p-5"
-              variants={fadeUp}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              <p className="text-sm text-muted-foreground italic leading-relaxed">
-                &ldquo;D&D without the 4 hours of prep. Shared the link and we were playing in 30 seconds.&rdquo;
-              </p>
-              <p className="text-xs text-muted-foreground/40 mt-3">— 3-player session, Red Dust</p>
-            </motion.div>
+          <div
+            className="pl-6 md:pl-8"
+            style={{ borderLeft: '2px solid #4A9B8C' }}
+          >
+            <p className="font-literary italic text-lg md:text-xl leading-[1.9] text-white/75">
+              The bus coughs to a stop where the cliff road ends. Below,
+              Innsmouth spreads along the grey harbor like something washed
+              ashore — salt-bleached roofs, a church with no cross, streets that
+              bend away from the water as if flinching. The driver won&rsquo;t
+              look at you. &ldquo;Last stop,&rdquo; he says, to the windshield.
+              Somewhere below, a bell begins to ring, though the church tower
+              stands empty.
+            </p>
           </div>
 
-          {/* Final CTA */}
-          <motion.button
-            type="button"
-            onClick={handlePlayNow}
-            className="
-              inline-flex items-center gap-3
-              px-8 py-4
-              bg-foreground text-background
-              font-serif text-lg
-              rounded-md
-              hover:bg-foreground/90
-              transition-colors
-              cursor-pointer
-            "
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <UserRound className="w-5 h-5" />
-            <span>Start Your First Story</span>
-          </motion.button>
-          <p className="mt-3 text-xs text-muted-foreground/40">
+          <div className="mt-10 border-b border-white/[0.08]">
+            {SAMPLE_CHOICES.map((choice, i) => (
+              <button
+                key={choice}
+                type="button"
+                onClick={begin}
+                className="group w-full flex items-baseline gap-4 px-3 py-4 border-t border-white/[0.08] text-left hover:bg-white/[0.03] transition-colors duration-300 cursor-pointer"
+              >
+                <span className="font-literary text-sm text-white/25 group-hover:text-[#4A9B8C] transition-colors">
+                  {i + 1}.
+                </span>
+                <span className="font-literary text-base text-white/60 group-hover:text-white/90 transition-colors">
+                  {choice}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <p className="mt-8 text-center font-literary italic text-sm text-white/30">
+            Every pulse ends with a choice. The story bends around yours.
+          </p>
+        </motion.div>
+      </section>
+
+      {/* ————— How it plays ————— */}
+      <section className="px-6 py-20 md:py-28">
+        <motion.div
+          className="mx-auto max-w-xl flex flex-col items-center"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.9 }}
+        >
+          <div className="text-white/40 mb-10">
+            <Ornament />
+          </div>
+
+          <div className="w-full space-y-10">
+            {HOW_IT_PLAYS.map((step) => (
+              <div
+                key={step.numeral}
+                className="flex flex-col items-center text-center"
+              >
+                <span
+                  className="font-literary text-sm tracking-[0.5em] pl-[0.5em]"
+                  style={{ color: INK }}
+                >
+                  · {step.numeral} ·
+                </span>
+                <h3 className="mt-3 font-literary uppercase tracking-[0.2em] pl-[0.2em] text-lg text-white/85">
+                  {step.title}
+                </h3>
+                <p className="mt-2 font-literary italic text-[15px] text-white/40 max-w-sm">
+                  {step.detail}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ————— Closing ————— */}
+      <section className="px-6 py-20 md:py-28 flex flex-col items-center text-center">
+        <motion.div
+          className="flex flex-col items-center"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.9 }}
+        >
+          <p className="font-literary italic text-xl md:text-2xl text-white/70">
+            The narrator is waiting.
+          </p>
+          <div className="mt-10">
+            <InkButton onClick={begin} primary>
+              Begin a story
+            </InkButton>
+          </div>
+          <p className="mt-5 font-mono text-[9px] uppercase tracking-[0.3em] pl-[0.3em] text-white/25">
             ~30 minutes · Free to play · No signup
           </p>
         </motion.div>
       </section>
 
-      {/* Footer */}
-      <footer className="px-6 py-8 text-center border-t border-border/30">
-        <p className="text-sm text-muted-foreground mb-2">
+      {/* ————— Colophon ————— */}
+      <footer className="px-6 pb-14 pt-8 flex flex-col items-center gap-4 text-center">
+        <div className="text-white/25">
+          <Ornament />
+        </div>
+        <p className="font-literary text-xs text-white/35">
           Already have an account?{' '}
-          <Link href="/login" className="text-foreground hover:underline">
+          <Link
+            href="/login"
+            className="text-white/60 hover:text-white underline underline-offset-4 decoration-white/20 transition-colors"
+          >
             Sign in
           </Link>
         </p>
-        <p className="text-xs text-muted-foreground/40">© 2026 The Pulse</p>
+        <p className="font-mono text-[9px] uppercase tracking-[0.5em] pl-[0.5em] text-white/20">
+          The Pulse · MMXXVI
+        </p>
       </footer>
     </div>
   );

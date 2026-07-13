@@ -1,15 +1,15 @@
-import { atomWithStorage } from "jotai/utils";
-import { atom } from "jotai";
-import { DEFAULT_VOICE_ID } from "@pulse/core/ai/models";
-import { type GuestSession, GUEST_SESSION_KEY } from "./guest-session";
+import { atomWithStorage } from 'jotai/utils';
+import { atom } from 'jotai';
+import { DEFAULT_VOICE_ID } from '@pulse/core/ai/models';
+import { type GuestSession, GUEST_SESSION_KEY } from './guest-session';
 
 // Atom to control the expansion state of reasoning in messages
-export const showReasoningAtom = atomWithStorage("reasoningExpanded", false);
+export const showReasoningAtom = atomWithStorage('reasoningExpanded', false);
 
 // Guest session atom - persisted to localStorage
 export const guestSessionAtom = atomWithStorage<GuestSession | null>(
   GUEST_SESSION_KEY,
-  null
+  null,
 );
 
 // Derived atom to check if in guest mode
@@ -30,7 +30,7 @@ export const selectedVoiceAtom = atom(DEFAULT_VOICE_ID);
 
 // Real-time audio streaming (Option C) - when enabled, audio streams alongside text
 // When disabled (default), audio generates in background after text completes (Option B)
-export const realtimeAudioAtom = atomWithStorage("realtimeAudio", false);
+export const realtimeAudioAtom = atomWithStorage('realtimeAudio', false);
 
 // Current background image URL for contrast-aware input styling
 export const currentBackgroundImageAtom = atom<string | null>(null);
@@ -50,5 +50,8 @@ export const audioElementAtom = atom<HTMLAudioElement | null>(null);
 // - null: idle (story awaiting)
 // - "thinking": narrator is generating response
 // - "talking": audio is playing
-export type NarratorState = null | "thinking" | "talking";
+export type NarratorState = null | 'thinking' | 'talking';
 export const narratorStateAtom = atom<NarratorState>(null);
+
+// The active story's ink color — tints the narrator orb per story
+export const storyAccentAtom = atom<string | null>(null);

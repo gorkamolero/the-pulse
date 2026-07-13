@@ -1,73 +1,74 @@
-import type { Metadata } from "next";
-import { Crimson_Text } from "next/font/google";
-import { Toaster } from "sonner";
+import type { Metadata } from 'next';
+import { Crimson_Text } from 'next/font/google';
+import { Toaster } from 'sonner';
 
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from '@/components/theme-provider';
+import { storyFontVariables } from '@/lib/story-fonts';
 
-import "./globals.css";
+import './globals.css';
 
 const crimsonText = Crimson_Text({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-serif",
-  display: "swap",
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-serif',
+  display: 'swap',
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://the-pulse.games";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://the-pulse.games';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "The Pulse — AI-Powered Interactive Fiction",
-    template: "%s | The Pulse",
+    default: 'The Pulse — AI-Powered Interactive Fiction',
+    template: '%s | The Pulse',
   },
   description:
-    "No prep. No DM. Just play. An AI narrator runs the story in real-time — you make the choices, the story adapts. Solo or with friends. 5 story worlds.",
+    'No prep. No DM. Just play. An AI narrator runs the story in real-time — you make the choices, the story adapts. Solo or with friends. 5 story worlds.',
   keywords: [
-    "interactive fiction",
-    "AI storytelling",
-    "multiplayer",
-    "tabletop RPG",
-    "D&D",
-    "AI narrator",
-    "collaborative fiction",
+    'interactive fiction',
+    'AI storytelling',
+    'multiplayer',
+    'tabletop RPG',
+    'D&D',
+    'AI narrator',
+    'collaborative fiction',
   ],
   openGraph: {
-    type: "website",
-    siteName: "The Pulse",
-    title: "The Pulse — AI-Powered Interactive Fiction",
+    type: 'website',
+    siteName: 'The Pulse',
+    title: 'The Pulse — AI-Powered Interactive Fiction',
     description:
-      "No prep. No DM. Just play. An AI narrator runs the story in real-time — you make the choices, the story adapts. Solo or with friends.",
+      'No prep. No DM. Just play. An AI narrator runs the story in real-time — you make the choices, the story adapts. Solo or with friends.',
     url: SITE_URL,
     images: [
       {
-        url: "/images/pulse.jpg",
+        url: '/images/pulse.jpg',
         width: 1024,
         height: 768,
-        alt: "The Pulse — AI-Powered Interactive Fiction",
+        alt: 'The Pulse — AI-Powered Interactive Fiction',
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "The Pulse — AI-Powered Interactive Fiction",
+    card: 'summary_large_image',
+    title: 'The Pulse — AI-Powered Interactive Fiction',
     description:
-      "No prep. No DM. Just play. An AI narrator runs the story — you make the choices.",
-    images: ["/images/pulse.jpg"],
+      'No prep. No DM. Just play. An AI narrator runs the story — you make the choices.',
+    images: ['/images/pulse.jpg'],
   },
   other: {
-    "permissions-policy": "microphone=self",
+    'permissions-policy': 'microphone=self',
   },
 };
 
 export const viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 1, // Disable auto-zoom on mobile Safari
 };
 
 // Dark mode only - no light theme
-const DARK_THEME_COLOR = "hsl(240deg 10% 3.92%)";
+const DARK_THEME_COLOR = 'hsl(240deg 10% 3.92%)';
 const THEME_COLOR_SCRIPT = `\
 (function() {
   var meta = document.querySelector('meta[name="theme-color"]');
@@ -101,7 +102,9 @@ export default async function RootLayout({
         />
         <meta httpEquiv="permissions-policy" content="microphone=self" />
       </head>
-      <body className={`antialiased ${crimsonText.variable}`}>
+      <body
+        className={`antialiased ${crimsonText.variable} ${storyFontVariables}`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
