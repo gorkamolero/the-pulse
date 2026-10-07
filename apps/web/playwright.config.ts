@@ -14,12 +14,16 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
+    // Narration plays real audio; keep test runs silent
+    launchOptions: { args: ["--mute-audio"] },
   },
 
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      // The installed Google Chrome, headless with its own temporary profile:
+      // no Playwright browser download to keep in step with the package version
+      use: { ...devices["Desktop Chrome"], channel: "chrome" },
     },
   ],
 
