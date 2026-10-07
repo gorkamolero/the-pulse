@@ -6,6 +6,8 @@ import { createRoomContext } from "@liveblocks/react";
 // Create the Liveblocks client
 const client = createClient({
   authEndpoint: "/api/liveblocks-auth",
+  // Relayed narrator voice can burst past one socket message; split instead of dropping it
+  largeMessageStrategy: "split",
 });
 
 // Presence: ephemeral data about each connected user
@@ -22,7 +24,17 @@ export type RoomEvent =
   | { type: "SPOKESPERSON_CHANGED"; playerId: string; playerName: string }
   | { type: "GAME_STARTED"; chatId: string }
   | { type: "PLAYER_JOINED"; player: { id: string; name: string; color: string } }
-  | { type: "PLAYER_LEFT"; playerId: string; playerName: string };
+  | { type: "PLAYER_LEFT"; playerId: string; playerName: string }
+  // Live narration relayed by the player whose browser talks to the narrator agent
+  | { type: "NARRATION_TURN" }
+  | {
+      type: "NARRATION_AUDIO";
+      audio: string;
+      sampleRate: number;
+      alignment?: { chars: string[]; char_start_times_ms: number[]; char_durations_ms: number[] };
+    }
+  | { type: "NARRATION_TEXT"; messageId: string; text: string }
+  | { type: "PLAYER_MOVE"; messageId: string; text: string };
 
 // User metadata from auth
 export type UserMeta = {

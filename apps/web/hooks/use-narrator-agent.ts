@@ -17,10 +17,17 @@ export interface LiveTurn {
   done: boolean;
 }
 
-interface ChunkAlignment {
+export interface ChunkAlignment {
   chars: string[];
   char_start_times_ms: number[];
   char_durations_ms: number[];
+}
+
+/** One chunk of narrator voice: 16-bit PCM in base64, with its character timings */
+export interface NarrationChunk {
+  audio: string;
+  sampleRate: number;
+  alignment?: ChunkAlignment;
 }
 
 const newTurn = (): LiveTurn => ({ startAt: null, chars: [], startsMs: [], endsMs: [], done: false });
@@ -84,13 +91,23 @@ interface UseNarratorAgentOptions {
   onNarration: (text: string, turn: LiveTurn) => void;
   /** Thinking after a move is sent, talking while the voice plays, null when quiet */
   onStateChange?: (state: NarratorState) => void;
+  /** Each chunk of voice as it arrives, to relay to other players */
+  onAudioChunk?: (chunk: NarrationChunk) => void;
+  /** A move went to the agent and a new narrator turn begins */
+  onTurnStart?: () => void;
 }
 
 /**
  * Live narration through an ElevenLabs agent: typed moves go out as user messages,
  * and the agent's voice streams back as PCM that plays as soon as it arrives.
  */
-export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNarratorAgentOptions) {
+export function useNarratorAgent({
+  agentId,
+  onNarration,
+  onStateChange,
+  onAudioChunk,
+  onTurnStart,
+}: UseNarratorAgentOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sampleRateRef = useRef(16000);
@@ -99,13 +116,20 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
   const pendingRef = useRef<string[]>([]);
   const quietTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const turnRef = useRef<LiveTurn>(newTurn());
+  const blockCheckRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [connected, setConnected] = useState(false);
+  // The browser holds sound until the player clicks or presses a key
+  const [audioBlocked, setAudioBlocked] = useState(false);
 
   const onNarrationRef = useRef(onNarration);
   const onStateChangeRef = useRef(onStateChange);
+  const onAudioChunkRef = useRef(onAudioChunk);
+  const onTurnStartRef = useRef(onTurnStart);
   useEffect(() => {
     onNarrationRef.current = onNarration;
     onStateChangeRef.current = onStateChange;
+    onAudioChunkRef.current = onAudioChunk;
+    onTurnStartRef.current = onTurnStart;
   });
 
   const setState = useCallback((state: NarratorState) => {
@@ -180,6 +204,7 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
       playheadRef.current = 0;
       ws.send(JSON.stringify({ type: 'user_message', text }));
       setState('thinking');
+      onTurnStartRef.current?.();
     },
     [setState],
   );
@@ -197,6 +222,60 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
   /** Whether a conversation is open or opening */
   const isStarted = useCallback(() => wsRef.current !== null, []);
 
+  /** The audio context, resumed when the browser allows it. Call from a click to unlock sound. */
+  const ensureAudio = useCallback(() => {
+    let ctx = audioCtxRef.current;
+    if (!ctx) {
+      const created = new AudioContext();
+      created.onstatechange = () => {
+        if (created.state === 'running') setAudioBlocked(false);
+      };
+      audioCtxRef.current = created;
+      ctx = created;
+    }
+    liveClock = ctx;
+    // Suspended, or interrupted on Safari
+    if (ctx.state !== 'running' && ctx.state !== 'closed') {
+      ctx.resume().catch(() => {});
+      // Resuming without a click stays pending; flag it if the context hasn't started shortly
+      const pending = ctx;
+      blockCheckRef.current ??= setTimeout(() => {
+        blockCheckRef.current = null;
+        if (pending.state !== 'running' && pending.state !== 'closed') setAudioBlocked(true);
+      }, 600);
+    }
+    return ctx;
+  }, []);
+
+  /** A narrator turn relayed from the player talking to the agent begins */
+  const beginRemoteTurn = useCallback(() => {
+    turnRef.current.done = true;
+    turnRef.current = newTurn();
+    // The playhead stays: the new turn queues after any relayed voice still playing
+    setState('thinking');
+  }, [setState]);
+
+  /** Play a chunk of narrator voice relayed from the player talking to the agent */
+  const playRemote = useCallback(
+    (chunk: NarrationChunk) => {
+      ensureAudio();
+      sampleRateRef.current = chunk.sampleRate;
+      playChunk(chunk.audio, chunk.alignment);
+    },
+    [ensureAudio, playChunk],
+  );
+
+  /** Close the conversation, e.g. when this player hands the narrator to someone else */
+  const stop = useCallback(() => {
+    pendingRef.current = [];
+    wsRef.current?.close();
+    wsRef.current = null;
+    setConnected(false);
+  }, []);
+
+  /** The turn the latest voice belongs to */
+  const currentTurn = useCallback(() => turnRef.current, []);
+
   /**
    * Open the conversation. Call from a click or key press so the browser lets audio play.
    * `context` (the story so far, when resuming) is given to the agent without a reply.
@@ -205,10 +284,7 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
     (openingMessage?: string, context?: string) => {
       if (!agentId || wsRef.current) return;
 
-      const ctx = audioCtxRef.current ?? new AudioContext();
-      audioCtxRef.current = ctx;
-      liveClock = ctx;
-      void ctx.resume();
+      ensureAudio();
       if (openingMessage) pendingRef.current.push(openingMessage);
       setState('thinking');
 
@@ -234,6 +310,13 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
           }
           case 'audio':
             playChunk(data.audio_event?.audio_base_64, data.audio_event?.alignment);
+            if (data.audio_event?.audio_base_64) {
+              onAudioChunkRef.current?.({
+                audio: data.audio_event.audio_base_64,
+                sampleRate: sampleRateRef.current,
+                alignment: data.audio_event.alignment,
+              });
+            }
             break;
           case 'interruption':
             stopAudio();
@@ -244,11 +327,12 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
         }
       };
       ws.onclose = () => {
+        if (wsRef.current !== ws) return;
         wsRef.current = null;
         setConnected(false);
       };
     },
-    [agentId, playChunk, sendNow, setState, stopAudio],
+    [agentId, ensureAudio, playChunk, sendNow, setState, stopAudio],
   );
 
   useEffect(() => {
@@ -257,8 +341,20 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
       stopAudio();
       void audioCtxRef.current?.close();
       if (quietTimerRef.current) clearTimeout(quietTimerRef.current);
+      if (blockCheckRef.current) clearTimeout(blockCheckRef.current);
     };
   }, [stopAudio]);
 
-  return { start, send, isStarted, connected };
+  return {
+    start,
+    send,
+    stop,
+    isStarted,
+    connected,
+    beginRemoteTurn,
+    playRemote,
+    currentTurn,
+    audioBlocked,
+    unlockAudio: ensureAudio,
+  };
 }

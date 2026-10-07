@@ -13,8 +13,8 @@ type ChatRequestOptions = {
   experimental_attachments?: Array<Attachment>;
   body?: Record<string, unknown>;
 };
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { BookOpen, MessageSquare } from 'lucide-react';
+import { useState, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import { BookOpen, MessageSquare, Volume2 } from 'lucide-react';
 import { useSWRConfig } from 'swr';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { stories } from '@pulse/core/ai/stories';
@@ -37,6 +37,7 @@ import { useGuestSession } from '@/hooks/use-guest-session';
 import { useAmbientAudio } from '@/hooks/use-ambient-audio';
 import { bindLiveNarration, useNarratorAgent } from '@/hooks/use-narrator-agent';
 import { getNarratorAgentId } from '@/lib/ai/narrator-agents';
+import { RoomNarrationContext } from '@/components/multiplayer/room-narration';
 import { SoftGateModal } from './soft-gate-modal';
 
 import { Overview } from './overview';
@@ -90,13 +91,24 @@ export function Chat({
   const audioEnabled = useAtomValue(audioEnabledAtom);
   const setStoryBegun = useSetAtom(storyBegunAtom);
 
+  // In a multiplayer room, only the spokesperson's browser talks to the narrator agent;
+  // it relays the voice and text so every other player hears and reads it live
+  const roomBus = useContext(RoomNarrationContext);
+  const isRoomListener = roomBus !== null && Boolean(disabled);
+
   // Simple 3-phase UI state (no race conditions):
   // - 'overview': Story selection screen
   // - 'loading': Black screen + loading modal (story starting)
   // - 'chat': Full chat interface
+  // A room chose its story in the lobby, so its players go straight to Begin
+  const roomBeginsAtModal =
+    initialMessages.length === 0 &&
+    roomBus !== null &&
+    Boolean(initialStoryId && getNarratorAgentId(initialStoryId, false));
   const [phase, setPhase] = useState<'overview' | 'loading' | 'chat'>(
-    initialMessages.length > 0 ? 'chat' : 'overview',
+    initialMessages.length > 0 ? 'chat' : roomBeginsAtModal ? 'loading' : 'overview',
   );
+  const roomBeginsAtModalRef = useRef(roomBeginsAtModal);
 
   // If returning to existing session, mark story as begun for audio autoplay
   useEffect(() => {
@@ -225,15 +237,23 @@ export function Chat({
   const narratorState = useAtomValue(narratorStateAtom);
   const setNarratorState = useSetAtom(narratorStateAtom);
   const setAgentMessageIds = useSetAtom(agentMessageIdsAtom);
-  const lastPlayerMoveRef = useRef<string | null>(null);
+  const lastPlayerMoveRef = useRef<{ id: string; text: string } | null>(null);
 
   const {
     start: startNarrator,
     send: sendToNarrator,
+    stop: stopNarrator,
     isStarted: narratorStarted,
+    beginRemoteTurn,
+    playRemote,
+    currentTurn,
+    audioBlocked,
+    unlockAudio,
   } = useNarratorAgent({
     agentId: narratorAgentId,
     onStateChange: setNarratorState,
+    onTurnStart: () => roomBus?.publish({ type: 'NARRATION_TURN' }),
+    onAudioChunk: (chunk) => roomBus?.publish({ type: 'NARRATION_AUDIO', ...chunk }),
     onNarration: (raw, turn) => {
       // Delivery tags like [whisper] steer the voice; keep them out of the text
       const text = raw.replace(/\[[^\]]{1,24}\]\s*/g, '').trim();
@@ -246,8 +266,9 @@ export function Chat({
         ...prev,
         { id: messageId, role: 'assistant', parts: [{ type: 'text', text }] },
       ]);
+      roomBus?.publish({ type: 'NARRATION_TEXT', messageId, text });
 
-      const userText = lastPlayerMoveRef.current;
+      const move = lastPlayerMoveRef.current;
       lastPlayerMoveRef.current = null;
       void fetch('/api/pulse/agent-turn', {
         method: 'POST',
@@ -255,7 +276,8 @@ export function Chat({
         body: JSON.stringify({
           chatId: id,
           storyId: selectedStoryId,
-          userText,
+          userText: move?.text ?? null,
+          userMessageId: move?.id,
           narration: text,
           assistantMessageId: messageId,
           solo: isSoloMode,
@@ -266,6 +288,60 @@ export function Chat({
       }
     },
   });
+
+  // Narration relayed from the spokesperson's browser: queue the voice, show the text and moves
+  useEffect(() => {
+    if (!roomBus) return;
+    const appendRelayed = (messageId: string, role: 'user' | 'assistant', text: string) =>
+      setMessages((prev) =>
+        prev.some((m) => m.id === messageId)
+          ? prev
+          : [...prev, { id: messageId, role, parts: [{ type: 'text', text }] }],
+      );
+    return roomBus.subscribe((event) => {
+      switch (event.type) {
+        case 'NARRATION_TURN':
+          beginRemoteTurn();
+          break;
+        case 'NARRATION_AUDIO':
+          playRemote(event);
+          break;
+        case 'NARRATION_TEXT':
+          bindLiveNarration(event.messageId, currentTurn());
+          setAgentMessageIds((ids) => new Set(ids).add(event.messageId));
+          appendRelayed(event.messageId, 'assistant', event.text);
+          break;
+        case 'PLAYER_MOVE':
+          appendRelayed(event.messageId, 'user', event.text);
+          break;
+      }
+    });
+  }, [roomBus, beginRemoteTurn, playRemote, currentTurn, setAgentMessageIds, setMessages]);
+
+  // Browsers hold the relayed voice until the player interacts; any click or key lets it play
+  useEffect(() => {
+    if (!audioBlocked) return;
+    window.addEventListener('pointerdown', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, [audioBlocked, unlockAudio]);
+
+  // A player who hands over the spokesperson role stops narrating; the new spokesperson's
+  // browser opens the narrator with the story so far on their first move
+  useEffect(() => {
+    if (isRoomListener) stopNarrator();
+  }, [isRoomListener, stopNarrator]);
+
+  // Without a narrator agent (Spanish), a room starts from the story picker as before
+  useEffect(() => {
+    if (roomBeginsAtModalRef.current && !narratorAgentId) {
+      roomBeginsAtModalRef.current = false;
+      setPhase('overview');
+    }
+  }, [narratorAgentId]);
 
   const handleStorySelection = useCallback(
     async (storyId: string, solo: boolean) => {
@@ -287,9 +363,9 @@ export function Chat({
     [mutate],
   );
 
-  // Load story typography when returning to existing session (runs once on mount)
+  // Load story typography when returning to existing session or entering a room (runs once on mount)
   useEffect(() => {
-    if (initialMessages.length > 0 && selectedStory?.theme?.typography) {
+    if (phase !== 'overview' && selectedStory?.theme?.typography) {
       initStoryTypography(selectedStory.theme.typography);
     }
     // Only run on mount - don't re-run when story changes (handleStorySelection handles that)
@@ -309,6 +385,7 @@ export function Chat({
     ) => {
       event?.preventDefault?.();
       if (!input.trim() && !attachments.length) return;
+      if (isRoomListener) return;
 
       if (narratorAgentId) {
         const text = input.trim();
@@ -330,11 +407,13 @@ export function Chat({
               : undefined,
           );
         }
+        const move = { id: crypto.randomUUID(), text };
         setMessages((prev) => [
           ...prev,
-          { id: crypto.randomUUID(), role: 'user', parts: [{ type: 'text', text }] },
+          { id: move.id, role: 'user', parts: [{ type: 'text', text }] },
         ]);
-        lastPlayerMoveRef.current = text;
+        roomBus?.publish({ type: 'PLAYER_MOVE', messageId: move.id, text });
+        lastPlayerMoveRef.current = move;
         sendToNarrator(text);
         setInput('');
         setAttachments([]);
@@ -367,6 +446,8 @@ export function Chat({
       sendToNarrator,
       setMessages,
       messages,
+      isRoomListener,
+      roomBus,
     ],
   );
 
@@ -375,10 +456,17 @@ export function Chat({
       message: UIMessage | CreateUIMessage<UIMessage>,
       chatRequestOptions?: ChatRequestOptions,
     ) => {
+      // In a room, only the spokesperson starts the narration
+      if (isRoomListener) return null;
+
       const body = chatRequestOptions?.body as
         | { selectedStoryId?: string; solo?: boolean }
         | undefined;
-      if (body?.selectedStoryId && getNarratorAgentId(body.selectedStoryId, body.solo ?? true)) {
+      if (
+        language !== 'es' &&
+        body?.selectedStoryId &&
+        getNarratorAgentId(body.selectedStoryId, body.solo ?? true)
+      ) {
         // The narrator agent opens the story when the player presses Begin
         return null;
       }
@@ -394,7 +482,7 @@ export function Chat({
       );
       return null;
     },
-    [sendMessage],
+    [sendMessage, isRoomListener, language],
   );
 
   const reload = useCallback(
@@ -463,6 +551,12 @@ export function Chat({
   const handleBeginStory = useCallback(() => {
     setStoryBegun(true); // Enable audio autoplay
     setPhase('chat'); // Transition to chat interface
+    roomBeginsAtModalRef.current = false;
+    if (isRoomListener) {
+      // The spokesperson's browser runs the narrator; this click lets its relayed voice play here
+      unlockAudio();
+      return;
+    }
     if (narratorAgentId && selectedStory) {
       // Same hidden opening the text pipeline gets from the overview
       startNarrator(
@@ -471,7 +565,15 @@ export function Chat({
           : `Let's start the group session for "${selectedStory.title}". Ask for the number of players and each player's name before beginning the story.`,
       );
     }
-  }, [setStoryBegun, narratorAgentId, selectedStory, startNarrator, isSoloMode]);
+  }, [
+    setStoryBegun,
+    narratorAgentId,
+    selectedStory,
+    startNarrator,
+    isSoloMode,
+    isRoomListener,
+    unlockAudio,
+  ]);
 
   return (
     <>
@@ -615,6 +717,17 @@ export function Chat({
           </form>
         )}
       </div>
+
+      {roomBus && audioBlocked && phase === 'chat' && (
+        <button
+          type="button"
+          onClick={unlockAudio}
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full border border-border bg-background/95 px-4 py-2 text-sm text-foreground shadow-lg backdrop-blur"
+        >
+          <Volume2 className="w-4 h-4" />
+          Tap to hear the narrator
+        </button>
+      )}
 
       {/* Soft Gate Modal for guests */}
       {showSoftGate && (

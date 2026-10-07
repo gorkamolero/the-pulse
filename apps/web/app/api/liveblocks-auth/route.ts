@@ -1,5 +1,7 @@
 import { Liveblocks } from "@liveblocks/node";
+import { cookies } from "next/headers";
 import { auth } from "@/app/(auth)/auth";
+import { getPlayerInRoom } from "@/lib/db/queries";
 
 const LIVEBLOCKS_SECRET_KEY = process.env.LIVEBLOCKS_SECRET_KEY;
 
@@ -32,10 +34,13 @@ export async function POST(request: Request) {
     userName = session.user.email || "Player";
     userColor = "#457B9D"; // Default blue for authenticated users
   } else {
-    // Guest user - look for guest info in headers or generate
-    const guestId = request.headers.get("x-guest-id");
-    const guestName = request.headers.get("x-guest-name");
-    const guestColor = request.headers.get("x-guest-color");
+    // Guest player: the guest-id cookie set on joining, matched to their seat in the room
+    const guestId =
+      (await cookies()).get("guest-id")?.value ?? request.headers.get("x-guest-id");
+    const player = guestId
+      ? await getPlayerInRoom({ roomId, guestId }).catch(() => null)
+      : null;
+    const guestName = player?.displayName ?? request.headers.get("x-guest-name");
 
     if (!guestId || !guestName) {
       return new Response("Missing guest info", { status: 400 });
@@ -43,7 +48,7 @@ export async function POST(request: Request) {
 
     userId = `guest-${guestId}`;
     userName = guestName;
-    userColor = guestColor || "#E63946";
+    userColor = player?.color ?? request.headers.get("x-guest-color") ?? "#E63946";
   }
 
   const liveblocksSession = liveblocks.prepareSession(userId, {

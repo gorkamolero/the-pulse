@@ -4,6 +4,7 @@ import type { UIMessage } from "ai";
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import { MultiplayerRoomProvider } from "@/components/multiplayer/room-provider";
+import { RoomNarrationProvider } from "@/components/multiplayer/room-narration";
 import { PlayerChat } from "@/components/multiplayer/player-chat";
 import { SpokespersonIndicator } from "@/components/multiplayer/spokesperson-indicator";
 import type { RoomWithPlayers } from "@/lib/multiplayer/types";
@@ -54,16 +55,18 @@ export function MultiplayerPlayWrapper({
       displayName={currentPlayer.displayName}
       color={currentPlayer.color}
     >
-      <MultiplayerPlayContent
-        room={initialRoom}
-        chatId={chatId}
-        initialMessages={initialMessages}
-        currentPlayerId={currentPlayerId}
-        initialIsSpokesperson={initialIsSpokesperson}
-        initialSpokespersonName={initialSpokespersonName}
-        guestId={guestId}
-        user={user}
-      />
+      <RoomNarrationProvider>
+        <MultiplayerPlayContent
+          room={initialRoom}
+          chatId={chatId}
+          initialMessages={initialMessages}
+          currentPlayerId={currentPlayerId}
+          initialIsSpokesperson={initialIsSpokesperson}
+          initialSpokespersonName={initialSpokespersonName}
+          guestId={guestId}
+          user={user}
+        />
+      </RoomNarrationProvider>
     </MultiplayerRoomProvider>
   );
 }
@@ -98,8 +101,9 @@ function MultiplayerPlayContent({
 
   // Use real-time data if available, fall back to initial
   const currentRoom = room || initialRoom;
-  const currentIsSpokesperson =
-    room?.spokespersonPlayerId === currentPlayerId || initialIsSpokesperson;
+  const currentIsSpokesperson = room
+    ? room.spokespersonPlayerId === currentPlayerId
+    : initialIsSpokesperson;
 
   // Find current spokesperson name
   const spokesperson = currentRoom.players.find(

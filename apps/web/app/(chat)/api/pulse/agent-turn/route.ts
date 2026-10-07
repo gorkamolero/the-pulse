@@ -25,6 +25,7 @@ export async function POST(request: Request) {
     chatId,
     storyId,
     userText,
+    userMessageId,
     narration,
     assistantMessageId,
     solo = true,
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
     chatId: string;
     storyId: string;
     userText?: string | null;
+    userMessageId?: string;
     narration: string;
     assistantMessageId: string;
     solo?: boolean;
@@ -60,7 +62,8 @@ export async function POST(request: Request) {
     messages: [
       ...(userText?.trim()
         ? [{
-            id: crypto.randomUUID(),
+            // Same id the other players in a room were shown, when the browser sent one
+            id: userMessageId ?? crypto.randomUUID(),
             chatId,
             role: "user",
             content: userText,
