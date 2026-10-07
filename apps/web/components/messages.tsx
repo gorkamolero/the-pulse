@@ -21,14 +21,10 @@ import { Button } from "@/components/ui/button";
 import { getUIMessageContent } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useMessage } from "@/hooks/use-message";
-import {
-  audioEnabledAtom,
-  audioElementAtom,
-  audioPlayingAtom,
-  narratorStateAtom,
-  storyBegunAtom,
-} from "@/lib/atoms";
+import { audioEnabledAtom, audioElementAtom, audioPlayingAtom, narratorStateAtom, storyBegunAtom, agentMessageIdsAtom } from "@/lib/atoms";
 import { getValidWordTimings, TimedNarration } from "@/components/timed-narration";
+import { LiveNarration } from "@/components/live-narration";
+import { hasLiveNarration } from "@/hooks/use-narrator-agent";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -294,6 +290,9 @@ function VisibleMessage({
 }) {
   const [playbackTimeMs, setPlaybackTimeMs] = useState(-1);
   const { message: storedMessage } = useMessage(role === "assistant" ? messageId : null);
+  // Voiced live by the narrator agent, so there is no stored audio to play or retry
+  const isLiveNarration =
+    useAtomValue(agentMessageIdsAtom).has(messageId) || hasLiveNarration(messageId);
   const wordTimings = getValidWordTimings(storedMessage.wordTimings);
 
   const handlePlaybackTimeChange = useCallback(
@@ -317,7 +316,9 @@ function VisibleMessage({
         )}
       >
         {role === "assistant" ? (
-          wordTimings.length > 0 ? (
+          isLiveNarration ? (
+            <LiveNarration messageId={messageId} text={content} />
+          ) : wordTimings.length > 0 ? (
             <TimedNarration
               currentTimeMs={playbackTimeMs}
               text={content}
@@ -331,7 +332,7 @@ function VisibleMessage({
         )}
       </MessageContent>
 
-      {role === "assistant" && (
+      {role === "assistant" && !isLiveNarration && (
         <MessageActions>
           <NarrationButton
             autoplay={autoplay}

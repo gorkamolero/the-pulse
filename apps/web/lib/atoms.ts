@@ -53,5 +53,8 @@ export const audioElementAtom = atom<HTMLAudioElement | null>(null);
 export type NarratorState = null | 'thinking' | 'talking';
 export const narratorStateAtom = atom<NarratorState>(null);
 
+// Narrator messages voiced live by an ElevenLabs agent (no stored audio to fetch)
+export const agentMessageIdsAtom = atom<Set<string>>(new Set<string>());
+
 // The active story's ink color — tints the narrator orb per story
 export const storyAccentAtom = atom<string | null>(null);

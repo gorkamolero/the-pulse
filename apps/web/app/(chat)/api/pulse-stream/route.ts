@@ -314,11 +314,8 @@ export async function POST(request: Request) {
           if (textBuffer.length > 0) {
             elevenLabsStream.sendText(textBuffer);
           }
-          elevenLabsStream.flush();
-
-          // Wait a bit for final audio chunks
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          elevenLabsStream.close();
+          // Flush and wait for the final audio chunks
+          await elevenLabsStream.finish();
         }
 
         // Check for garbage output

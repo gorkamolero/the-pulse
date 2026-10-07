@@ -56,6 +56,7 @@ export async function generatePulseAudio({
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to generate audio";
+    console.error("[TTS] Narration audio failed:", message);
     return { success: false, error: message };
   }
 }

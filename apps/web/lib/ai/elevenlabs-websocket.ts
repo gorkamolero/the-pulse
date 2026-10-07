@@ -1,32 +1,48 @@
 import WebSocket from "ws";
 import { DEFAULT_VOICE_ID } from "@pulse/core/ai/models";
 
+// Eleven v4 Turbo streams only over the Text to Dialogue WebSocket, which takes
+// eleven_v3* / eleven_v4* models and exactly one registered voice for v4 Turbo.
+export const DEFAULT_STREAMING_MODEL = "eleven_v4_turbo";
+
+// The server ends a connection after 20s without a client message
+const KEEP_ALIVE_MS = 10_000;
+// Longest finish() waits for the final audio before closing anyway
+const FINISH_TIMEOUT_MS = 8_000;
+
+export interface DialogueAlignment {
+  chars: string[];
+  char_start_times_ms: number[];
+  char_durations_ms: number[];
+}
+
 interface ElevenLabsStreamOptions {
   voiceId?: string;
   modelId?: string;
-  onAudioChunk?: (chunk: Buffer) => void;
+  /** Ask for character timings on each audio chunk */
+  syncAlignment?: boolean;
+  onAudioChunk?: (chunk: Buffer, alignment?: DialogueAlignment) => void;
   onError?: (error: Error) => void;
   onClose?: () => void;
 }
 
-interface AudioChunkMessage {
+interface DialogueMessage {
   audio?: string; // base64 encoded audio
-  isFinal?: boolean;
-  normalizedAlignment?: {
-    char_start_times_ms: number[];
-    chars_durations_ms: number[];
-    chars: string[];
-  };
+  alignment?: DialogueAlignment | null;
+  is_final?: boolean;
+  error?: string;
+  message?: string;
 }
 
 /**
- * Creates a streaming connection to ElevenLabs WebSocket TTS API.
+ * Creates a streaming connection to the ElevenLabs Text to Dialogue WebSocket.
  * Returns an object with methods to send text and close the connection.
  */
 export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
   const {
     voiceId = DEFAULT_VOICE_ID,
-    modelId = "eleven_flash_v2_5",
+    modelId = DEFAULT_STREAMING_MODEL,
+    syncAlignment = false,
     onAudioChunk,
     onError,
     onClose,
@@ -39,11 +55,13 @@ export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
 
   // Build WebSocket URL with query parameters
   const wsUrl = new URL(
-    `wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-input`
+    "wss://api.elevenlabs.io/v1/text-to-dialogue/stream-input"
   );
   wsUrl.searchParams.set("model_id", modelId);
   wsUrl.searchParams.set("output_format", "mp3_44100_128");
-  wsUrl.searchParams.set("auto_mode", "true"); // Lower latency for full sentences
+  if (syncAlignment) {
+    wsUrl.searchParams.set("sync_alignment", "true");
+  }
 
   const ws = new WebSocket(wsUrl.toString(), {
     headers: {
@@ -52,6 +70,8 @@ export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
   });
 
   let isConnected = false;
+  let keepAlive: ReturnType<typeof setInterval> | null = null;
+  let onFinal: (() => void) | null = null;
   let connectionPromiseResolve: (() => void) | null = null;
   let connectionPromiseReject: ((error: Error) => void) | null = null;
 
@@ -60,43 +80,45 @@ export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
     connectionPromiseReject = reject;
   });
 
+  const send = (payload: object) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+    }
+  };
+
   ws.on("open", () => {
     isConnected = true;
 
-    // Send initialization message with voice settings
-    ws.send(
-      JSON.stringify({
-        text: " ", // Initial empty text to prime the connection
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-          style: 0.0,
-          use_speaker_boost: true,
-        },
-        generation_config: {
-          chunk_length_schedule: [120, 160, 250, 290],
-        },
-      })
-    );
+    // First message registers the narrator voice for the session
+    send({ voices: [voiceId] });
+    keepAlive = setInterval(() => send({ keep_alive: true }), KEEP_ALIVE_MS);
 
     connectionPromiseResolve?.();
   });
 
   ws.on("message", (data: Buffer) => {
+    let message: DialogueMessage;
     try {
-      const message: AudioChunkMessage = JSON.parse(data.toString());
+      message = JSON.parse(data.toString());
+    } catch {
+      return;
+    }
 
-      if (message.audio) {
-        // Decode base64 audio and send to callback
-        const audioBuffer = Buffer.from(message.audio, "base64");
-        onAudioChunk?.(audioBuffer);
-      }
+    if (message.error) {
+      onError?.(new Error(message.message ?? message.error));
+      return;
+    }
 
-    } catch (error) {
-      // Non-JSON message, might be binary audio
-      if (Buffer.isBuffer(data)) {
-        onAudioChunk?.(data);
-      }
+    if (message.audio) {
+      // Decode base64 audio and send to callback
+      onAudioChunk?.(
+        Buffer.from(message.audio, "base64"),
+        message.alignment ?? undefined
+      );
+    }
+
+    if (message.is_final) {
+      onFinal?.();
     }
   });
 
@@ -107,6 +129,10 @@ export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
 
   ws.on("close", () => {
     isConnected = false;
+    if (keepAlive) {
+      clearInterval(keepAlive);
+    }
+    onFinal?.();
     onClose?.();
   });
 
@@ -124,37 +150,50 @@ export function createElevenLabsStream(options: ElevenLabsStreamOptions = {}) {
         return;
       }
 
-      ws.send(
-        JSON.stringify({
-          text,
-          try_trigger_generation: true,
-        })
-      );
+      send({ inputs: [{ text, voice_id: voiceId }] });
     },
 
     /**
-     * Flush any remaining text and signal end of input
+     * Force generation of any buffered text without closing
      */
     flush: () => {
       if (!isConnected) {
         return;
       }
 
-      ws.send(
-        JSON.stringify({
-          text: "",
-          flush: true,
-        })
-      );
+      send({ flush: true });
     },
 
     /**
-     * Close the WebSocket connection
+     * Flush remaining text and resolve once the final audio chunk has arrived.
+     * The server closes the connection after that.
+     */
+    finish: () =>
+      new Promise<void>((resolve) => {
+        if (!isConnected) {
+          resolve();
+          return;
+        }
+
+        const timeout = setTimeout(() => {
+          ws.close();
+        }, FINISH_TIMEOUT_MS);
+        onFinal = () => {
+          clearTimeout(timeout);
+          onFinal = null;
+          resolve();
+        };
+        send({ close_socket: true });
+      }),
+
+    /**
+     * Close the WebSocket connection immediately
      */
     close: () => {
+      if (keepAlive) {
+        clearInterval(keepAlive);
+      }
       if (ws.readyState === WebSocket.OPEN) {
-        // Send close message
-        ws.send(JSON.stringify({ close: true }));
         ws.close();
       }
     },
@@ -185,19 +224,14 @@ export async function textToSpeechStream(
       onError: (error) => {
         reject(error);
       },
-      onClose: () => {
-        resolve(Buffer.concat(chunks));
-      },
     });
 
-    stream.waitForConnection().then(() => {
-      stream.sendText(text);
-      stream.flush();
-
-      // Close after a delay to ensure all audio is received
-      setTimeout(() => {
-        stream.close();
-      }, 5000);
-    });
+    stream
+      .waitForConnection()
+      .then(() => {
+        stream.sendText(text);
+        return stream.finish();
+      })
+      .then(() => resolve(Buffer.concat(chunks)), reject);
   });
 }

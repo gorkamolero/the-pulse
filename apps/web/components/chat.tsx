@@ -13,7 +13,7 @@ type ChatRequestOptions = {
   experimental_attachments?: Array<Attachment>;
   body?: Record<string, unknown>;
 };
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BookOpen, MessageSquare } from 'lucide-react';
 import { useSWRConfig } from 'swr';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -23,12 +23,20 @@ import { initStoryTypography, resetStoryTypography } from '@/lib/font-loader';
 import { StoryDisplay } from '@/components/story-display';
 import { StoryLoadingModal } from '@/components/story-loading-modal';
 import { ShareCard } from '@/components/share-card';
-import { audioEnabledAtom, storyAccentAtom, storyBegunAtom } from '@/lib/atoms';
+import {
+  agentMessageIdsAtom,
+  audioEnabledAtom,
+  narratorStateAtom,
+  storyAccentAtom,
+  storyBegunAtom,
+} from '@/lib/atoms';
 import { ChatHeader } from '@/components/chat-header';
 import { getUIMessageContent } from '@/lib/utils';
 import { DEFAULT_STORY_ID } from '@pulse/core/ai/stories';
 import { useGuestSession } from '@/hooks/use-guest-session';
 import { useAmbientAudio } from '@/hooks/use-ambient-audio';
+import { bindLiveNarration, useNarratorAgent } from '@/hooks/use-narrator-agent';
+import { getNarratorAgentId } from '@/lib/ai/narrator-agents';
 import { SoftGateModal } from './soft-gate-modal';
 
 import { Overview } from './overview';
@@ -210,6 +218,50 @@ export function Chat({
       },
     });
 
+  // Solo stories with a narrator agent are narrated live by ElevenLabs instead of /api/pulse
+  // Agents narrate in English; other languages keep the text model + TTS pipeline
+  const narratorAgentId =
+    isSoloMode && language !== 'es' ? getNarratorAgentId(selectedStoryId) : null;
+  const narratorState = useAtomValue(narratorStateAtom);
+  const setNarratorState = useSetAtom(narratorStateAtom);
+  const setAgentMessageIds = useSetAtom(agentMessageIdsAtom);
+  const lastPlayerMoveRef = useRef<string | null>(null);
+
+  const { start: startNarrator, send: sendToNarrator } = useNarratorAgent({
+    agentId: narratorAgentId,
+    onStateChange: setNarratorState,
+    onNarration: (raw, turn) => {
+      // Delivery tags like [whisper] steer the voice; keep them out of the text
+      const text = raw.replace(/\[[^\]]{1,24}\]\s*/g, '').trim();
+      if (!text) return;
+
+      const messageId = crypto.randomUUID();
+      bindLiveNarration(messageId, turn);
+      setAgentMessageIds((ids) => new Set(ids).add(messageId));
+      setMessages((prev) => [
+        ...prev,
+        { id: messageId, role: 'assistant', parts: [{ type: 'text', text }] },
+      ]);
+
+      const userText = lastPlayerMoveRef.current;
+      lastPlayerMoveRef.current = null;
+      void fetch('/api/pulse/agent-turn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatId: id,
+          storyId: selectedStoryId,
+          userText,
+          narration: text,
+          assistantMessageId: messageId,
+        }),
+      });
+      if (isGuest) {
+        addGuestMessage({ role: 'assistant', content: '' });
+      }
+    },
+  });
+
   const handleStorySelection = useCallback(
     async (storyId: string, solo: boolean) => {
       setSelectedStoryId(storyId);
@@ -253,6 +305,19 @@ export function Chat({
       event?.preventDefault?.();
       if (!input.trim() && !attachments.length) return;
 
+      if (narratorAgentId) {
+        const text = input.trim();
+        setMessages((prev) => [
+          ...prev,
+          { id: crypto.randomUUID(), role: 'user', parts: [{ type: 'text', text }] },
+        ]);
+        lastPlayerMoveRef.current = text;
+        sendToNarrator(text);
+        setInput('');
+        setAttachments([]);
+        return;
+      }
+
       // Convert attachments to files format if needed
       // For now, sending just text - file handling needs to be implemented
       sendMessage(
@@ -268,7 +333,7 @@ export function Chat({
       setAttachments([]);
       mutate('/api/history');
     },
-    [input, attachments, sendMessage, mutate],
+    [input, attachments, sendMessage, mutate, narratorAgentId, sendToNarrator, setMessages],
   );
 
   const append = useCallback(
@@ -276,6 +341,14 @@ export function Chat({
       message: UIMessage | CreateUIMessage<UIMessage>,
       chatRequestOptions?: ChatRequestOptions,
     ) => {
+      const body = chatRequestOptions?.body as
+        | { selectedStoryId?: string; solo?: boolean }
+        | undefined;
+      if (body?.solo && getNarratorAgentId(body.selectedStoryId)) {
+        // The narrator agent opens the story when the player presses Begin
+        return null;
+      }
+
       const textContent = getUIMessageContent(message as UIMessage);
       await sendMessage(
         {
@@ -300,7 +373,8 @@ export function Chat({
     [regenerate],
   );
 
-  const isLoading = status === 'streaming';
+  const isLoading =
+    status === 'streaming' || (Boolean(narratorAgentId) && narratorState === 'thinking');
 
   // On mobile, switch back to messages view when narrator finishes responding
   useEffect(() => {
@@ -345,16 +419,20 @@ export function Chat({
   // - Narrator has responded AND
   // - Audio is ready (signaled via stream data) OR audio is disabled
   const isStoryReady = useMemo(() => {
+    if (narratorAgentId) return true;
     if (!hasNarratorResponse) return false;
     if (!audioEnabled) return true;
     if (audioReady) return true;
     return status === 'ready' || status === 'error';
-  }, [hasNarratorResponse, audioEnabled, audioReady, status]);
+  }, [narratorAgentId, hasNarratorResponse, audioEnabled, audioReady, status]);
 
   const handleBeginStory = useCallback(() => {
     setStoryBegun(true); // Enable audio autoplay
     setPhase('chat'); // Transition to chat interface
-  }, [setStoryBegun]);
+    if (narratorAgentId && selectedStory) {
+      startNarrator(`Let's start the story "${selectedStory.title}".`);
+    }
+  }, [setStoryBegun, narratorAgentId, selectedStory, startNarrator]);
 
   return (
     <>

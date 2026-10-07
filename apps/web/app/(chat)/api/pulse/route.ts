@@ -404,7 +404,8 @@ export async function POST(request: Request) {
           model,
           system: systemPromptText,
           messages: await convertToModelMessages(messages),
-          maxOutputTokens: 700,
+          // Room for the model's hidden reasoning; the prompt keeps the pulse itself short
+          maxOutputTokens: 2000,
           ...(isGuest ? {} : {
             experimental_telemetry: {
               isEnabled: true,
