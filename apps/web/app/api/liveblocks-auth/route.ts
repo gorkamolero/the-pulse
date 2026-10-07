@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import { auth } from "@/app/(auth)/auth";
 import { getPlayerInRoom } from "@/lib/db/queries";
 
-const LIVEBLOCKS_SECRET_KEY = process.env.LIVEBLOCKS_SECRET_KEY;
+// Trimmed: a key pasted with a trailing newline or quotes fails Liveblocks' validation
+const LIVEBLOCKS_SECRET_KEY = process.env.LIVEBLOCKS_SECRET_KEY?.trim().replace(/^["']|["']$/g, "");
 
 export async function POST(request: Request) {
   if (!LIVEBLOCKS_SECRET_KEY) {
