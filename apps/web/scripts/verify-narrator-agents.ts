@@ -34,22 +34,28 @@ const VOICE_RULES = readFileSync(resolve(process.cwd(), "scripts/create-narrator
 
 for (const { id } of stories) {
   const story = getStoryById(id)!;
-  const agentId = getNarratorAgentId(id);
-  if (!agentId) {
-    console.log(`${story.title}: NO AGENT`);
-    continue;
+  for (const solo of [true, false]) {
+    const agentId = getNarratorAgentId(id, solo);
+    const label = `${story.title} ${solo ? "solo" : "group"}`;
+    if (!agentId) {
+      console.log(`${label}: NO AGENT`);
+      continue;
+    }
+    const res = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
+      headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY ?? "" },
+    });
+    if (!res.ok) {
+      console.log(`${label} (${agentId}): not readable with this key (${res.status})`);
+      continue;
+    }
+    const cc = ((await res.json()) as any).conversation_config ?? {};
+    const stored: string = cc.agent?.prompt?.prompt ?? "";
+    const expected = VOICE_RULES + systemPrompt({ storyGuide: story.storyGuide, language: "english", solo });
+    // The Endless Path guide embeds the build time, so compare it with digits masked
+    const same = stored === expected || stored.replace(/\d/g, "#") === expected.replace(/\d/g, "#");
+    console.log(`${label} (${agentId}):`, same ? "prompt matches the game" : `PROMPT DIFFERS (${stored.length} vs ${expected.length})`,
+      `| voice ${cc.tts?.voice_id === getNarratorConfig(id).voiceId ? "ok" : "WRONG"}`,
+      `| ${cc.agent?.prompt?.llm} / ${cc.tts?.model_id} / ${cc.tts?.agent_output_audio_format}`,
+      `| greeting ${JSON.stringify(cc.agent?.first_message ?? null)} | timeout ${cc.turn?.turn_timeout} | max ${cc.conversation?.max_duration_seconds}s`);
   }
-  const agent = (await (await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
-    headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY ?? "" },
-  })).json()) as any;
-  const cc = agent.conversation_config ?? {};
-  const stored: string = cc.agent?.prompt?.prompt ?? "";
-  const expected = VOICE_RULES + systemPrompt({ storyGuide: story.storyGuide, language: "english", solo: true });
-  const guideOpening = story.storyGuide.trim().slice(0, 60);
-  console.log(`${story.title} (${agentId}):`,
-    stored === expected ? "prompt matches the game exactly" : `PROMPT DIFFERS (stored ${stored.length} vs expected ${expected.length} chars)`,
-    `| guide inside: ${stored.includes(story.storyGuide.trim()) ? "yes" : "NO"}`,
-    `| voice ${cc.tts?.voice_id === getNarratorConfig(id).voiceId ? "ok" : "WRONG"}`,
-    `| ${cc.agent?.prompt?.llm} / ${cc.tts?.model_id} / ${cc.tts?.agent_output_audio_format}`,
-    `| ${stored.length} chars | guide starts: "${guideOpening.replace(/\s+/g, " ")}…"`);
 }

@@ -27,12 +27,14 @@ export async function POST(request: Request) {
     userText,
     narration,
     assistantMessageId,
+    solo = true,
   }: {
     chatId: string;
     storyId: string;
     userText?: string | null;
     narration: string;
     assistantMessageId: string;
+    solo?: boolean;
   } = await request.json();
 
   const story = getStoryById(storyId);
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
       userId: userId || (await ensureGuestUser()),
       title: userId ? `[${story.title}] Live narrator` : `[Guest] ${story.title}`,
       storyId,
-      soloMode: true,
+      soloMode: solo,
     });
   }
 

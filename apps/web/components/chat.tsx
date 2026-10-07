@@ -221,13 +221,17 @@ export function Chat({
   // Solo stories with a narrator agent are narrated live by ElevenLabs instead of /api/pulse
   // Agents narrate in English; other languages keep the text model + TTS pipeline
   const narratorAgentId =
-    isSoloMode && language !== 'es' ? getNarratorAgentId(selectedStoryId) : null;
+    language !== 'es' ? getNarratorAgentId(selectedStoryId, isSoloMode) : null;
   const narratorState = useAtomValue(narratorStateAtom);
   const setNarratorState = useSetAtom(narratorStateAtom);
   const setAgentMessageIds = useSetAtom(agentMessageIdsAtom);
   const lastPlayerMoveRef = useRef<string | null>(null);
 
-  const { start: startNarrator, send: sendToNarrator } = useNarratorAgent({
+  const {
+    start: startNarrator,
+    send: sendToNarrator,
+    isStarted: narratorStarted,
+  } = useNarratorAgent({
     agentId: narratorAgentId,
     onStateChange: setNarratorState,
     onNarration: (raw, turn) => {
@@ -254,6 +258,7 @@ export function Chat({
           userText,
           narration: text,
           assistantMessageId: messageId,
+          solo: isSoloMode,
         }),
       });
       if (isGuest) {
@@ -307,6 +312,24 @@ export function Chat({
 
       if (narratorAgentId) {
         const text = input.trim();
+        if (!narratorStarted()) {
+          // Resumed or reloaded game: open the agent and give it the story so far
+          const storySoFar = messages
+            .map((m) => {
+              const content = getUIMessageContent(m);
+              if (/let's start the (story|group session)/i.test(content)) return null;
+              return `${m.role === 'assistant' ? 'Narrator' : 'Player'}: ${content}`;
+            })
+            .filter(Boolean)
+            .join('\n\n')
+            .slice(-12000);
+          startNarrator(
+            undefined,
+            storySoFar
+              ? `The story so far (continue it; do not start over):\n\n${storySoFar}`
+              : undefined,
+          );
+        }
         setMessages((prev) => [
           ...prev,
           { id: crypto.randomUUID(), role: 'user', parts: [{ type: 'text', text }] },
@@ -333,7 +356,18 @@ export function Chat({
       setAttachments([]);
       mutate('/api/history');
     },
-    [input, attachments, sendMessage, mutate, narratorAgentId, sendToNarrator, setMessages],
+    [
+      input,
+      attachments,
+      sendMessage,
+      mutate,
+      narratorAgentId,
+      narratorStarted,
+      startNarrator,
+      sendToNarrator,
+      setMessages,
+      messages,
+    ],
   );
 
   const append = useCallback(
@@ -344,7 +378,7 @@ export function Chat({
       const body = chatRequestOptions?.body as
         | { selectedStoryId?: string; solo?: boolean }
         | undefined;
-      if (body?.solo && getNarratorAgentId(body.selectedStoryId)) {
+      if (body?.selectedStoryId && getNarratorAgentId(body.selectedStoryId, body.solo ?? true)) {
         // The narrator agent opens the story when the player presses Begin
         return null;
       }
@@ -430,9 +464,14 @@ export function Chat({
     setStoryBegun(true); // Enable audio autoplay
     setPhase('chat'); // Transition to chat interface
     if (narratorAgentId && selectedStory) {
-      startNarrator(`Let's start the story "${selectedStory.title}".`);
+      // Same hidden opening the text pipeline gets from the overview
+      startNarrator(
+        isSoloMode
+          ? `Let's start the story "${selectedStory.title}".`
+          : `Let's start the group session for "${selectedStory.title}". Ask for the number of players and each player's name before beginning the story.`,
+      );
     }
-  }, [setStoryBegun, narratorAgentId, selectedStory, startNarrator]);
+  }, [setStoryBegun, narratorAgentId, selectedStory, startNarrator, isSoloMode]);
 
   return (
     <>

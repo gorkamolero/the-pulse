@@ -73,6 +73,8 @@ export default async function PlayPage({ params }: PlayPageProps) {
       id: chatId,
       userId: chatUserId,
       title: `Multiplayer Game - Room ${room.inviteCode}`,
+      storyId: room.storyId ?? undefined,
+      soloMode: false,
     });
 
     // Update room with chatId

@@ -194,9 +194,15 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
     [connected, sendNow],
   );
 
-  /** Open the conversation. Call from a click so the browser lets audio play. */
+  /** Whether a conversation is open or opening */
+  const isStarted = useCallback(() => wsRef.current !== null, []);
+
+  /**
+   * Open the conversation. Call from a click or key press so the browser lets audio play.
+   * `context` (the story so far, when resuming) is given to the agent without a reply.
+   */
   const start = useCallback(
-    (openingMessage?: string) => {
+    (openingMessage?: string, context?: string) => {
       if (!agentId || wsRef.current) return;
 
       const ctx = audioCtxRef.current ?? new AudioContext();
@@ -217,6 +223,7 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
               data.conversation_initiation_metadata_event?.agent_output_audio_format ?? 'pcm_16000';
             sampleRateRef.current = Number(format.split('_')[1]) || 16000;
             setConnected(true);
+            if (context) ws.send(JSON.stringify({ type: 'contextual_update', text: context }));
             for (const text of pendingRef.current.splice(0)) sendNow(ws, text);
             break;
           }
@@ -253,5 +260,5 @@ export function useNarratorAgent({ agentId, onNarration, onStateChange }: UseNar
     };
   }, [stopAudio]);
 
-  return { start, send, connected };
+  return { start, send, isStarted, connected };
 }

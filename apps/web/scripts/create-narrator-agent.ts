@@ -4,7 +4,9 @@
  * own solo narrator prompt and story guide.
  *
  * Usage:
- *   npx tsx scripts/create-narrator-agent.ts [story-id] [--key-from <project dir>] [--update <agent-id>]
+ *   npx tsx scripts/create-narrator-agent.ts [story-id] [--group] [--key-from <project dir>] [--update <agent-id>]
+ *
+ * --group builds the group narrator (asks for players and names first) instead of solo.
  *
  * --key-from takes ELEVENLABS_API_KEY from another project's env files instead,
  * for when this project's key lacks the agents write permission.
@@ -26,7 +28,8 @@ for (const envFile of [".env.local", "../../.env.local", ".env"]) {
 const args = process.argv.slice(2);
 const keyFrom = args.includes("--key-from") ? args[args.indexOf("--key-from") + 1] : undefined;
 const updateId = args.includes("--update") ? args[args.indexOf("--update") + 1] : undefined;
-const positional = args.filter((arg, i) => !arg.startsWith("--") && !args[i - 1]?.startsWith("--"));
+const solo = !args.includes("--group");
+const positional = args.filter((arg, i) => !arg.startsWith("--") && !["--key-from", "--update"].includes(args[i - 1] ?? ""));
 
 if (keyFrom) {
   for (const envFile of [".env.local", ".env", "api/.env"]) {
@@ -80,14 +83,14 @@ async function main() {
   }
 
   const body = {
-    name: `The Pulse — ${story.title}`,
+    name: `The Pulse — ${story.title}${solo ? "" : " (group)"}`,
     conversation_config: {
       agent: {
         // Empty: the game opens the story itself when the player presses Begin
         first_message: "",
         language: "en",
         prompt: {
-          prompt: VOICE_RULES + systemPrompt({ storyGuide: story.storyGuide, language: "english", solo: true }),
+          prompt: VOICE_RULES + systemPrompt({ storyGuide: story.storyGuide, language: "english", solo }),
           llm,
         },
       },

@@ -129,6 +129,8 @@ function MultiplayerPlayContent({
             user={user}
             disabled={!currentIsSpokesperson}
             disabledReason="Only the spokesperson can message the narrator"
+            initialStoryId={currentRoom.storyId ?? undefined}
+            initialSoloMode={false}
           />
           <DataStreamHandler id={chatId} />
         </ResizablePanel>
