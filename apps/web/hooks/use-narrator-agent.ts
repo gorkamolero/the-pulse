@@ -10,6 +10,7 @@ const QUIET_AFTER_MS = 500;
 
 /** Character timings for one narrator turn, in ms from when its voice started */
 export interface LiveTurn {
+  id: string;
   startAt: number | null; // AudioContext time the turn's first chunk plays
   chars: string[];
   startsMs: number[];
@@ -25,12 +26,13 @@ export interface ChunkAlignment {
 
 /** One chunk of narrator voice: 16-bit PCM in base64, with its character timings */
 export interface NarrationChunk {
+  turnId: string;
   audio: string;
   sampleRate: number;
   alignment?: ChunkAlignment;
 }
 
-const newTurn = (): LiveTurn => ({ startAt: null, chars: [], startsMs: [], endsMs: [], done: false });
+const newTurn = (id = ''): LiveTurn => ({ id, startAt: null, chars: [], startsMs: [], endsMs: [], done: false });
 const liveTurns = new Map<string, LiveTurn>();
 let liveClock: AudioContext | null = null;
 
@@ -94,7 +96,7 @@ interface UseNarratorAgentOptions {
   /** Each chunk of voice as it arrives, to relay to other players */
   onAudioChunk?: (chunk: NarrationChunk) => void;
   /** A move went to the agent and a new narrator turn begins */
-  onTurnStart?: () => void;
+  onTurnStart?: (turnId: string) => void;
 }
 
 /**
@@ -200,11 +202,11 @@ export function useNarratorAgent({
   const sendNow = useCallback(
     (ws: WebSocket, text: string) => {
       turnRef.current.done = true;
-      turnRef.current = newTurn();
+      turnRef.current = newTurn(crypto.randomUUID());
       playheadRef.current = 0;
       ws.send(JSON.stringify({ type: 'user_message', text }));
       setState('thinking');
-      onTurnStartRef.current?.();
+      onTurnStartRef.current?.(turnRef.current.id);
     },
     [setState],
   );
@@ -248,21 +250,27 @@ export function useNarratorAgent({
   }, []);
 
   /** A narrator turn relayed from the player talking to the agent begins */
-  const beginRemoteTurn = useCallback(() => {
-    turnRef.current.done = true;
-    turnRef.current = newTurn();
-    // The playhead stays: the new turn queues after any relayed voice still playing
-    setState('thinking');
-  }, [setState]);
+  const beginRemoteTurn = useCallback(
+    (turnId: string) => {
+      if (turnRef.current.id === turnId) return;
+      turnRef.current.done = true;
+      turnRef.current = newTurn(turnId);
+      // The playhead stays: the new turn queues after any relayed voice still playing
+      setState('thinking');
+    },
+    [setState],
+  );
 
   /** Play a chunk of narrator voice relayed from the player talking to the agent */
   const playRemote = useCallback(
     (chunk: NarrationChunk) => {
+      // A player who connected mid-turn never saw it begin
+      beginRemoteTurn(chunk.turnId);
       ensureAudio();
       sampleRateRef.current = chunk.sampleRate;
       playChunk(chunk.audio, chunk.alignment);
     },
-    [ensureAudio, playChunk],
+    [beginRemoteTurn, ensureAudio, playChunk],
   );
 
   /** Close the conversation, e.g. when this player hands the narrator to someone else */
@@ -312,6 +320,7 @@ export function useNarratorAgent({
             playChunk(data.audio_event?.audio_base_64, data.audio_event?.alignment);
             if (data.audio_event?.audio_base_64) {
               onAudioChunkRef.current?.({
+                turnId: turnRef.current.id,
                 audio: data.audio_event.audio_base_64,
                 sampleRate: sampleRateRef.current,
                 alignment: data.audio_event.alignment,

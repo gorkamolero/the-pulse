@@ -307,6 +307,7 @@ function VisibleMessage({
       from={role}
       isLast={isLastAssistant}
       className={setupMode ? "items-center" : undefined}
+      data-message-id={messageId}
     >
       <MessageContent
         className={cn(

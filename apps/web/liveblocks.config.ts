@@ -26,14 +26,15 @@ export type RoomEvent =
   | { type: "PLAYER_JOINED"; player: { id: string; name: string; color: string } }
   | { type: "PLAYER_LEFT"; playerId: string; playerName: string }
   // Live narration relayed by the player whose browser talks to the narrator agent
-  | { type: "NARRATION_TURN" }
+  | { type: "NARRATION_TURN"; turnId: string }
   | {
       type: "NARRATION_AUDIO";
+      turnId: string;
       audio: string;
       sampleRate: number;
       alignment?: { chars: string[]; char_start_times_ms: number[]; char_durations_ms: number[] };
     }
-  | { type: "NARRATION_TEXT"; messageId: string; text: string }
+  | { type: "NARRATION_TEXT"; turnId: string; messageId: string; text: string }
   | { type: "PLAYER_MOVE"; messageId: string; text: string };
 
 // User metadata from auth

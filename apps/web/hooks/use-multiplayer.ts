@@ -85,7 +85,8 @@ export function useMultiplayer(roomId: string) {
         timestamp: Date.now(),
       };
 
-      broadcast(event);
+      // Queued until the room connection is up; otherwise Liveblocks drops it
+      broadcast(event, { shouldQueueEventIfNotReady: true });
 
       // Add to local messages immediately
       setChatMessages((prev) => [

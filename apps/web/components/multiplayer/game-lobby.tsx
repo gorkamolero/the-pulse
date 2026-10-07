@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -35,15 +35,49 @@ interface GameLobbyProps {
   story?: Story;
 }
 
-export function GameLobby({ room, currentPlayerId, guestId, story }: GameLobbyProps) {
+export function GameLobby({ room: initialRoom, currentPlayerId, guestId, story }: GameLobbyProps) {
   const router = useRouter();
   const [isStarting, setIsStarting] = useState(false);
+
+  // The lobby has no live channel: check the room every 2 s so new players show up
+  // and everyone follows the host into the game once it starts
+  const [room, setRoom] = useState(initialRoom);
+  const leavingRef = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const response = await fetch(`/api/room/${initialRoom.id}`, { cache: "no-store" });
+        if (!response.ok || cancelled || leavingRef.current) return;
+        const { room: latest } = (await response.json()) as { room: RoomWithPlayers };
+        if (cancelled || leavingRef.current) return;
+        if (latest.status === "playing") {
+          leavingRef.current = true;
+          router.push(`/room/${latest.id}/play`);
+          return;
+        }
+        setRoom(latest);
+      } catch {
+        // Try again on the next check
+      }
+    };
+    const timer = setInterval(check, 2000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [initialRoom.id, router]);
   const [selectedSpokesperson, setSelectedSpokesperson] = useState(
     room.spokespersonPlayerId || ""
   );
 
   // Derive values during render
   const isHost = room.hostPlayerId === currentPlayerId;
+
+  // Other players see the host's spokesperson choice as the room refreshes
+  useEffect(() => {
+    if (!isHost) setSelectedSpokesperson(room.spokespersonPlayerId || "");
+  }, [isHost, room.spokespersonPlayerId]);
   const currentPlayer = room.players.find((p) => p.id === currentPlayerId);
 
   const handleChangeSpokesperson = useCallback(
@@ -94,6 +128,7 @@ export function GameLobby({ room, currentPlayerId, guestId, story }: GameLobbyPr
         return;
       }
 
+      leavingRef.current = true;
       router.push(`/room/${room.id}/play`);
     } catch {
       toast.error("Failed to start game");

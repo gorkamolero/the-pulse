@@ -35,7 +35,8 @@ export function RoomNarrationProvider({ children }: { children: ReactNode }) {
   const publish = useCallback(
     (event: NarrationEvent) => {
       try {
-        broadcast(event);
+        // Queued until this player's room connection is up; otherwise Liveblocks drops it
+        broadcast(event, { shouldQueueEventIfNotReady: true });
       } catch {
         // Relay is best effort; the narration still plays for this player
       }

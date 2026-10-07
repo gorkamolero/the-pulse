@@ -238,6 +238,8 @@ export function Chat({
   const setNarratorState = useSetAtom(narratorStateAtom);
   const setAgentMessageIds = useSetAtom(agentMessageIdsAtom);
   const lastPlayerMoveRef = useRef<{ id: string; text: string } | null>(null);
+  // The narration this browser relayed last, sent again when its voice ends for players who missed it
+  const lastRelayedTextRef = useRef<{ turnId: string; messageId: string; text: string } | null>(null);
 
   const {
     start: startNarrator,
@@ -251,8 +253,17 @@ export function Chat({
     unlockAudio,
   } = useNarratorAgent({
     agentId: narratorAgentId,
-    onStateChange: setNarratorState,
-    onTurnStart: () => roomBus?.publish({ type: 'NARRATION_TURN' }),
+    onStateChange: (state) => {
+      setNarratorState(state);
+      if (state === null && lastRelayedTextRef.current) {
+        roomBus?.publish({ type: 'NARRATION_TEXT', ...lastRelayedTextRef.current });
+        lastRelayedTextRef.current = null;
+      }
+    },
+    onTurnStart: (turnId) => {
+      lastRelayedTextRef.current = null;
+      roomBus?.publish({ type: 'NARRATION_TURN', turnId });
+    },
     onAudioChunk: (chunk) => roomBus?.publish({ type: 'NARRATION_AUDIO', ...chunk }),
     onNarration: (raw, turn) => {
       // Delivery tags like [whisper] steer the voice; keep them out of the text
@@ -266,7 +277,10 @@ export function Chat({
         ...prev,
         { id: messageId, role: 'assistant', parts: [{ type: 'text', text }] },
       ]);
-      roomBus?.publish({ type: 'NARRATION_TEXT', messageId, text });
+      if (roomBus) {
+        lastRelayedTextRef.current = { turnId: turn.id, messageId, text };
+        roomBus.publish({ type: 'NARRATION_TEXT', ...lastRelayedTextRef.current });
+      }
 
       const move = lastPlayerMoveRef.current;
       lastPlayerMoveRef.current = null;
@@ -301,13 +315,14 @@ export function Chat({
     return roomBus.subscribe((event) => {
       switch (event.type) {
         case 'NARRATION_TURN':
-          beginRemoteTurn();
+          beginRemoteTurn(event.turnId);
           break;
         case 'NARRATION_AUDIO':
           playRemote(event);
           break;
         case 'NARRATION_TEXT':
-          bindLiveNarration(event.messageId, currentTurn());
+          // Highlight follows the voice only when this player heard that turn
+          if (currentTurn().id === event.turnId) bindLiveNarration(event.messageId, currentTurn());
           setAgentMessageIds((ids) => new Set(ids).add(event.messageId));
           appendRelayed(event.messageId, 'assistant', event.text);
           break;
