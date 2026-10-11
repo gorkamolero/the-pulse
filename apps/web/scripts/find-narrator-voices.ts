@@ -180,8 +180,8 @@ async function main() {
     case "transcribe": {
       const form = new FormData();
       form.append("model_id", flag("--model") ?? "scribe_v1");
-      form.append("file", new Blob([readFileSync(rest[0])], { type: "audio/mpeg" }), "sample.mp3");
-      const res = await fetch(`${API}/v1/speech-to-text`, { method: "POST", headers: { "xi-api-key": apiKey }, body: form });
+      form.append("file", new Blob([new Uint8Array(readFileSync(rest[0]))], { type: "audio/mpeg" }), "sample.mp3");
+      const res = await fetch(`${API}/v1/speech-to-text`, { method: "POST", headers: { "xi-api-key": headers["xi-api-key"] }, body: form });
       const result = (await res.json()) as { text?: string; detail?: unknown };
       console.log(args.includes("--json") ? JSON.stringify(result) : (result.text ?? JSON.stringify(result.detail)));
       break;
