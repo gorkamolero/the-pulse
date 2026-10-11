@@ -77,7 +77,7 @@ The rain gnawed Navaluenga's darkness with hungry teeth while the comet's hum st
 ---
 `,
   narrator: {
-    voiceId: "JBFqnCBsd6RMkjVDRZzb", // George - Captivating Storyteller
+    voiceId: "5egO01tkUjEzu7xSSE8M", // Carmelo - Mature, Mysterious and Clear
   },
   ambientAudio: {
     src: "/audio/ambience/endless-path-rain.mp3",

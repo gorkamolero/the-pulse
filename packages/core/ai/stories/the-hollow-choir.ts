@@ -246,7 +246,7 @@ Write in the style of J. G. Ballard but readable for a wider audience.
 
 </story-guide>`,
   narrator: {
-    voiceId: "N2lVS1w4EtoT3dr4eOWO", // Callum - Husky Trickster
+    voiceId: "NFG5qt843uXKj4pFvR7C", // Adam Stone - Smooth, Deep and Relaxed (Ballard)
   },
   ambientAudio: {
     src: "/audio/ambience/hollow-choir-water.mp3",

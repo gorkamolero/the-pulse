@@ -8,13 +8,19 @@ const CONVERSATION_URL = 'wss://api.elevenlabs.io/v1/convai/conversation';
 // Wait this long after the last chunk before calling the narrator quiet
 const QUIET_AFTER_MS = 500;
 
-/** Character timings for one narrator turn, in ms from when its voice started */
+/**
+ * One narrator turn. Its audio chunks and its character timings arrive together but cover
+ * different stretches of speech; laid end to end, each makes the same track (ms of narrator
+ * audio from the turn's first sample). Segments say where each chunk of that track plays.
+ */
 export interface LiveTurn {
   id: string;
-  startAt: number | null; // AudioContext time the turn's first chunk plays
   chars: string[];
-  startsMs: number[];
+  startsMs: number[]; // on the turn's audio track
   endsMs: number[];
+  segments: Array<{ at: number; trackMs: number; durMs: number }>; // at: AudioContext time
+  audioMs: number; // track length of the audio received so far
+  alignMs: number; // track length covered by character timings so far
   done: boolean;
 }
 
@@ -32,7 +38,19 @@ export interface NarrationChunk {
   alignment?: ChunkAlignment;
 }
 
-const newTurn = (id = ''): LiveTurn => ({ id, startAt: null, chars: [], startsMs: [], endsMs: [], done: false });
+export const newTurn = (id = ''): LiveTurn => ({
+  id,
+  chars: [],
+  startsMs: [],
+  endsMs: [],
+  segments: [],
+  audioMs: 0,
+  alignMs: 0,
+  done: false,
+});
+
+// Delivery tags such as [slow] are voiced as timing but never shown
+const TAG = /\[[^\]]{1,24}\]\s*/g;
 const liveTurns = new Map<string, LiveTurn>();
 let liveClock: AudioContext | null = null;
 
@@ -46,28 +64,115 @@ export function bindLiveNarration(messageId: string, turn: LiveTurn) {
   liveTurns.set(messageId, turn);
 }
 
-/** The live turn behind a narrator message, and how far into its voice playback is */
+/** Add one chunk of narrator voice to a turn: its audio plays at AudioContext time `at` */
+export function addChunk(turn: LiveTurn, at: number, durMs: number, alignment?: ChunkAlignment) {
+  // The audio continues the turn's track where the last chunk's audio ended
+  turn.segments.push({ at, trackMs: turn.audioMs, durMs });
+  turn.audioMs += durMs;
+
+  // The character timings start at zero and continue the track where the last ones ended
+  const count = alignment?.chars?.length ?? 0;
+  if (!alignment || count === 0) return;
+  alignment.chars.forEach((char, i) => {
+    const start = turn.alignMs + (alignment.char_start_times_ms[i] ?? 0);
+    turn.chars.push(char);
+    turn.startsMs.push(start);
+    turn.endsMs.push(start + (alignment.char_durations_ms[i] ?? 0));
+  });
+  turn.alignMs += (alignment.char_start_times_ms[count - 1] ?? 0) + (alignment.char_durations_ms[count - 1] ?? 0);
+}
+
+/** Where on a turn's audio track the listener is at an AudioContext time; a late chunk pauses it */
+export function trackTime(turn: LiveTurn, at: number) {
+  const first = turn.segments[0];
+  if (at < first.at) return (at - first.at) * 1000;
+  for (let i = turn.segments.length - 1; i >= 0; i--) {
+    const segment = turn.segments[i];
+    if (at >= segment.at) return segment.trackMs + Math.min((at - segment.at) * 1000, segment.durMs);
+  }
+  return 0;
+}
+
+/** The live turn behind a narrator message, and how far into its voice the listener is */
 export function getLiveNarration(messageId: string) {
   const turn = liveTurns.get(messageId);
-  if (!turn || turn.startAt === null || !liveClock) return null;
+  if (!turn || turn.segments.length === 0 || !liveClock) return null;
   // Output latency is the gap between the audio clock and the speaker (large on Bluetooth)
   const heardAt = liveClock.currentTime - (liveClock.outputLatency || 0) - (liveClock.baseLatency || 0);
-  return { turn, nowMs: (heardAt - turn.startAt) * 1000 };
+  return { turn, nowMs: trackTime(turn, heardAt) };
+}
+
+// Curly quotes and dashes may differ between the shown text and the voiced one
+const fold = (char: string) =>
+  char.toLowerCase().replace(/[\u2018\u2019\u02bc]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2013\u2014]/g, '-');
+const isSpace = (char: string | undefined) => char !== undefined && /\s/.test(char);
+
+/** Spoken characters with delivery tags removed; a tag still arriving is held back */
+function spokenChars(turn: LiveTurn) {
+  const spoken = turn.chars.join('');
+  // Joined-string position to character index, in case a character is more than one code unit
+  const owner: number[] = [];
+  turn.chars.forEach((char, i) => {
+    for (let n = 0; n < char.length; n++) owner.push(i);
+  });
+  const keep: number[] = [];
+  const take = (from: number, to: number) => {
+    for (let p = from; p < to; p++) if (keep.at(-1) !== owner[p]) keep.push(owner[p]);
+  };
+  let from = 0;
+  for (const match of spoken.matchAll(TAG)) {
+    take(from, match.index ?? 0);
+    from = (match.index ?? 0) + match[0].length;
+  }
+  const open = spoken.indexOf('[', from);
+  take(from, open !== -1 && spoken.length - open <= 24 ? open : spoken.length);
+  return keep;
 }
 
 /** Word timings for the displayed text from the voice's character timings */
 export function liveWordTimings(text: string, turn: LiveTurn): WordTiming[] {
   const starts: Array<number | undefined> = new Array(text.length);
   const ends: Array<number | undefined> = new Array(text.length);
-  let cursor = 0;
-  for (let i = 0; i < turn.chars.length; i++) {
-    // Look a little ahead; the voice drops or normalises some characters
-    let found = cursor;
-    while (found < text.length && found - cursor < 12 && text[found] !== turn.chars[i]) found++;
-    if (found >= text.length || text[found] !== turn.chars[i]) continue;
-    starts[found] = turn.startsMs[i];
-    ends[found] = turn.endsMs[i];
-    cursor = found + 1;
+  const keep = spokenChars(turn);
+  const said = (k: number) => fold(turn.chars[keep[k]] ?? '');
+  const shown = (j: number) => fold(text[j] ?? '');
+
+  // Walk the voiced and shown characters together; on a mismatch, skip ahead on either
+  // side to the nearest point where three characters agree again
+  let k = 0;
+  let j = 0;
+  while (k < keep.length && j < text.length) {
+    if (said(k) === shown(j)) {
+      starts[j] = turn.startsMs[keep[k]];
+      ends[j] = turn.endsMs[keep[k]];
+      k++;
+      j++;
+      continue;
+    }
+    if (isSpace(turn.chars[keep[k]])) {
+      k++;
+      continue;
+    }
+    if (isSpace(text[j])) {
+      j++;
+      continue;
+    }
+    let skip: [number, number] | null = null;
+    for (let total = 1; total <= 24 && !skip; total++) {
+      for (let dk = 0; dk <= total && !skip; dk++) {
+        const dj = total - dk;
+        if ([0, 1, 2].every((n) => said(k + dk + n) !== '' && said(k + dk + n) === shown(j + dj + n))) {
+          skip = [dk, dj];
+        }
+      }
+    }
+    if (skip) {
+      k += skip[0];
+      j += skip[1];
+    } else {
+      k++;
+      j++;
+    }
   }
 
   const timings: WordTiming[] = [];
@@ -173,18 +278,7 @@ export function useNarratorAgent({
       playheadRef.current = startAt + buffer.duration;
       sourcesRef.current.add(source);
 
-      // Chunk timings start at zero; place them on the turn's own timeline
-      const turn = turnRef.current;
-      turn.startAt ??= startAt;
-      if (alignment?.chars?.length) {
-        const offsetMs = (startAt - turn.startAt) * 1000;
-        alignment.chars.forEach((char, i) => {
-          const start = offsetMs + (alignment.char_start_times_ms[i] ?? 0);
-          turn.chars.push(char);
-          turn.startsMs.push(start);
-          turn.endsMs.push(start + (alignment.char_durations_ms[i] ?? 0));
-        });
-      }
+      addChunk(turnRef.current, startAt, buffer.duration * 1000, alignment);
 
       if (quietTimerRef.current) clearTimeout(quietTimerRef.current);
       setState('talking');

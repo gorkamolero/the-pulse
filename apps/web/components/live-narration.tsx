@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getLiveNarration, liveWordTimings } from "@/hooks/use-narrator-agent";
-import { TimedNarration, type WordTiming } from "@/components/timed-narration";
+import { activeWordIndex, TimedNarration, type WordTiming } from "@/components/timed-narration";
 
 /**
  * Narration voiced live by the narrator agent: highlights each word as the
@@ -16,7 +16,7 @@ export function LiveNarration({ messageId, text }: { messageId: string; text: st
     let frame = 0;
     let charsSeen = -1;
     let timings: WordTiming[] = [];
-    let activeKey: number | null = null;
+    let activeIndex = -1;
 
     const tick = () => {
       const live = getLiveNarration(messageId);
@@ -27,15 +27,14 @@ export function LiveNarration({ messageId, text }: { messageId: string; text: st
           setWordTimings(timings);
         }
 
-        const active = timings.find((t) => t.startMs <= live.nowMs && live.nowMs < t.endMs);
-        const key = active ? active.startChar : null;
-        if (key !== activeKey) {
-          activeKey = key;
-          setCurrentTimeMs(active ? live.nowMs : -1);
+        const index = activeWordIndex(timings, live.nowMs);
+        if (index !== activeIndex) {
+          activeIndex = index;
+          setCurrentTimeMs(index >= 0 ? live.nowMs : -1);
         }
 
         const lastEnd = timings.at(-1)?.endMs ?? 0;
-        if (live.turn.done && live.nowMs > lastEnd) {
+        if (live.turn.done && live.nowMs > lastEnd + 1000) {
           setCurrentTimeMs(-1);
           return;
         }

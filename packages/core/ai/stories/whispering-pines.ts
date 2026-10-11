@@ -146,7 +146,7 @@ export const whisperingPines = {
   </story-guide>
   `,
   narrator: {
-    voiceId: "nPczCjzI2devNBz1zQrb", // Brian - Deep, Resonant
+    voiceId: "n1PvBOwxb8X6m7tahp2h", // Michael C. Vincent - Suspenseful Storyteller
   },
   ambientAudio: {
     src: "/audio/ambience/whispering-pines-forest.mp3",
