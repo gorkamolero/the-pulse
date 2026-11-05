@@ -9,6 +9,7 @@
  * Command: pnpm test:compare --story [id] --narrator [model]
  */
 
+import { shutdownLangfuse } from '../langfuse';
 import { Command } from 'commander';
 import { config } from 'dotenv';
 import chalk from 'chalk';
@@ -87,6 +88,7 @@ async function runComparison() {
   } catch (error) {
     console.error(chalk.red((error as Error).message));
     console.log(chalk.yellow('Available stories:'), listStoryIds().join(', '));
+    await shutdownLangfuse();
     process.exit(1);
   }
 
@@ -104,6 +106,7 @@ async function runComparison() {
     if (!PROMPT_STYLES.includes(style)) {
       console.error(chalk.red(`Unknown prompt style: ${style}`));
       console.log(chalk.yellow('Available styles:'), PROMPT_STYLES.join(', '));
+      await shutdownLangfuse();
       process.exit(1);
     }
   }
@@ -262,4 +265,4 @@ ${results.map(r => `- [${r.promptStyle}](../${r.sessionId}/report.md)`).join('\n
   console.log(chalk.gray(`Saved: ${reportPath}\n`));
 }
 
-runComparison().catch(console.error);
+runComparison().catch(console.error).finally(shutdownLangfuse);

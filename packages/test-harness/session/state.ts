@@ -5,6 +5,7 @@
  * Injected before each narrator turn for consistency.
  */
 
+import { traceGeneration } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
@@ -154,12 +155,12 @@ For each player, identify:
     const { result } = await withModelFallback(
       'google/gemini-2.5-flash',
       async (modelId) => {
-        const result = await generateObject({
+        const result = await traceGeneration('state-classifier', modelId, () => generateObject({
           model: modelId,
           schema,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.2,
-        });
+        }));
 
         return result.object.characters.map((c): CharacterMapping => ({
           odName: c.playerName,
@@ -264,12 +265,12 @@ Be conservative - only extract clear, explicit changes.`;
     const { result: updates } = await withModelFallback(
       'google/gemini-2.5-flash',
       async (modelId) => {
-        const result = await generateObject({
+        const result = await traceGeneration('state-classifier', modelId, () => generateObject({
           model: modelId,
           schema,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.2,
-        });
+        }));
 
         return result.object;
       },

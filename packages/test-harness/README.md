@@ -100,3 +100,54 @@ Player agents add ~$0.10-0.30 per session. Start testing with cheaper narrators,
 ## Development Status
 
 See the main spec document at `/specs/the-pulse-test-harness-spec.md` for full details and implementation phases.
+
+## Langfuse experiments
+
+Supply `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and your existing AI Gateway
+model credentials through the process environment. `LANGFUSE_BASE_URL` defaults
+to `https://cloud.langfuse.com`. The experiment CLI loads no environment files.
+Without both Langfuse keys it silently returns without model or API calls;
+existing CLIs keep running normally without telemetry.
+
+From the repository root, run a small comparison:
+
+```bash
+pnpm cli:langfuse-experiment --story shadow-over-innsmouth --variants mechanical,minimal --items 1 --max-turns 6 --narrator deepseek-v4-flash --players 2
+```
+
+This runs two sessions against the same stored friend group. Each session has one
+`pulse-session` trace with turn observations, model generations, usage, estimated
+cost, latency, and a `gemini-judge` observation. Dataset `pulse-player-groups`
+uses stable IDs based on story, player count, and item index. Groups are generated
+once, cached under `sessions/langfuse-player-groups`, and stored in the dataset;
+subsequent invocations reuse the hosted item. Prompt variants receive the same
+archetypes, identities, relationships, and group history, as in `cli:compare`.
+In-story characters and player responses still evolve during each session.
+
+Experiment `pulse-narrator` creates dataset runs named
+`pulse-<variant>-<ISO date>`, visible together in dataset-run comparison. Item
+scores include the 12 snake_case criteria, `weighted_overall`, the four BOOLEAN
+smell checks (`true` means a problem was detected), `cost_per_turn_usd`,
+`latency_per_turn_ms`, and `cost_usd`. Run scores are `mean_weighted_overall` and
+`mean_cost_usd`. Criteria comments retain the judge's notes and evidence.
+`weighted_overall` copies the existing judge's `overall.score` unchanged: in this
+checkout the formula and 8.5 cap live in the evaluator prompt, not a TypeScript
+calculation. Costs retain the existing tracker's estimates and scope (the session
+cost excludes the judge and group setup); generation observations show their
+individual estimated costs. No Liveblocks or audio generation is used.
+
+`cli:run`, `cli:compare`, `cli:batch`, and `cli:eval` also emit telemetry when keys
+are present. `sessions/<id>/langfuse.json` retains the trace parent and performance
+metrics so a later evaluation attaches to the original trace. Older sessions
+without this sidecar get a trace when evaluated; unavailable historical timings
+and costs are not invented. All four CLIs flush and shut down telemetry on exit.
+
+Offline checks (no provider calls):
+
+```bash
+pnpm --filter @pulse/test-harness test:langfuse
+pnpm --filter @pulse/test-harness typecheck
+```
+
+The integration uses the latest Langfuse SDK v4 packages (4.6.1), with compatible
+OpenTelemetry dependencies.

@@ -5,6 +5,7 @@
  * Bypasses spokesperson for private interactions.
  */
 
+import { traceGeneration } from '../langfuse';
 import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
@@ -114,12 +115,12 @@ Evaluate:
 2. Narrative Appropriateness (0-1): Is this the right time in the narrative for this revelation?
 3. Feedback: Brief explanation of your scores`;
 
-    const result = await generateObject({
+    const result = await traceGeneration('private-classifier', 'google/gemini-2.5-flash', () => generateObject({
       model: 'google/gemini-2.5-flash',
       schema: privateMomentValidationSchema,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-    });
+    }));
 
     return result.object;
   } catch (error) {
@@ -211,11 +212,11 @@ Consider:
 
 Answer with ONLY: true or false`;
 
-      const { text } = await generateText({
+      const { text } = await traceGeneration('private-classifier', 'google/gemini-2.5-flash', () => generateText({
         model: 'google/gemini-2.5-flash',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
-      });
+      }));
 
       return text.trim().toLowerCase() === 'true';
     } catch (_error) {

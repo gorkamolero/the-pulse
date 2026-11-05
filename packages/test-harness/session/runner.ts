@@ -5,6 +5,8 @@
  * executes main loop until story ends or max turns reached.
  */
 
+import { traceSession, traceTurn, traceStream, getLangfuse, type SpanContext } from '../langfuse';
+import { PerformanceTracker, type PerformanceMetrics } from './metrics';
 import { nanoid } from 'nanoid';
 import {
   streamText,
@@ -82,6 +84,8 @@ async function extractUsage(
 export type SessionOutcome = 'completed' | 'timeout' | 'failed';
 
 export interface SessionResult {
+  langfuseContext?: SpanContext;
+  performanceMetrics?: PerformanceMetrics;
   sessionId: string;
   config: SessionConfig;
   conversationHistory: Message[];
@@ -132,6 +136,7 @@ export interface SessionRunnerConfig {
 // ============================================================================
 
 interface TurnExecutionContext {
+  performanceTracker?: PerformanceTracker;
   sessionId: string;
   sessionConfig: SessionConfig;
   playerAgents: PlayerAgent[];
@@ -318,7 +323,7 @@ async function generateNarratorResponse(
     }
 
     try {
-      const result = streamText({
+      const result = traceStream('narrator-generation', modelId, () => streamText({
         model,
         system: fullSystemPrompt,
         ...(isFirstTurn ? { prompt: firstTurnPrompt } : { messages }),
@@ -328,7 +333,7 @@ async function generateNarratorResponse(
             deepseek: { reasoning: { enabled: true } },
           },
         }),
-      });
+      }));
 
       let fullText = '';
       let reasoning = '';
@@ -418,12 +423,12 @@ async function generatePlayerResponse(
   const { result, modelUsed } = await withModelFallback(
     agent.modelId,
     async (modelId) => {
-      const result = streamText({
+      const result = traceStream('player-generation', modelId, () => streamText({
         model: modelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
-      });
+      }));
 
       const modelNote = modelId !== agent.modelId ? ` [${modelId}]` : '';
       let fullText = '';
@@ -497,12 +502,12 @@ Respond in character as ${agent.name}.`,
   const { result } = await withModelFallback(
     agent.modelId,
     async (modelId) => {
-      const result = streamText({
+      const result = traceStream('player-generation', modelId, () => streamText({
         model: modelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
-      });
+      }));
 
       const modelNote = modelId !== agent.modelId ? ` [${modelId}]` : '';
       let fullText = '';
@@ -552,12 +557,12 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
   const { result } = await withModelFallback(
     spokesperson.modelId,
     async (modelId) => {
-      const result = streamText({
+      const result = traceStream('player-generation', modelId, () => streamText({
         model: modelId,
         system: spokesperson.systemPrompt,
         messages,
         temperature: 0.7,
-      });
+      }));
 
       const modelNote = modelId !== spokesperson.modelId ? ` [${modelId}]` : '';
       let fullText = '';
@@ -642,6 +647,7 @@ async function executeTurn(
   onProgress?.({ type: 'turn-start', turn, maxTurns: sessionConfig.maxTurns });
 
   // Generate narrator output
+  ctx.performanceTracker?.startNarrator();
   const { text: narratorOutput, reasoning: narratorReasoning, usage: narratorUsage } =
     await generateNarratorResponse(
       conversationHistory,
@@ -649,6 +655,8 @@ async function executeTurn(
       ctx.gameState,
     );
 
+  const narratorTime = ctx.performanceTracker?.endNarrator() ?? 0;
+  const playersStart = Date.now();
   costTracker.recordNarratorUsage(narratorUsage);
 
   // Emit progress: narrator turn complete
@@ -853,6 +861,8 @@ async function executeTurn(
     );
   }
 
+  ctx.performanceTracker?.endTurn(turn, narratorTime, Date.now() - playersStart);
+
   // Save checkpoint
   const checkpoint = createCheckpoint(
     sessionId,
@@ -888,11 +898,13 @@ async function runSessionLoop(
   ctx: TurnExecutionContext,
   startTurn: number,
 ): Promise<SessionOutcome> {
+  if (getLangfuse()) ctx.performanceTracker = new PerformanceTracker();
   let outcome: SessionOutcome = 'timeout';
 
   for (let turn = startTurn; turn <= ctx.sessionConfig.maxTurns; turn++) {
     try {
-      const result = await executeTurn(ctx, turn);
+      ctx.performanceTracker?.startTurn();
+      const result = await traceTurn(turn, () => executeTurn(ctx, turn));
       if (result.shouldEnd) {
         outcome = result.outcome || 'completed';
         break;
@@ -951,6 +963,13 @@ async function finalizeSession(
     costBreakdown: ctx.costTracker.getBreakdown(),
     playerFeedback,
     gameState: ctx.gameState,
+    performanceMetrics: ctx.performanceTracker?.generateMetrics({
+      totalDuration: duration,
+      totalTurns: ctx.conversationHistory.at(-1)?.turn || 0,
+      totalPulses: ctx.conversationHistory.filter((m) => m.role === 'narrator').length,
+      tangentAnalysis, privateMoments: ctx.privateMomentTracker.getAll().length,
+      paidOffMoments: ctx.privateMomentTracker.getAll().filter((m) => m.payoffDetected).length, costBreakdown: ctx.costTracker.getBreakdown(),
+    }),
   };
 }
 
@@ -1036,6 +1055,7 @@ export async function resumeSessionFromCheckpoint(
 export async function runSession(
   config: SessionRunnerConfig,
 ): Promise<SessionResult> {
+  return traceSession(config, async () => {
   const startTime = Date.now();
   let sessionConfig: SessionConfig | undefined;
   let sessionId = 'error';
@@ -1153,4 +1173,5 @@ export async function runSession(
       error: error instanceof Error ? error.message : String(error),
     };
   }
+  });
 }

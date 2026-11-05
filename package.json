@@ -12,7 +12,8 @@
     "format": "biome format --write",
     "typecheck": "turbo typecheck",
     "test:run": "pnpm --filter @pulse/test-harness run cli:run",
-    "test:compare": "pnpm --filter @pulse/test-harness run cli:compare"
+    "test:compare": "pnpm --filter @pulse/test-harness run cli:compare",
+    "cli:langfuse-experiment": "pnpm --filter @pulse/test-harness run cli:langfuse-experiment"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

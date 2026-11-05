@@ -127,7 +127,7 @@ export class CostTracker {
   /**
    * Calculate cost for a model
    */
-  private calculateCost(usage: TokenUsage, modelId: string): number {
+  calculateCost(usage: TokenUsage, modelId: string): number {
     const pricing = MODEL_PRICING[modelId as keyof typeof MODEL_PRICING];
 
     if (!pricing) {

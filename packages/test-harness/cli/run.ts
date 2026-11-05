@@ -6,6 +6,7 @@
  * Command: pnpm test:run --story [id] --prompt [name] --narrator [model]
  */
 
+import { shutdownLangfuse } from '../langfuse';
 import { Command } from 'commander';
 import { config } from 'dotenv';
 import ora from 'ora';
@@ -79,6 +80,7 @@ async function main() {
       chalk.yellow('Available stories:'),
       availableStories.join(', '),
     );
+    await shutdownLangfuse();
     process.exit(1);
   }
 
@@ -87,6 +89,7 @@ async function main() {
   if (!PROMPT_STYLES.includes(promptStyle)) {
     console.error(chalk.red(`Unknown prompt style: ${options.prompt}`));
     console.log(chalk.yellow('Available styles:'), PROMPT_STYLES.join(', '));
+    await shutdownLangfuse();
     process.exit(1);
   }
 
@@ -144,8 +147,9 @@ async function main() {
   } catch (error) {
     console.log(chalk.red('\n✖ Session failed'));
     console.error(error);
+    await shutdownLangfuse();
     process.exit(1);
   }
 }
 
-main();
+main().finally(shutdownLangfuse);

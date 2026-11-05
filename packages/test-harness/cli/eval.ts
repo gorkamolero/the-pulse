@@ -11,6 +11,7 @@
  *   pnpm cli:eval --latest              # Evaluate most recent session
  */
 
+import { shutdownLangfuse } from '../langfuse';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { program } from 'commander';
 import chalk from 'chalk';
@@ -72,7 +73,7 @@ async function hasGeminiEval(sessionId: string): Promise<boolean> {
 async function getAllSessionIds(): Promise<string[]> {
   const entries = await readdir('sessions', { withFileTypes: true });
   return entries
-    .filter((e) => e.isDirectory() && e.name !== 'comparisons')
+    .filter((e) => e.isDirectory() && e.name !== 'comparisons' && e.name !== 'langfuse-player-groups')
     .map((e) => e.name);
 }
 
@@ -183,6 +184,7 @@ program
         const latest = await getLatestSessionId();
         if (!latest) {
           console.log(chalk.red('No sessions found'));
+          await shutdownLangfuse();
           process.exit(1);
         }
         console.log(chalk.dim(`Evaluating latest session: ${latest}`));
@@ -226,8 +228,9 @@ program
       }
     } catch (error) {
       console.error(chalk.red('Error:'), error);
+      await shutdownLangfuse();
       process.exit(1);
     }
   });
 
-program.parse();
+program.parseAsync().finally(shutdownLangfuse);

@@ -5,6 +5,7 @@
  * Agents discuss amongst themselves, then spokesperson synthesizes for narrator.
  */
 
+import { traceStream } from '../langfuse';
 import {
   streamText,
   type LanguageModelUsage,
@@ -150,12 +151,12 @@ async function generateAgentResponse(
   const { result, modelUsed } = await withModelFallback(
     agent.modelId,
     async (modelId) => {
-      const result = streamText({
+      const result = traceStream('player-generation', modelId, () => streamText({
         model: modelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
-      });
+      }));
 
       let text = '';
       if (stream) {

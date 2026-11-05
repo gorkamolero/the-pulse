@@ -5,6 +5,7 @@
  * Evaluates narrator performance against the philosophical framework.
  */
 
+import { traceJudge, traceGeneration } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import { writeFile } from 'node:fs/promises';
@@ -198,7 +199,9 @@ export async function evaluateWithGemini(
   result: SessionResult,
   narratorSystemPrompt: string,
   storyGuide: string,
+  scoreTrace = true,
 ): Promise<GeminiEvaluation> {
+  return traceJudge(result, async () => {
   const transcript = formatTranscriptForEval(result.conversationHistory);
   const metadata: SessionMetadata = {
     outcome: result.outcome,
@@ -217,12 +220,12 @@ export async function evaluateWithGemini(
 
   const evaluation = await withRetry(
     async () => {
-      const response = await generateObject({
+      const response = await traceGeneration('gemini-judge', 'google/gemini-3-pro-preview', () => generateObject({
         model: 'google/gemini-3-pro-preview',
         schema: evaluationSchema,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
-      });
+      }));
       return response.object;
     },
     {
@@ -234,6 +237,7 @@ export async function evaluateWithGemini(
   );
 
   return evaluation;
+  }, scoreTrace);
 }
 
 /**

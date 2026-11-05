@@ -7,6 +7,7 @@
  * Command: pnpm test:batch --config [file]
  */
 
+import { shutdownLangfuse } from '../langfuse';
 import { Command } from 'commander';
 import { config as loadEnv } from 'dotenv';
 import ora from 'ora';
@@ -83,6 +84,7 @@ async function main() {
   if (!options.story || !options.narrator) {
     console.error(chalk.red('Error: --story and --narrator are required'));
     console.log(chalk.yellow('Available stories:'), listStoryIds().join(', '));
+    await shutdownLangfuse();
     process.exit(1);
   }
 
@@ -93,6 +95,7 @@ async function main() {
     storyData = getStory(options.story);
   } catch (error) {
     console.error(chalk.red((error as Error).message));
+    await shutdownLangfuse();
     process.exit(1);
   }
 
@@ -191,8 +194,9 @@ async function main() {
   } catch (error) {
     spinner.fail(chalk.red('Batch analysis failed'));
     console.error(chalk.red('\nError:'), error);
+    await shutdownLangfuse();
     process.exit(1);
   }
 }
 
-main();
+main().finally(shutdownLangfuse);
