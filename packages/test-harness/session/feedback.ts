@@ -5,7 +5,7 @@
  * Use subjective feedback to improve narrator behavior, pacing, and story design.
  */
 
-import { traceGeneration } from '../langfuse';
+import { tracePlayer, telemetry } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { PlayerAgent } from '../agents/player';
@@ -153,10 +153,12 @@ async function collectAgentFeedback(
 ): Promise<PlayerFeedback> {
   const feedbackPrompt = buildFeedbackPrompt(agent, conversationHistory);
 
+  return tracePlayer(agent, feedbackPrompt, async () => {
   try {
     const result = await withRetry(
       async () => {
-        return traceGeneration('player-feedback', FEEDBACK_MODEL, () => generateObject({
+        return generateObject({
+        experimental_telemetry: telemetry('collect-player-feedback', { model: FEEDBACK_MODEL }),
           model: FEEDBACK_MODEL,
           schema: feedbackSchema,
           messages: [
@@ -177,7 +179,7 @@ CRITICAL INSTRUCTIONS:
             { role: 'user', content: feedbackPrompt },
           ],
           temperature: 0.7,
-        }));
+        });
       },
       {
         maxRetries: 2,
@@ -231,6 +233,7 @@ CRITICAL INSTRUCTIONS:
       groupDynamics: 'N/A',
     };
   }
+  });
 }
 
 /**

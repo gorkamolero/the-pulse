@@ -25,6 +25,8 @@ import {
   performanceScores,
   shutdownLangfuse,
   stableItemId,
+  sessionInput,
+  sessionOutput,
 } from '../langfuse';
 
 export interface PlayerGroupInput {
@@ -119,10 +121,23 @@ export async function runExperiment(options: {
 
   const date = new Date().toISOString();
   for (const variant of variants) {
+    const sessions = new Map<string, SessionResult>();
     const run = await client.experiment.run({
       name: 'pulse-narrator',
       runName: `pulse-${variant}-${date}`,
-      data,
+      data: data.map((item) => {
+        const input = item.input as PlayerGroupInput;
+        return {
+          ...item,
+          input: sessionInput({
+            story: { storyId: input.storyId },
+            archetypes: input.archetypes,
+            promptStyle: variant,
+            maxTurns: options.maxTurns,
+          }),
+          metadata: { datasetItemId: item.id, rawInput: input },
+        };
+      }),
       metadata: {
         story: story.id,
         narrator: options.narrator,
@@ -132,8 +147,13 @@ export async function runExperiment(options: {
       },
       maxConcurrency: 1,
       task: async (item) => {
-        const input = item.input as PlayerGroupInput;
-        return runSession({
+        const metadata = item.metadata as {
+          datasetItemId: string;
+          rawInput: PlayerGroupInput;
+        };
+        const input = metadata.rawInput;
+        const session = await runSession({
+          langfuseExperiment: true,
           story: {
             storyId: story.id,
             storyTitle: story.title,
@@ -149,10 +169,13 @@ export async function runExperiment(options: {
           groupSize: options.players,
           maxTurns: options.maxTurns,
         });
+        sessions.set(metadata.datasetItemId, session);
+        return sessionOutput(session);
       },
       evaluators: [
-        async ({ output }) => {
-          const session = output as SessionResult;
+        async ({ metadata }) => {
+          const session = sessions.get(metadata?.datasetItemId || '');
+          if (!session) throw new Error('Missing session for dataset item');
           const evaluation = await evaluateWithGemini(
             session,
             session.config.systemPrompt,

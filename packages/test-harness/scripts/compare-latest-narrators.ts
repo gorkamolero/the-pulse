@@ -6,6 +6,7 @@
  * one story, one prompt, one generation per model, sequential execution.
  */
 
+import { telemetry, shutdownLangfuse } from '../langfuse';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { config } from 'dotenv';
@@ -74,6 +75,7 @@ async function testNarrator(narrator: NarratorModel): Promise<Result> {
   const startedAt = performance.now();
   try {
     const { text, usage } = await generateText({
+      experimental_telemetry: telemetry('generate-narration'),
       model: gateway(modelId),
       system,
       prompt: USER_MESSAGE,
@@ -179,5 +181,5 @@ async function main() {
 
 main().catch((error) => {
   console.error(error);
-  process.exit(1);
-});
+  process.exitCode = 1;
+}).finally(shutdownLangfuse);

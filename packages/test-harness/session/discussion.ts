@@ -5,7 +5,7 @@
  * Agents discuss amongst themselves, then spokesperson synthesizes for narrator.
  */
 
-import { traceStream } from '../langfuse';
+import { tracePlayer, telemetry } from '../langfuse';
 import {
   streamText,
   type LanguageModelUsage,
@@ -148,15 +148,17 @@ async function generateAgentResponse(
     ? `${agent.name} (spokesperson)`
     : agent.name;
 
+  return tracePlayer(agent, prompt, async () => {
   const { result, modelUsed } = await withModelFallback(
     agent.modelId,
     async (modelId) => {
-      const result = traceStream('player-generation', modelId, () => streamText({
+      const result = streamText({
+        experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
         model: modelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
-      }));
+      });
 
       let text = '';
       if (stream) {
@@ -186,4 +188,5 @@ async function generateAgentResponse(
 
   costTracker.recordPlayerUsage(result.usage);
   return result;
+  });
 }

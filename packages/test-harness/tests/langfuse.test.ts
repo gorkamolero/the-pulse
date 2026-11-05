@@ -13,17 +13,34 @@ import {
   restoreTrace,
   shutdownLangfuse,
   stableItemId,
-  traceGeneration,
+  telemetry,
+  tracePlayer,
+  weightedOverall,
+  withGameSession,
+  sessionOutput,
   traceJudge,
   traceSession,
-  traceStream,
   traceTurn,
 } from '../langfuse';
 import { PerformanceTracker } from '../session/metrics';
 import { CostTracker } from '../session/cost';
 import type { SessionResult, SessionRunnerConfig } from '../session/runner';
-import type { GeminiEvaluation } from '../report/gemini-eval';
-import type { LanguageModelUsage, streamText } from 'ai';
+import {
+  evaluateWithGemini,
+  type GeminiEvaluation,
+} from '../report/gemini-eval';
+import {
+  generateObject,
+  generateText,
+  streamText,
+  type LanguageModelUsage,
+} from 'ai';
+import {
+  MockLanguageModelV3,
+  MockProviderV3,
+  simulateReadableStream,
+} from 'ai/test';
+import { z } from 'zod';
 import { positiveInteger, runExperiment } from '../cli/langfuse-experiment';
 
 await test('Langfuse integration', async (t) => {
@@ -116,6 +133,7 @@ await test('Langfuse integration', async (t) => {
     'no keys: silent pass-through, including experiment CLI, with no API initialization',
     async () => {
       assert.equal(getLangfuse(), undefined);
+      assert.equal(telemetry('generate-narration').isEnabled, false);
       const session = fixture('disabled');
       assert.equal(await traceSession(config, async () => session), session);
       assert.equal(
@@ -137,11 +155,11 @@ await test('Langfuse integration', async (t) => {
   );
 
   await t.test(
-    'scores reuse the returned overall and all evidence; boolean yes means a smell was detected',
+    'deterministic weighted score uses 14.5 and preserves the judge number and evidence',
     () => {
       const scores = evaluationScores(evaluation);
-      assert.equal(scores.length, 17);
-      assert.equal(scores.filter((s) => s.dataType === 'NUMERIC').length, 13);
+      assert.equal(scores.length, 18);
+      assert.equal(scores.filter((s) => s.dataType === 'NUMERIC').length, 14);
       assert.equal(
         scores.find((s) => s.name === 'weighted_overall')?.value,
         8.5,
@@ -158,13 +176,66 @@ await test('Langfuse integration', async (t) => {
         scores.find((s) => s.name === 'agency_respect')?.comment || '',
         /A door opens/,
       );
+      const changed = evaluationScores({
+        ...evaluation,
+        overall: { ...evaluation.overall, score: 7.123 },
+      });
       assert.equal(
-        evaluationScores({
-          ...evaluation,
-          overall: { ...evaluation.overall, score: 7.123 },
-        }).find((s) => s.name === 'weighted_overall')?.value,
+        changed.find((s) => s.name === 'weighted_overall')?.value,
+        8.5,
+      );
+      assert.equal(
+        changed.find((s) => s.name === 'judge_reported_overall')?.value,
         7.123,
       );
+      const clear = {
+        ...evaluation,
+        smellTest: {
+          ...evaluation.smellTest,
+          railroadedReported: false,
+          cappedScore: true,
+        },
+      };
+      assert.equal(weightedOverall(clear), 9);
+      assert.equal(
+        weightedOverall({
+          ...clear,
+          agencyRespect: { ...dimension, score: 1 },
+        }),
+        114.5 / 14.5,
+      );
+      for (const criterion of [
+        'declarationVsAcknowledgment',
+        'invitationArchitecture',
+        'branchingPersistence',
+      ] as const) {
+        assert.equal(
+          weightedOverall({
+            ...clear,
+            [criterion]: { ...dimension, score: 1 },
+          }),
+          118.5 / 14.5,
+        );
+      }
+      for (const check of [
+        'railroadedReported',
+        'linearLanguageUsed',
+        'declarationPhrases',
+        'experientiallyWrong',
+      ] as const) {
+        const capped = {
+          ...clear,
+          smellTest: { ...clear.smellTest, cappedScore: false, [check]: true },
+        };
+        assert.equal(weightedOverall(capped), 8.5);
+        assert.equal(
+          weightedOverall({
+            ...capped,
+            agencyRespect: { ...dimension, score: 1 },
+          }),
+          114.5 / 14.5,
+        );
+      }
     },
   );
 
@@ -205,32 +276,92 @@ await test('Langfuse integration', async (t) => {
   );
   process.chdir(directory);
 
+  const player = {
+    name: 'Ada',
+    archetype: 'joker' as const,
+    modelId: 'stub-model',
+  };
+  function model(text = 'A door opens') {
+    const modelUsage = {
+      inputTokens: { total: 100, noCache: 100, cacheRead: 0, cacheWrite: 0 },
+      outputTokens: { total: 50, text: 40, reasoning: 10 },
+    };
+    const finishReason = { unified: 'stop' as const, raw: 'stop' };
+    return new MockLanguageModelV3({
+      modelId: 'stub-model',
+      doGenerate: {
+        content: [
+          { type: 'reasoning', text: 'Consider the door' },
+          { type: 'text', text },
+        ],
+        usage: modelUsage,
+        finishReason,
+        warnings: [],
+      },
+      doStream: {
+        stream: simulateReadableStream({
+          chunks: [
+            { type: 'stream-start', warnings: [] },
+            { type: 'reasoning-start', id: 'reason' },
+            {
+              type: 'reasoning-delta',
+              id: 'reason',
+              delta: 'Consider the door',
+            },
+            { type: 'reasoning-end', id: 'reason' },
+            { type: 'text-start', id: 'text' },
+            { type: 'text-delta', id: 'text', delta: text },
+            { type: 'text-end', id: 'text' },
+            { type: 'finish', usage: modelUsage, finishReason },
+          ],
+        }),
+      },
+    });
+  }
+
   await t.test(
-    'session, concurrent turns, streams and post-hoc judge share exactly one trace',
+    'native AI SDK telemetry nests streaming players and classifiers under turns with model, tokens and reasoning',
     async () => {
       const session = await traceSession(config, async () => {
-        await Promise.all(
-          [1, 2].map((turn) =>
-            traceTurn(turn, async () => {
-              await traceGeneration(
-                'classifier',
-                'google/gemini-2.5-flash',
-                async () => ({ usage, object: { type: 'group' } }),
-              );
-              const stream = traceStream(
-                'player-generation',
-                'deepseek/deepseek-v4-flash',
-                () =>
-                  ({
-                    totalUsage: Promise.resolve(usage),
-                    text: Promise.resolve('Hello'),
-                  }) as unknown as ReturnType<typeof streamText>,
-              );
-              await stream.text;
-            }),
-          ),
+        const result = fixture('one-session');
+        await withGameSession(
+          { ...result.config, sessionId: result.sessionId },
+          async () => {
+            await Promise.all(
+              [1, 2].map((turn) =>
+                traceTurn(turn, async () => {
+                  await generateObject({
+                    model: model('{"type":"group"}'),
+                    schema: z.object({ type: z.string() }),
+                    prompt: 'Classify narration',
+                    experimental_telemetry: telemetry('classify-narration'),
+                  });
+                  await tracePlayer(player, 'A door opens', async () => {
+                    const stream = streamText({
+                      model: model(),
+                      prompt: 'Respond as Ada',
+                      experimental_telemetry: telemetry(
+                        'generate-player-response',
+                      ),
+                    });
+                    const text = await stream.text;
+                    await stream.totalUsage;
+                    return { text };
+                  });
+                }),
+              ),
+            );
+          },
         );
-        return fixture('one-session');
+        result.conversationHistory = [
+          {
+            role: 'narrator',
+            turn: 1,
+            timestamp: Date.now(),
+            content: 'The door opens. '.repeat(100),
+          },
+        ];
+        return result;
       });
       const disk = JSON.parse(
         await readFile('sessions/one-session/langfuse.json', 'utf8'),
@@ -242,47 +373,158 @@ await test('Langfuse integration', async (t) => {
         restored.langfuseContext?.traceId,
         session.langfuseContext?.traceId,
       );
-      await traceJudge(restored, () =>
-        traceGeneration(
-          'gemini-judge',
-          'google/gemini-2.5-flash',
-          async () => ({ usage, object: evaluation }),
-        ).then((r) => r.object),
-      );
+      await traceJudge(restored, async () => {
+        await generateText({
+          model: model(),
+          prompt: 'Judge session',
+          experimental_telemetry: telemetry('generate-judgment'),
+        });
+        return evaluation;
+      });
       assert.equal(new Set(spans.map((s) => s.spanContext().traceId)).size, 1);
-      assert.equal(spans.filter((s) => s.name === 'pulse-session').length, 1);
-      const judge = spans.find((s) => s.name === 'gemini-judge');
+      const roots = spans.filter((s) => s.name === 'play-session');
+      assert.equal(roots.length, 1);
+      const root = roots[0];
+      assert.equal(root.attributes['langfuse.trace.name'], 'play-session');
+      assert.equal(root.attributes['session.id'], session.sessionId);
+      assert.deepEqual(
+        JSON.parse(String(root.attributes['langfuse.trace.input'])),
+        {
+          story: config.story.storyId,
+          archetypes: ['joker'],
+          variant: 'minimal',
+          maxTurns: 6,
+        },
+      );
+      const output = JSON.parse(
+        String(root.attributes['langfuse.trace.output']),
+      );
+      assert.equal(output.finalTurn, 1);
+      assert.equal(output.excerpt.length, 600);
+      assert.match(JSON.stringify(root.attributes), /narrator-eval/);
+      const judge = spans.find((s) => s.name === 'judge-session');
       assert.ok(judge);
-      const generation = spans.find((s) => s.name === 'player-generation');
-      assert.ok(generation);
-      assert.match(
-        String(generation.attributes['langfuse.observation.usage_details']),
-        /100/,
+      assert.equal(judge.attributes['langfuse.observation.type'], 'evaluator');
+      const agents = spans.filter((s) => s.name === 'simulate-player');
+      assert.equal(agents.length, 2);
+      for (const agent of agents) {
+        assert.equal(agent.attributes['langfuse.observation.type'], 'agent');
+        assert.match(JSON.stringify(agent.attributes), /joker/);
+        const turn = spans.find(
+          (s) => s.spanContext().spanId === agent.parentSpanContext?.spanId,
+        );
+        assert.equal(turn?.name, 'play-turn');
+        const generation = spans.find(
+          (s) => s.parentSpanContext?.spanId === agent.spanContext().spanId,
+        );
+        assert.equal(
+          generation?.attributes['ai.telemetry.functionId'],
+          'generate-player-response',
+        );
+      }
+      const generations = spans.filter(
+        (s) => s.name === 'ai.streamText.doStream',
       );
-      assert.match(
-        String(generation.attributes['langfuse.observation.cost_details']),
-        /total/,
-      );
+      assert.equal(generations.length, 2);
+      for (const generation of generations) {
+        assert.equal(generation.attributes['ai.model.id'], 'stub-model');
+        assert.equal(generation.attributes['ai.usage.inputTokens'], 100);
+        assert.equal(generation.attributes['ai.usage.outputTokens'], 50);
+        assert.equal(
+          generation.attributes['ai.response.reasoning'],
+          'Consider the door',
+        );
+      }
       assert.ok(
         scores.every((s) => s.traceId === session.langfuseContext?.traceId),
       );
-      assert.equal(scores.length, 17);
+      assert.equal(scores.length, 18);
     },
   );
 
   await t.test(
-    'errors end generation observations and mark them as errors',
+    'the actual Gemini judge call emits native generation telemetry and separate deterministic and reported scores',
+    async () => {
+      const previousProvider = globalThis.AI_SDK_DEFAULT_PROVIDER;
+      const reported = {
+        ...evaluation,
+        overall: { ...evaluation.overall, score: 9.9 },
+      };
+      globalThis.AI_SDK_DEFAULT_PROVIDER = new MockProviderV3({
+        languageModels: {
+          'google/gemini-3-pro-preview': model(JSON.stringify(reported)),
+        },
+      });
+      try {
+        const result = fixture('one-session');
+        const verdict = await evaluateWithGemini(
+          result,
+          'Narrator instructions',
+          'Story guide',
+        );
+        assert.equal(verdict.overall.score, 9.9);
+        assert.equal(
+          scores.findLast((s) => s.name === 'weighted_overall')?.value,
+          8.5,
+        );
+        assert.equal(
+          scores.findLast((s) => s.name === 'judge_reported_overall')?.value,
+          9.9,
+        );
+        const generation = spans.findLast(
+          (s) => s.name === 'ai.generateObject.doGenerate',
+        );
+        assert.equal(
+          generation?.attributes['ai.telemetry.functionId'],
+          'generate-judgment',
+        );
+        assert.equal(generation?.attributes['ai.usage.promptTokens'], 100);
+        assert.equal(
+          generation?.spanContext().traceId,
+          result.langfuseContext?.traceId,
+        );
+        const parent = spans.find(
+          (s) =>
+            s.spanContext().spanId === generation?.parentSpanContext?.spanId,
+        );
+        const evaluator = spans.find(
+          (s) => s.spanContext().spanId === parent?.parentSpanContext?.spanId,
+        );
+        assert.equal(evaluator?.name, 'judge-session');
+        assert.equal(
+          evaluator?.attributes['langfuse.observation.type'],
+          'evaluator',
+        );
+      } finally {
+        globalThis.AI_SDK_DEFAULT_PROVIDER = previousProvider;
+      }
+    },
+  );
+
+  await t.test(
+    'native AI SDK failed calls end with an error status',
     async () => {
       await assert.rejects(
         traceTurn(3, () =>
-          traceGeneration('broken-classifier', 'stub', async () => {
-            throw new Error('stub failure');
+          generateText({
+            model: new MockLanguageModelV3({
+              doGenerate: async () => {
+                throw new Error('stub failure');
+              },
+            }),
+            prompt: 'Fail',
+            maxRetries: 0,
+            experimental_telemetry: telemetry('classify-failure'),
           }),
         ),
       );
-      const span = spans.find((s) => s.name === 'broken-classifier');
+      const span = spans.find(
+        (s) =>
+          s.name === 'ai.generateText.doGenerate' &&
+          s.attributes['ai.telemetry.functionId'] === 'classify-failure',
+      );
       assert.ok(span);
-      assert.equal(span.attributes['langfuse.observation.level'], 'ERROR');
+      assert.equal(span.status.code, 2);
     },
   );
 
@@ -384,7 +626,11 @@ await test('Langfuse integration', async (t) => {
             /^pulse-(minimal|mechanical)-\d{4}-/,
           );
           assert.equal(params.runEvaluators?.[0], aggregateRun);
-          inputs.push(params.data);
+          inputs.push(
+            params.data.map(
+              (item) => (item.metadata as { rawInput: unknown }).rawInput,
+            ),
+          );
           return {
             itemResults: params.data.map((item) => ({
               item,
@@ -425,16 +671,25 @@ await test('Langfuse integration', async (t) => {
           traceId: request.traceId,
         }),
       );
+      let completedSession: SessionResult | undefined;
       const result = await client.experiment.run({
         name: 'pulse-narrator',
         runName: 'pulse-minimal-test',
         data: [
           { id: 'item-stub', datasetId: 'dataset-stub', input: {} },
         ] as Parameters<typeof client.experiment.run>[0]['data'],
-        task: () => traceSession(config, async () => fixture('sdk-experiment')),
+        task: async () => {
+          completedSession = await traceSession(
+            { ...config, langfuseExperiment: true },
+            async () => fixture('sdk-experiment'),
+          );
+          return sessionOutput(completedSession);
+        },
         evaluators: [
           async ({ output }) => {
-            const session = output as SessionResult;
+            const session = completedSession;
+            assert.ok(session);
+            assert.deepEqual(output, sessionOutput(session));
             await traceJudge(session, async () => evaluation, false);
             return [
               ...evaluationScores(evaluation),
@@ -445,7 +700,22 @@ await test('Langfuse integration', async (t) => {
         runEvaluators: [aggregateRun],
       });
       const item = result.itemResults[0];
-      const session = item.output as SessionResult;
+      const session = completedSession;
+      assert.ok(session);
+      const sessionSpans = spans.filter(
+        (s) => s.spanContext().traceId === item.traceId,
+      );
+      const roots = sessionSpans.filter((s) => !s.parentSpanContext);
+      assert.equal(roots.length, 1);
+      assert.equal(roots[0].name, 'play-session');
+      assert.equal(
+        sessionSpans.filter((s) => s.name === 'play-session').length,
+        1,
+      );
+      assert.deepEqual(
+        JSON.parse(String(roots[0].attributes['langfuse.observation.output'])),
+        sessionOutput(session),
+      );
       assert.equal(item.traceId, session.langfuseContext?.traceId);
       assert.equal(link.mock.calls[0].arguments[0].traceId, item.traceId);
       assert.ok(

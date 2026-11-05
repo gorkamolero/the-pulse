@@ -3,6 +3,7 @@
  * Test narrator model speed - measures TTFT and tokens/sec
  */
 
+import { telemetry, shutdownLangfuse } from '../langfuse';
 import { config } from "dotenv";
 import { resolve } from "node:path";
 
@@ -54,6 +55,7 @@ async function testModel(modelKey: string, modelId: string) {
 
   try {
     const result = streamText({
+      experimental_telemetry: telemetry('generate-narration'),
       model: openrouter(modelId) as unknown as LanguageModel,
       system,
       messages: [{ role: "user", content: userMessage }],
@@ -131,4 +133,4 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+main().catch(console.error).finally(shutdownLangfuse);

@@ -9,15 +9,18 @@ import {
 import { LangfuseSpanProcessor } from '@langfuse/otel';
 import {
   startActiveObservation,
-  startObservation,
-  type LangfuseGeneration,
+  LangfuseSpan,
+  propagateAttributes,
+  updateActiveTrace,
+  type LangfuseEvaluator,
 } from '@langfuse/tracing';
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import type { SpanContext } from '@opentelemetry/api';
-import type { LanguageModelUsage, streamText } from 'ai';
+import { context, trace, type SpanContext } from '@opentelemetry/api';
+import type { TelemetrySettings } from 'ai';
+import type { PlayerAgent } from './agents/player';
+import type { SessionConfig } from './checkpoint/schema';
 import type { SessionResult, SessionRunnerConfig } from './session/runner';
 import type { GeminiEvaluation } from './report/gemini-eval';
-import { CostTracker } from './session/cost';
 
 let runtime:
   | { client: LangfuseClient; sdk: NodeSDK; processor: LangfuseSpanProcessor }
@@ -75,30 +78,71 @@ export function stableItemId(
     .digest('hex');
 }
 
+export function sessionInput(config: {
+  story: { storyId: string };
+  archetypes?: string[];
+  promptStyle?: string;
+  maxTurns?: number;
+}) {
+  return {
+    story: config.story.storyId,
+    archetypes: config.archetypes ?? [],
+    variant: config.promptStyle || 'production',
+    maxTurns: config.maxTurns ?? 100,
+  };
+}
+
+export function sessionOutput(result: SessionResult) {
+  return {
+    outcome: result.outcome,
+    finalTurn: result.finalTurn,
+    excerpt: result.conversationHistory
+      .slice(-3)
+      .map((message) => `${message.role}: ${message.content}`)
+      .join('\n')
+      .slice(-600),
+  };
+}
+
 export async function traceSession(
   config: SessionRunnerConfig,
   run: () => Promise<SessionResult>,
 ): Promise<SessionResult> {
   if (!getLangfuse()) return run();
-  return startActiveObservation('pulse-session', async (span) => {
+  const input = sessionInput(config);
+  const tags = ['pulse', 'narrator-eval', input.variant];
+  const record = async (span: LangfuseSpan) => {
     const metadata = {
-      story: config.story.storyId,
+      story: input.story,
       narrator_model: config.narratorModel,
-      prompt_variant: config.promptStyle || 'production',
-      maxTurns: config.maxTurns ?? 100,
+      prompt_variant: input.variant,
+      maxTurns: input.maxTurns,
       git_commit: gitCommit(),
     };
-    span.updateTrace({ name: 'pulse-session', metadata });
+    span.update({ input, metadata });
+    span.updateTrace({ name: 'play-session', input, tags, metadata });
     const result = await run();
     result.langfuseContext = span.otelSpan.spanContext();
+    const finalInput = {
+      ...input,
+      archetypes: result.config.group.players.map((p) => p.archetype),
+    };
+    const output = sessionOutput(result);
+    const finalMetadata = {
+      ...metadata,
+      archetypes: finalInput.archetypes,
+      outcome: result.outcome,
+      raw_session: {
+        config: result.config,
+        conversationHistory: result.conversationHistory,
+      },
+    };
+    span.update({ input: finalInput, output, metadata: finalMetadata });
     span.updateTrace({
       sessionId: result.sessionId,
-      metadata: {
-        ...metadata,
-        archetypes: result.config.group.players.map((p) => p.archetype),
-        outcome: result.outcome,
-      },
-      output: { outcome: result.outcome, turns: result.finalTurn },
+      input: finalInput,
+      output,
+      metadata: finalMetadata,
     });
     if (result.outcome === 'failed')
       span.update({
@@ -106,7 +150,6 @@ export async function traceSession(
         statusMessage: result.error || 'Session failed',
       });
     emitScores(result, performanceScores(result));
-    // Retain the original parent for post-hoc cli:eval, including failed sessions.
     await mkdir(`sessions/${result.sessionId}`, { recursive: true });
     await writeFile(
       `sessions/${result.sessionId}/langfuse.json`,
@@ -119,7 +162,36 @@ export async function traceSession(
       }),
     );
     return result;
-  });
+  };
+  return propagateAttributes(
+    {
+      traceName: 'play-session',
+      tags,
+      metadata: { story: input.story, variant: input.variant },
+    },
+    () => {
+      const active = config.langfuseExperiment
+        ? trace.getSpan(context.active())
+        : undefined;
+      if (active) {
+        // The experiment SDK owns and ends this root observation.
+        active.updateName('play-session');
+        return record(new LangfuseSpan({ otelSpan: active }));
+      }
+      return startActiveObservation('play-session', record);
+    },
+  );
+}
+
+export function withGameSession<T>(
+  config: SessionConfig,
+  run: (config: SessionConfig) => Promise<T>,
+): Promise<T> {
+  if (!getLangfuse()) return run(config);
+  updateActiveTrace({ sessionId: config.sessionId });
+  return propagateAttributes({ sessionId: config.sessionId }, () =>
+    run(config),
+  );
 }
 
 export async function restoreTrace(result: SessionResult): Promise<void> {
@@ -138,6 +210,31 @@ export async function restoreTrace(result: SessionResult): Promise<void> {
   }
 }
 
+export async function withSessionTrace<T>(
+  result: SessionResult,
+  run: () => Promise<T>,
+): Promise<T> {
+  if (!getLangfuse()) return run();
+  await restoreTrace(result);
+  if (!result.langfuseContext) return run();
+  return context.with(
+    trace.setSpanContext(context.active(), result.langfuseContext),
+    () =>
+      propagateAttributes(
+        {
+          sessionId: result.sessionId,
+          traceName: 'play-session',
+          tags: [
+            'pulse',
+            'narrator-eval',
+            result.config.promptStyle || 'production',
+          ],
+        },
+        run,
+      ),
+  );
+}
+
 export async function traceJudge(
   result: SessionResult,
   judge: () => Promise<GeminiEvaluation>,
@@ -145,8 +242,20 @@ export async function traceJudge(
 ): Promise<GeminiEvaluation> {
   if (!getLangfuse()) return judge();
   await restoreTrace(result);
-  const evaluate = async () => {
+  const evaluate = async (span: LangfuseEvaluator) => {
+    span.update({
+      input: { sessionId: result.sessionId, turns: result.finalTurn },
+      metadata: { raw_transcript: result.conversationHistory },
+    });
     const evaluation = await judge();
+    span.update({
+      output: {
+        weighted_overall: weightedOverall(evaluation),
+        judge_reported_overall: evaluation.overall.score,
+        summary: evaluation.overall.summary,
+      },
+      metadata: { raw_verdict: evaluation },
+    });
     if (scoreTrace)
       emitScores(result, [
         ...evaluationScores(evaluation),
@@ -168,93 +277,113 @@ export async function traceJudge(
       async () => result,
     );
   }
-  return startActiveObservation('judge-evaluation', evaluate, {
-    parentSpanContext: result.langfuseContext,
-  });
+  return propagateAttributes(
+    {
+      sessionId: result.sessionId,
+      tags: [
+        'pulse',
+        'narrator-eval',
+        result.config.promptStyle || 'production',
+      ],
+    },
+    () =>
+      startActiveObservation('judge-session', evaluate, {
+        asType: 'evaluator',
+        parentSpanContext: result.langfuseContext,
+      }),
+  );
 }
 
 export function traceTurn<T>(turn: number, run: () => Promise<T>): Promise<T> {
   if (!getLangfuse()) return run();
-  return startActiveObservation(`turn-${turn}`, (span) => {
-    span.update({ metadata: { turn } });
-    return run();
-  });
+  return propagateAttributes({ metadata: { turn: String(turn) } }, () =>
+    startActiveObservation('play-turn', async (span) => {
+      span.update({ input: { turn }, metadata: { turn } });
+      const result = await run();
+      span.update({ output: result });
+      return result;
+    }),
+  );
 }
 
-function finishGeneration(
-  span: LangfuseGeneration,
-  model: string,
-  usage: LanguageModelUsage,
-  output: unknown,
-): void {
-  const tokens = {
-    promptTokens: usage.inputTokens ?? 0,
-    completionTokens: usage.outputTokens ?? 0,
-    totalTokens:
-      usage.totalTokens ?? (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
+export function telemetry(
+  functionId: string,
+  metadata: TelemetrySettings['metadata'] = {},
+): TelemetrySettings {
+  return {
+    isEnabled: Boolean(getLangfuse()),
+    functionId,
+    metadata,
+    recordInputs: true,
+    recordOutputs: true,
   };
-  const cost = new CostTracker(model, []).calculateCost(tokens, model);
-  span.update({
-    output,
-    usageDetails: {
-      input: tokens.promptTokens,
-      output: tokens.completionTokens,
-      total: tokens.totalTokens,
-    },
-    costDetails: { total: cost },
-  });
 }
 
-export function traceStream<T extends ReturnType<typeof streamText>>(
-  name: string,
-  model: string,
-  run: () => T,
-): T {
-  if (!getLangfuse()) return run();
-  const span = startObservation(name, { model }, { asType: 'generation' });
-  try {
-    const result = run();
-    void Promise.all([result.totalUsage, result.text])
-      .then(([usage, text]) => {
-        finishGeneration(span, model, usage, text);
-        span.end();
-      })
-      .catch((error: unknown) => {
-        span.update({ level: 'ERROR', statusMessage: String(error) });
-        span.end();
-      });
-    return result;
-  } catch (error) {
-    span.update({ level: 'ERROR', statusMessage: String(error) });
-    span.end();
-    throw error;
-  }
-}
-
-export async function traceGeneration<
-  T extends { usage: LanguageModelUsage; object?: unknown; text?: string },
->(name: string, model: string, run: () => Promise<T>): Promise<T> {
+export function tracePlayer<T>(
+  player: Pick<PlayerAgent, 'name' | 'archetype' | 'modelId'>,
+  input: string,
+  run: () => Promise<T>,
+): Promise<T> {
   if (!getLangfuse()) return run();
   return startActiveObservation(
-    name,
+    'simulate-player',
     async (span) => {
-      span.update({ model });
-      try {
-        const result = await run();
-        finishGeneration(
-          span,
-          model,
-          result.usage,
-          result.object ?? result.text,
-        );
-        return result;
-      } catch (error) {
-        span.update({ level: 'ERROR', statusMessage: String(error) });
-        throw error;
-      }
+      span.update({
+        input,
+        metadata: {
+          player: player.name,
+          archetype: player.archetype,
+          model: player.modelId,
+        },
+      });
+      const result = await run();
+      span.update({
+        output:
+          result && typeof result === 'object' && 'text' in result
+            ? result.text
+            : result,
+      });
+      return result;
     },
-    { asType: 'generation' },
+    { asType: 'agent' },
   );
+}
+
+const criterionWeights = {
+  agencyRespect: 2,
+  declarationVsAcknowledgment: 1.5,
+  invitationArchitecture: 1.5,
+  branchingPersistence: 1.5,
+  equipmentEngagement: 1,
+  npcDialogue: 1,
+  spatialConsistency: 1,
+  characterCreation: 1,
+  atmosphere: 1,
+  curiosityFollowing: 1,
+  pacingBreath: 1,
+  actionableVsAtmospheric: 1,
+} as const;
+const smellChecks = [
+  'railroadedReported',
+  'linearLanguageUsed',
+  'declarationPhrases',
+  'experientiallyWrong',
+] as const;
+
+export function weightedOverall(evaluation: GeminiEvaluation): number {
+  let total = 0;
+  let weightSum = 0;
+  for (const criterion of Object.keys(criterionWeights) as Array<
+    keyof typeof criterionWeights
+  >) {
+    const weight = criterionWeights[criterion];
+    total += evaluation[criterion].score * weight;
+    weightSum += weight;
+  }
+  const score = total / weightSum;
+  return smellChecks.some((check) => evaluation.smellTest[check])
+    ? Math.min(score, 8.5)
+    : score;
 }
 
 const snake = (name: string) =>
@@ -281,16 +410,17 @@ export function evaluationScores(evaluation: GeminiEvaluation): Evaluation[] {
   }
   scores.push({
     name: 'weighted_overall',
+    value: weightedOverall(evaluation),
+    dataType: 'NUMERIC',
+    comment: evaluation.overall.summary,
+  });
+  scores.push({
+    name: 'judge_reported_overall',
     value: evaluation.overall.score,
     dataType: 'NUMERIC',
     comment: evaluation.overall.summary,
   });
-  for (const name of [
-    'railroadedReported',
-    'linearLanguageUsed',
-    'declarationPhrases',
-    'experientiallyWrong',
-  ] as const) {
+  for (const name of smellChecks) {
     scores.push({
       name: snake(name),
       value: Number(evaluation.smellTest[name]),

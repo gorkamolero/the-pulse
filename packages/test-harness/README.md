@@ -115,26 +115,36 @@ From the repository root, run a small comparison:
 pnpm cli:langfuse-experiment --story shadow-over-innsmouth --variants mechanical,minimal --items 1 --max-turns 6 --narrator deepseek-v4-flash --players 2
 ```
 
-This runs two sessions against the same stored friend group. Each session has one
-`pulse-session` trace with turn observations, model generations, usage, estimated
-cost, latency, and a `gemini-judge` observation. Dataset `pulse-player-groups`
-uses stable IDs based on story, player count, and item index. Groups are generated
-once, cached under `sessions/langfuse-player-groups`, and stored in the dataset;
-subsequent invocations reuse the hosted item. Prompt variants receive the same
-archetypes, identities, relationships, and group history, as in `cli:compare`.
-In-story characters and player responses still evolve during each session.
+This runs two sessions against the same stored friend group. Each game has one
+`play-session` trace with `play-turn` spans and `simulate-player` agents.
+AI SDK `experimental_telemetry` captures model calls, usage, latency, and supported
+reasoning automatically. Generation names include `generate-narration`,
+`generate-player-response`, `classify-narration`, and `generate-judgment`.
+The judge's `judge-session` evaluator contains its model generation.
+Trace input shows story, archetypes, variant, and maxTurns. Output shows outcome,
+final turn, and a short transcript excerpt. Full session payloads are metadata.
+The game session ID and tags `pulse`, `narrator-eval`, and the variant allow filtering.
 
-Experiment `pulse-narrator` creates dataset runs named
-`pulse-<variant>-<ISO date>`, visible together in dataset-run comparison. Item
-scores include the 12 snake_case criteria, `weighted_overall`, the four BOOLEAN
-smell checks (`true` means a problem was detected), `cost_per_turn_usd`,
-`latency_per_turn_ms`, and `cost_usd`. Run scores are `mean_weighted_overall` and
-`mean_cost_usd`. Criteria comments retain the judge's notes and evidence.
-`weighted_overall` copies the existing judge's `overall.score` unchanged: in this
-checkout the formula and 8.5 cap live in the evaluator prompt, not a TypeScript
-calculation. Costs retain the existing tracker's estimates and scope (the session
-cost excludes the judge and group setup); generation observations show their
-individual estimated costs. No Liveblocks or audio generation is used.
+Dataset `pulse-player-groups` uses stable IDs based on story, player count, and
+item index. Groups are generated once, cached under `sessions/langfuse-player-groups`,
+and stored in the dataset. Later invocations reuse the hosted group. Every prompt
+variant receives the same archetypes, identities, relationships, and group history.
+In-story characters and player responses evolve during each session.
+
+Experiment `pulse-narrator` creates runs named `pulse-<variant>-<ISO date>`.
+Item scores include the 12 snake_case criteria, `weighted_overall`,
+`judge_reported_overall`, four BOOLEAN smell checks, `cost_per_turn_usd`,
+`latency_per_turn_ms`, and `cost_usd`. A true smell check indicates a problem.
+Run scores are `mean_weighted_overall` and `mean_cost_usd`.
+
+`weighted_overall` is computed in code with agency weighted 2.0,
+declaration/invitation/branching weighted 1.5, and the eight remaining criteria
+weighted 1.0. The denominator is their sum, **14.5**. Any of the four smell checks
+caps the result at 8.5. The evaluator prompt contains a **15.5 divisor bug**.
+`judge_reported_overall` retains its returned number so discrepancies are visible.
+Generation pricing comes from Langfuse's model pricing table. Session cost scores
+use the existing tracker and cover its recorded session calls. Judge and group
+setup costs appear on their own generations.
 
 `cli:run`, `cli:compare`, `cli:batch`, and `cli:eval` also emit telemetry when keys
 are present. `sessions/<id>/langfuse.json` retains the trace parent and performance

@@ -5,7 +5,7 @@
  * clarification, recap. Uses fast/cheap models with fallback chain.
  */
 
-import { traceGeneration } from '../langfuse';
+import { telemetry } from '../langfuse';
 import { generateObject, gateway, type LanguageModelUsage } from 'ai';
 import { z } from 'zod';
 
@@ -152,7 +152,8 @@ export async function classifyOutput(
     const isLastModel = i === CLASSIFICATION_MODELS.length - 1;
 
     try {
-      const response = await traceGeneration('classifier', modelId, () => generateObject({
+      const response = await generateObject({
+        experimental_telemetry: telemetry('classify-narration', { model: modelId }),
         model: gateway(modelId),
         schema: classificationSchema,
         messages: [
@@ -160,7 +161,7 @@ export async function classifyOutput(
           { role: 'user', content: userContent },
         ],
         temperature: 0.3,
-      }));
+      });
 
       const {
         isEnding,

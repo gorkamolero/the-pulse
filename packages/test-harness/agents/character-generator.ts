@@ -6,6 +6,7 @@
  * - All individual characters with names and relationships
  */
 
+import { telemetry } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import { faker } from '@faker-js/faker';
@@ -238,6 +239,7 @@ Make them feel like real friends with history, not strangers.${languageInstructi
   const result = await withRetry(
     async () => {
       return generateObject({
+        experimental_telemetry: telemetry('generate-player-group'),
         model: 'xai/grok-4.1-fast-reasoning',
         schema: generatedGroupSchema,
         prompt,

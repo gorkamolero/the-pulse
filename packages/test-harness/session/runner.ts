@@ -5,7 +5,7 @@
  * executes main loop until story ends or max turns reached.
  */
 
-import { traceSession, traceTurn, traceStream, getLangfuse, type SpanContext } from '../langfuse';
+import { tracePlayer, withGameSession, traceSession, traceTurn, telemetry, getLangfuse, type SpanContext } from '../langfuse';
 import { PerformanceTracker, type PerformanceMetrics } from './metrics';
 import { nanoid } from 'nanoid';
 import {
@@ -115,6 +115,8 @@ export type SessionProgressEvent =
   | { type: 'failed'; error: string };
 
 export interface SessionRunnerConfig {
+  /** Reuse the root observation owned by the Langfuse experiment runner. */
+  langfuseExperiment?: boolean;
   story: StoryContext;
   systemPrompt: string;
   storyGuide: string;
@@ -323,7 +325,8 @@ async function generateNarratorResponse(
     }
 
     try {
-      const result = traceStream('narrator-generation', modelId, () => streamText({
+      const result = streamText({
+        experimental_telemetry: telemetry('generate-narration', { model: modelId }),
         model,
         system: fullSystemPrompt,
         ...(isFirstTurn ? { prompt: firstTurnPrompt } : { messages }),
@@ -333,7 +336,7 @@ async function generateNarratorResponse(
             deepseek: { reasoning: { enabled: true } },
           },
         }),
-      }));
+      });
 
       let fullText = '';
       let reasoning = '';
@@ -420,15 +423,17 @@ async function generatePlayerResponse(
     content: `${agent.name}, what is your reaction to this? Respond in character.`,
   });
 
+  return tracePlayer(agent, narratorOutput, async () => {
   const { result, modelUsed } = await withModelFallback(
     agent.modelId,
     async (modelId) => {
-      const result = traceStream('player-generation', modelId, () => streamText({
+      const result = streamText({
+        experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
         model: modelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
-      }));
+      });
 
       const modelNote = modelId !== agent.modelId ? ` [${modelId}]` : '';
       let fullText = '';
@@ -449,6 +454,7 @@ async function generatePlayerResponse(
   );
 
   return result;
+  });
 }
 
 /**
@@ -499,15 +505,17 @@ Answer ONLY the questions addressed to you. Do not answer questions meant for ot
 Respond in character as ${agent.name}.`,
   });
 
+  return tracePlayer(agent, narratorOutput, async () => {
   const { result } = await withModelFallback(
     agent.modelId,
     async (modelId) => {
-      const result = traceStream('player-generation', modelId, () => streamText({
+      const result = streamText({
+        experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
         model: modelId,
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
-      }));
+      });
 
       const modelNote = modelId !== agent.modelId ? ` [${modelId}]` : '';
       let fullText = '';
@@ -528,6 +536,7 @@ Respond in character as ${agent.name}.`,
   );
 
   return result;
+  });
 }
 
 /**
@@ -554,15 +563,17 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
     { role: 'user' as const, content: synthesisPrompt },
   ];
 
+  return tracePlayer(spokesperson, narratorOutput, async () => {
   const { result } = await withModelFallback(
     spokesperson.modelId,
     async (modelId) => {
-      const result = traceStream('player-generation', modelId, () => streamText({
+      const result = streamText({
+        experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
         model: modelId,
         system: spokesperson.systemPrompt,
         messages,
         temperature: 0.7,
-      }));
+      });
 
       const modelNote = modelId !== spokesperson.modelId ? ` [${modelId}]` : '';
       let fullText = '';
@@ -583,6 +594,7 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
   );
 
   return result;
+  });
 }
 
 /**
@@ -1083,6 +1095,8 @@ export async function runSession(
     sessionConfig = createSessionConfig(config, playerAgents, spokesperson);
     sessionId = sessionConfig.sessionId;
 
+    return await withGameSession(sessionConfig, async (sessionConfig) => {
+
     // Emit progress: group generated
     config.onProgress?.({ type: 'generating-group' });
     config.onProgress?.({
@@ -1138,6 +1152,7 @@ export async function runSession(
     const outcome = await runSessionLoop(ctx, 1);
 
     return finalizeSession(ctx, outcome, startTime);
+    });
   } catch (error) {
     console.error('Session error:', error);
 

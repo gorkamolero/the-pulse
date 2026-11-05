@@ -5,7 +5,7 @@
  * Evaluates narrator performance against the philosophical framework.
  */
 
-import { traceJudge, traceGeneration } from '../langfuse';
+import { traceJudge, telemetry } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import { writeFile } from 'node:fs/promises';
@@ -220,12 +220,13 @@ export async function evaluateWithGemini(
 
   const evaluation = await withRetry(
     async () => {
-      const response = await traceGeneration('gemini-judge', 'google/gemini-3-pro-preview', () => generateObject({
+      const response = await generateObject({
+        experimental_telemetry: telemetry('generate-judgment', { model: 'google/gemini-3-pro-preview' }),
         model: 'google/gemini-3-pro-preview',
         schema: evaluationSchema,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
-      }));
+      });
       return response.object;
     },
     {

@@ -4,6 +4,7 @@
  * Generate formatted markdown reports from session data.
  */
 
+import { withSessionTrace } from '../langfuse';
 import { writeFile } from 'node:fs/promises';
 import type { SessionResult } from '../session/runner';
 import type { SessionFeedback } from '../session/feedback';
@@ -127,6 +128,7 @@ export async function saveSessionReport(
   filename?: string,
   options: SaveReportOptions = {},
 ): Promise<string> {
+  return withSessionTrace(result, async () => {
   const geminiEval = options.geminiEval ?? DEFAULTS.geminiEval;
   const report = await generateSessionReport(result);
   const sessionDir = `sessions/${result.sessionId}`;
@@ -181,6 +183,7 @@ export async function saveSessionReport(
   }
 
   return filepath;
+  });
 }
 
 /**

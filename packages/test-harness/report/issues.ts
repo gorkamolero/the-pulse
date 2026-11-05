@@ -4,6 +4,7 @@
  * Detect contradictions, loops, forced segues, stuck moments.
  */
 
+import { telemetry } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { Message } from '../session/turn';
@@ -206,6 +207,7 @@ If no contradictions found, return an empty array.`;
     const result = await withRetry(
       async () => {
         return generateObject({
+        experimental_telemetry: telemetry('detect-narrative-issues'),
           model: 'google/gemini-2.5-flash',
           schema: contradictionsArraySchema,
           messages: [{ role: 'user', content: prompt }],
