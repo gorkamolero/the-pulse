@@ -59,7 +59,7 @@ export interface Classification {
 const classificationSchema = z.object({
   isEnding: z.boolean(),
   responseType: z.enum(['group', 'discussion', 'directed', 'private', 'none']),
-  targetPlayers: z.array(z.string()).optional(),
+  targetPlayers: z.array(z.string()), // required for strict structured output; [] when none
   confidence: z.number().min(0).max(1),
   reasoning: z.string(),
 });

@@ -454,7 +454,7 @@ await test('Langfuse integration', async (t) => {
       };
       globalThis.AI_SDK_DEFAULT_PROVIDER = new MockProviderV3({
         languageModels: {
-          'google/gemini-3-pro-preview': model(JSON.stringify(reported)),
+          'google/gemini-3.1-pro-preview': model(JSON.stringify(reported)),
         },
       });
       try {

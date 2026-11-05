@@ -240,7 +240,7 @@ Make them feel like real friends with history, not strangers.${languageInstructi
     async () => {
       return generateObject({
         experimental_telemetry: telemetry('generate-player-group'),
-        model: 'xai/grok-4.1-fast-reasoning',
+        model: 'xai/grok-4.3',
         schema: generatedGroupSchema,
         prompt,
         temperature: 0.8,

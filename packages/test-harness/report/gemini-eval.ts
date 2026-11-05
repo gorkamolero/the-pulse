@@ -221,8 +221,8 @@ export async function evaluateWithGemini(
   const evaluation = await withRetry(
     async () => {
       const response = await generateObject({
-        experimental_telemetry: telemetry('generate-judgment', { model: 'google/gemini-3-pro-preview' }),
-        model: 'google/gemini-3-pro-preview',
+        experimental_telemetry: telemetry('generate-judgment', { model: 'google/gemini-3.1-pro-preview' }),
+        model: 'google/gemini-3.1-pro-preview',
         schema: evaluationSchema,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
