@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { mock, test } from 'node:test';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { LangfuseSpanProcessor } from '@langfuse/otel';
@@ -261,11 +261,13 @@ await test('Langfuse integration', async (t) => {
   process.env.LANGFUSE_SECRET_KEY = 'test-secret';
   const client = getLangfuse();
   assert.ok(client);
+  mock.method(client, 'getProjectId', async () => 'project-stub');
   mock.method(
     client,
     'getTraceUrl',
     async (id: string) => `http://stub/project/test/traces/${id}`,
   );
+  assert.deepEqual(evaluationScores({ ...evaluation, surprise: dimension } as GeminiEvaluation), evaluationScores(evaluation));
   const scores: Parameters<typeof client.score.create>[0][] = [];
   mock.method(
     client.score,
@@ -388,7 +390,7 @@ await test('Langfuse integration', async (t) => {
       assert.equal(root.attributes['langfuse.trace.name'], 'play-session');
       assert.equal(root.attributes['session.id'], session.sessionId);
       assert.deepEqual(
-        JSON.parse(String(root.attributes['langfuse.trace.input'])),
+        JSON.parse(String(root.attributes['langfuse.observation.input'])),
         {
           story: config.story.storyId,
           archetypes: ['joker'],
@@ -397,7 +399,7 @@ await test('Langfuse integration', async (t) => {
         },
       );
       const output = JSON.parse(
-        String(root.attributes['langfuse.trace.output']),
+        String(root.attributes['langfuse.observation.output']),
       );
       assert.equal(output.finalTurn, 1);
       assert.equal(output.excerpt.length, 600);
@@ -599,10 +601,10 @@ await test('Langfuse integration', async (t) => {
   await t.test(
     'CLI reuses hosted groups for every variant and later invocation without regenerating',
     async () => {
-      const dataset = mock.method(client, 'createDataset', async () => ({}));
+      const dataset = mock.method(client.api.datasets, 'create', async () => ({}));
       const getItem = mock.method(
-        client,
-        'getDatasetItem',
+        client.api.datasetItems,
+        'get',
         async (id: string) => ({
           id,
           datasetId: 'dataset-stub',
@@ -613,7 +615,7 @@ await test('Langfuse integration', async (t) => {
           },
         }),
       );
-      const upsert = mock.method(client, 'createDatasetItem', async () => {
+      const upsert = mock.method(client.api.datasetItems, 'create', async () => {
         throw new Error('Must reuse stored group');
       });
       const inputs: unknown[] = [];
@@ -660,17 +662,59 @@ await test('Langfuse integration', async (t) => {
     },
   );
 
+  await t.test('dataset resources stay bound through real SDK HTTP calls', async () => {
+    const id = stableItemId('shadow-over-innsmouth', 2, 0);
+    const input = {
+      storyId: 'shadow-over-innsmouth',
+      archetypes: ['joker', 'engaged'],
+      group: { players: [{ name: 'Ada' }, { name: 'Ben' }] },
+    };
+    await mkdir('sessions/langfuse-player-groups', { recursive: true });
+    await writeFile(`sessions/langfuse-player-groups/${id}.json`, JSON.stringify(input));
+    const requests: string[] = [];
+    let stored = false;
+    const transport = mock.method(globalThis, 'fetch', async (url: string | URL | Request, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      const method = init?.method || 'GET';
+      requests.push(`${method} ${path}`);
+      const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
+        status, headers: { 'Content-Type': 'application/json' },
+      });
+      if (method === 'POST' && path === '/api/public/v2/datasets') {
+        assert.equal(JSON.parse(String(init?.body)).name, 'pulse-player-groups');
+        return reply({ id: 'dataset-stub', name: 'pulse-player-groups' });
+      }
+      if (method === 'GET' && path === `/api/public/dataset-items/${id}`) {
+        return stored ? reply({ id, datasetId: 'dataset-stub', input }) : reply({ message: 'Not found' }, 404);
+      }
+      if (method === 'POST' && path === '/api/public/dataset-items') {
+        const body = JSON.parse(String(init?.body));
+        assert.deepEqual(body, { id, datasetName: 'pulse-player-groups', input });
+        stored = true;
+        return reply({ id, datasetId: 'dataset-stub', input });
+      }
+      throw new Error(`Unexpected offline request: ${method} ${path}`);
+    });
+    const runs = mock.method(client.experiment, 'run', async (params: Parameters<typeof client.experiment.run>[0]) => ({
+      itemResults: params.data.map((item) => ({ item, evaluations: [{ name: 'weighted_overall', value: 8 }] })),
+      format: async () => 'stub run',
+    }));
+    try {
+      const options = { story: 'shadow-over-innsmouth', variants: 'minimal', items: 1, maxTurns: 6, narrator: 'deepseek-v4-flash', players: 2 };
+      await runExperiment(options);
+      await runExperiment(options);
+      assert.equal(requests.filter((request) => request === 'POST /api/public/dataset-items').length, 1);
+      assert.equal(requests.filter((request) => request === 'POST /api/public/v2/datasets').length, 2);
+      assert.equal(runs.mock.callCount(), 2);
+    } finally {
+      runs.mock.restore();
+      transport.mock.restore();
+    }
+  });
+
   await t.test(
     'real SDK experiment runner links the session trace and emits dataset-run aggregates',
     async () => {
-      const link = mock.method(
-        client.api.datasetRunItems,
-        'create',
-        async (request: { traceId: string }) => ({
-          datasetRunId: 'run-stub',
-          traceId: request.traceId,
-        }),
-      );
       let completedSession: SessionResult | undefined;
       const result = await client.experiment.run({
         name: 'pulse-narrator',
@@ -717,11 +761,12 @@ await test('Langfuse integration', async (t) => {
         sessionOutput(session),
       );
       assert.equal(item.traceId, session.langfuseContext?.traceId);
-      assert.equal(link.mock.calls[0].arguments[0].traceId, item.traceId);
+      assert.equal(roots[0].attributes['langfuse.experiment.item.id'], 'item-stub');
+      assert.equal(roots[0].attributes['langfuse.experiment.dataset.id'], 'dataset-stub');
       assert.ok(
         scores.some(
           (s) =>
-            s.datasetRunId === 'run-stub' &&
+            s.datasetRunId === result.datasetRunId &&
             s.name === 'mean_weighted_overall' &&
             s.value === 8.5,
         ),
@@ -729,12 +774,11 @@ await test('Langfuse integration', async (t) => {
       assert.ok(
         scores.some(
           (s) =>
-            s.datasetRunId === 'run-stub' &&
+            s.datasetRunId === result.datasetRunId &&
             s.name === 'mean_cost_usd' &&
             s.value === 2,
         ),
       );
-      link.mock.restore();
     },
   );
 

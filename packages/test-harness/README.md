@@ -159,5 +159,6 @@ pnpm --filter @pulse/test-harness test:langfuse
 pnpm --filter @pulse/test-harness typecheck
 ```
 
-The integration uses the latest Langfuse SDK v4 packages (4.6.1), with compatible
-OpenTelemetry dependencies.
+The integration uses Langfuse SDK 6.1.1 (Node.js 22 or newer) with compatible
+OpenTelemetry dependencies. Dataset operations use the bound `client.api` resource
+methods; experiment links are exported as OpenTelemetry attributes.

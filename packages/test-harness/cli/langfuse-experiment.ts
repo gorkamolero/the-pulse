@@ -67,16 +67,16 @@ export async function runExperiment(options: {
   if (!client) return; // No keys means no API calls, including group generation.
 
   const datasetName = 'pulse-player-groups';
-  await client.createDataset({
+  await client.api.datasets.create({
     name: datasetName,
     description: 'Stored friend groups shared across narrator prompt variants',
   });
   const data = [];
   for (let index = 0; index < options.items; index++) {
     const id = stableItemId(story.id, options.players, index);
-    let item: Awaited<ReturnType<typeof client.getDatasetItem>>;
+    let item: Awaited<ReturnType<typeof client.api.datasetItems.get>>;
     try {
-      item = await client.getDatasetItem(id);
+      item = await client.api.datasetItems.get(id);
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode !== 404) throw error;
       // The local cache survives an interrupted upload; the hosted item wins on subsequent runs.
@@ -106,7 +106,7 @@ export async function runExperiment(options: {
         await mkdir(cacheDir, { recursive: true });
         await writeFile(path, JSON.stringify(input, null, 2));
       }
-      item = await client.createDatasetItem({ id, datasetName, input });
+      item = await client.api.datasetItems.create({ id, datasetName, input });
     }
     const input = item.input as PlayerGroupInput;
     if (

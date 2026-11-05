@@ -11,7 +11,6 @@ import {
   startActiveObservation,
   LangfuseSpan,
   propagateAttributes,
-  updateActiveTrace,
   type LangfuseEvaluator,
 } from '@langfuse/tracing';
 import { NodeSDK } from '@opentelemetry/sdk-node';
@@ -120,7 +119,6 @@ export async function traceSession(
       git_commit: gitCommit(),
     };
     span.update({ input, metadata });
-    span.updateTrace({ name: 'play-session', input, tags, metadata });
     const result = await run();
     result.langfuseContext = span.otelSpan.spanContext();
     const finalInput = {
@@ -138,12 +136,7 @@ export async function traceSession(
       },
     };
     span.update({ input: finalInput, output, metadata: finalMetadata });
-    span.updateTrace({
-      sessionId: result.sessionId,
-      input: finalInput,
-      output,
-      metadata: finalMetadata,
-    });
+    span.otelSpan.setAttribute('session.id', result.sessionId);
     if (result.outcome === 'failed')
       span.update({
         level: 'ERROR',
@@ -188,7 +181,6 @@ export function withGameSession<T>(
   run: (config: SessionConfig) => Promise<T>,
 ): Promise<T> {
   if (!getLangfuse()) return run(config);
-  updateActiveTrace({ sessionId: config.sessionId });
   return propagateAttributes({ sessionId: config.sessionId }, () =>
     run(config),
   );
@@ -386,27 +378,41 @@ export function weightedOverall(evaluation: GeminiEvaluation): number {
     : score;
 }
 
-const snake = (name: string) =>
-  name.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+const criterionScoreNames = {
+  agencyRespect: 'agency_respect',
+  declarationVsAcknowledgment: 'declaration_vs_acknowledgment',
+  invitationArchitecture: 'invitation_architecture',
+  branchingPersistence: 'branching_persistence',
+  equipmentEngagement: 'equipment_engagement',
+  npcDialogue: 'npc_dialogue',
+  spatialConsistency: 'spatial_consistency',
+  characterCreation: 'character_creation',
+  atmosphere: 'atmosphere',
+  curiosityFollowing: 'curiosity_following',
+  pacingBreath: 'pacing_breath',
+  actionableVsAtmospheric: 'actionable_vs_atmospheric',
+} as const;
+const checkScoreNames = {
+  railroadedReported: 'railroaded_reported',
+  linearLanguageUsed: 'linear_language_used',
+  declarationPhrases: 'declaration_phrases',
+  experientiallyWrong: 'experientially_wrong',
+} as const;
 export function evaluationScores(evaluation: GeminiEvaluation): Evaluation[] {
   const scores: Evaluation[] = [];
-  for (const [name, dimension] of Object.entries(evaluation)) {
-    if (
-      name !== 'overall' &&
-      typeof dimension === 'object' &&
-      'score' in dimension &&
-      'evidence' in dimension
-    ) {
-      scores.push({
-        name: snake(name),
-        value: dimension.score,
-        dataType: 'NUMERIC',
-        comment: JSON.stringify({
-          notes: dimension.notes,
-          evidence: dimension.evidence,
-        }),
-      });
-    }
+  for (const criterion of Object.keys(criterionScoreNames) as Array<
+    keyof typeof criterionScoreNames
+  >) {
+    const dimension = evaluation[criterion];
+    scores.push({
+      name: criterionScoreNames[criterion],
+      value: dimension.score,
+      dataType: 'NUMERIC',
+      comment: JSON.stringify({
+        notes: dimension.notes,
+        evidence: dimension.evidence,
+      }),
+    });
   }
   scores.push({
     name: 'weighted_overall',
@@ -422,7 +428,7 @@ export function evaluationScores(evaluation: GeminiEvaluation): Evaluation[] {
   });
   for (const name of smellChecks) {
     scores.push({
-      name: snake(name),
+      name: checkScoreNames[name],
       value: Number(evaluation.smellTest[name]),
       dataType: 'BOOLEAN',
       comment: evaluation.smellTest.notes,
@@ -461,14 +467,17 @@ function emitScores(result: SessionResult, scores: Evaluation[]): void {
 
 export const aggregateRun: RunEvaluator = async ({ itemResults }) => {
   const values = itemResults.flatMap((item) => item.evaluations);
-  const mean = (name: string) => {
+  const mean = (
+    name: 'weighted_overall' | 'cost_usd',
+    scoreName: 'mean_weighted_overall' | 'mean_cost_usd',
+  ) => {
     const scores = values.filter(
       (s) => s.name === name && typeof s.value === 'number',
     );
     return scores.length
       ? [
           {
-            name: `mean_${name}`,
+            name: scoreName,
             value:
               scores.reduce((sum, s) => sum + Number(s.value), 0) /
               scores.length,
@@ -477,7 +486,10 @@ export const aggregateRun: RunEvaluator = async ({ itemResults }) => {
         ]
       : [];
   };
-  return [...mean('weighted_overall'), ...mean('cost_usd')];
+  return [
+    ...mean('weighted_overall', 'mean_weighted_overall'),
+    ...mean('cost_usd', 'mean_cost_usd'),
+  ];
 };
 
 export type { SpanContext };
