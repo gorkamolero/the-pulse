@@ -345,6 +345,7 @@ async function generateNarratorResponse(
       let hasStartedText = false;
 
       for await (const part of result.fullStream) {
+        if (part.type === 'error') throw part.error;
         if (part.type === 'reasoning-delta') {
           reasoning += part.text;
         } else if (part.type === 'text-delta') {

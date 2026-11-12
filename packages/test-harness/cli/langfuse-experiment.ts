@@ -118,7 +118,9 @@ export async function runExperiment(options: {
           groupSize: options.players,
           maxTurns: options.maxTurns,
         });
-        const report = await saveSessionReport(session);
+        const report = await saveSessionReport(session, undefined, {
+          geminiEval: false,
+        });
         if (session.outcome === 'failed')
           throw new Error(
             `Session failed: ${session.error}; report: ${report}`,

@@ -30,7 +30,18 @@ process.stdin.on('end', () => {
     if (prompt.includes('FAIL_ONCE')) fs.writeFileSync(${JSON.stringify(join(dir, 'retried'))}, 'yes');
     fs.appendFileSync(${JSON.stringify(events)}, JSON.stringify({ type: 'end', pid: process.pid }) + '\\n');
     if (failed) process.exit(1);
-    const text = args.includes('--output-schema') ? '{"answer":"structured"}' : 'local answer';
+    let text = 'local answer';
+    if (args.includes('--output-schema')) {
+      const schema = JSON.parse(fs.readFileSync(args[args.indexOf('--output-schema') + 1], 'utf8'));
+      function verify(value) {
+        if (!value || typeof value !== 'object') return;
+        if (value.type === 'object' && value.properties)
+          require('node:assert/strict').deepEqual(value.required, Object.keys(value.properties));
+        Object.values(value).forEach(verify);
+      }
+      verify(schema);
+      text = schema.properties.result ? '{"result":[{"answer":"structured"}]}' : '{"answer":"structured"}';
+    }
     fs.writeFileSync(args[args.indexOf('-o') + 1], text);
     console.log(JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 17, cached_input_tokens: 5, output_tokens: 3 } }));
   }, 50);
@@ -53,10 +64,16 @@ process.stdin.on('end', () => {
     assert.equal(text.usage.outputTokens, 3);
     const object = await generateObject({
       model: codexLocal,
-      schema: z.object({ answer: z.string() }),
+      schema: z.object({ answer: z.string(), notes: z.string().optional() }),
       prompt: 'object',
     });
     assert.equal(object.object.answer, 'structured');
+    const array = await generateObject({
+      model: codexLocal,
+      schema: z.array(z.object({ answer: z.string() })),
+      prompt: 'array',
+    });
+    assert.deepEqual(array.object, [{ answer: 'structured' }]);
     const stream = streamText({ model: codexLocal, prompt: 'stream' });
     let collected = '';
     for await (const chunk of stream.textStream) collected += chunk;

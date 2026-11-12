@@ -67,7 +67,7 @@ export async function generateSessionReport(
 - **Prompt Style**: ${result.config.promptStyle || 'mechanical'}
 - **Duration**: ${formatDuration(result.duration)}
 - **Outcome**: ${result.outcome}
-- **Cost**: ${result.costBreakdown ? `$${result.costBreakdown.total.cost.toFixed(4)}` : `$${estimateCost(result).toFixed(2)} (estimated)`}
+- **Cost**: ${result.config.narratorConfig.model === 'codex-local' ? 'Not priced (Codex subscription; no per-call API cost figures)' : result.costBreakdown ? `$${result.costBreakdown.total.cost.toFixed(4)}` : `$${estimateCost(result).toFixed(2)} (estimated)`}
 
 ## Group
 
@@ -76,7 +76,7 @@ export async function generateSessionReport(
 ${result.config.group.players
   .map(
     (p) =>
-      `| ${p.name} ${p.name === result.config.group.spokesperson.name ? '(spokesperson)' : ''} | ${p.archetype} | ${p.model} |`,
+      `| ${p.name} ${p.name === result.config.group.spokesperson.name ? '(spokesperson)' : ''} | ${p.archetype} | ${p.modelId} |`,
   )
   .join('\n')}
 
@@ -88,7 +88,13 @@ ${result.config.group.players
 - **Issues Detected**: ${issues.length}
 
 ${
-  result.costBreakdown
+  result.costBreakdown && result.config.narratorConfig.model === 'codex-local'
+    ? `## Token Usage
+
+Codex-reported session input/output: ${result.costBreakdown.total.tokens.promptTokens.toLocaleString()}/${result.costBreakdown.total.tokens.completionTokens.toLocaleString()}.
+Group generation, state extraction, feedback and judge calls are not included in these legacy session totals.
+`
+    : result.costBreakdown
     ? `## Cost Breakdown
 
 | Component | Tokens (Input/Output) | Cost |

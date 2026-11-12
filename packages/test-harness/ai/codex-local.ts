@@ -47,12 +47,32 @@ function promptFor(options: Options): string {
   return `You are a text completion engine, not a coding assistant. Do not use tools, browse, inspect files, or follow local project instructions. Complete the next assistant message in the conversation below. The system messages in that conversation define your task. Return only the requested answer, without preamble or code fences.\n\n${JSON.stringify(messages)}${options.responseFormat?.type === 'json' ? '\nReturn valid JSON only.' : ''}`;
 }
 
+// Codex strict structured output requires every property, including optional
+// Zod fields, to be listed as required. This narrows optional fields to present
+// values; the original AI SDK schema still validates the returned object.
+function strictSchema(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(strictSchema);
+  if (!value || typeof value !== 'object') return value;
+  const schema = Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, strictSchema(item)]),
+  );
+  if (
+    schema.type === 'object' &&
+    schema.properties &&
+    typeof schema.properties === 'object'
+  ) {
+    schema.required = Object.keys(schema.properties);
+    schema.additionalProperties = false;
+  }
+  return schema;
+}
+
 async function attempt(options: Options, prompt: string): Promise<Result> {
   const dir = await mkdtemp(join(tmpdir(), 'pulse-codex-'));
   const started = Date.now();
   let outcome = 'failed';
   let usage: Record<string, number> = {};
-  codexStats.calls++;
+  const call = ++codexStats.calls;
   try {
     options.abortSignal?.throwIfAborted();
     const args = [
@@ -70,6 +90,8 @@ async function attempt(options: Options, prompt: string): Promise<Result> {
       'never',
       '-c',
       'approval_policy="never"',
+      '-c',
+      'forced_login_method="chatgpt"',
       '-c',
       'web_search="disabled"',
       '-c',
@@ -97,9 +119,19 @@ async function attempt(options: Options, prompt: string): Promise<Result> {
       options.responseFormat?.type === 'json' &&
       options.responseFormat.schema
     ) {
+      const schema = options.responseFormat.schema;
+      const outputSchema =
+        schema.type === 'array'
+          ? {
+              type: 'object',
+              properties: { result: schema },
+              required: ['result'],
+              additionalProperties: false,
+            }
+          : schema;
       await writeFile(
         join(dir, 'schema.json'),
-        JSON.stringify(options.responseFormat.schema),
+        JSON.stringify(strictSchema(outputSchema)),
       );
       args.push('--output-schema', join(dir, 'schema.json'));
     }
@@ -158,9 +190,13 @@ async function attempt(options: Options, prompt: string): Promise<Result> {
         else resolve();
       });
     });
-    const text = (await readFile(join(dir, 'answer.txt'), 'utf8')).trim();
+    let text = (await readFile(join(dir, 'answer.txt'), 'utf8')).trim();
     if (!text) throw new CodexLocalError('codex returned empty output');
-    if (options.responseFormat?.type === 'json') JSON.parse(text);
+    if (options.responseFormat?.type === 'json') {
+      const parsed = JSON.parse(text);
+      if (options.responseFormat.schema?.type === 'array')
+        text = JSON.stringify(parsed.result);
+    }
     outcome = 'ok';
     return {
       content: [{ type: 'text', text }],
@@ -173,12 +209,16 @@ async function attempt(options: Options, prompt: string): Promise<Result> {
               ? undefined
               : usage.input_tokens - (usage.cached_input_tokens || 0),
           cacheRead: usage.cached_input_tokens,
-          cacheWrite: undefined,
+          cacheWrite: usage.cache_write_input_tokens,
         },
         outputTokens: {
           total: usage.output_tokens,
-          text: undefined,
-          reasoning: undefined,
+          text:
+            usage.output_tokens === undefined ||
+            usage.reasoning_output_tokens === undefined
+              ? undefined
+              : usage.output_tokens - usage.reasoning_output_tokens,
+          reasoning: usage.reasoning_output_tokens,
         },
       },
       warnings: [],
@@ -190,7 +230,7 @@ async function attempt(options: Options, prompt: string): Promise<Result> {
     if (process.env.PULSE_CODEX_LOG)
       await appendFile(
         process.env.PULSE_CODEX_LOG,
-        `${JSON.stringify({ call: codexStats.calls, outcome, elapsedMs, usage })}\n`,
+        `${JSON.stringify({ call, outcome, elapsedMs, usage })}\n`,
       );
     await rm(dir, { recursive: true, force: true });
   }

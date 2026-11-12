@@ -205,6 +205,8 @@ Differences from gateway runs:
   state, project rules, configured MCP servers, or user configuration is reused.
 - Shell, browsing, image, apps, multi-agent and plan tools are disabled; attempted
   tool events fail the call. Text-only input and JSON-schema output are supported.
+  Optional JSON properties are requested as present values to satisfy Codex's
+  strict schema requirement; array roots are wrapped and unwrapped transparently.
 - At most three subprocesses run concurrently per Node process. Each attempt has
   a three-minute timeout and one retry; failures do not trigger paid fallbacks.
 - The judge uses the same model family as the narrator when both select Codex,
