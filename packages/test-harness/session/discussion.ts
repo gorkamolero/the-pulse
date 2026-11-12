@@ -6,6 +6,7 @@
  */
 
 import { tracePlayer, telemetry } from '../langfuse';
+import { resolveModel } from '../ai/models';
 import {
   streamText,
   type LanguageModelUsage,
@@ -154,7 +155,7 @@ async function generateAgentResponse(
     async (modelId) => {
       const result = streamText({
         experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
-        model: modelId,
+        model: resolveModel(modelId),
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,

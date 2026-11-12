@@ -162,3 +162,57 @@ pnpm --filter @pulse/test-harness typecheck
 The integration uses Langfuse SDK 6.1.1 (Node.js 22 or newer) with compatible
 OpenTelemetry dependencies. Dataset operations use the bound `client.api` resource
 methods; experiment links are exported as OpenTelemetry attributes.
+
+## Local Codex experiments
+
+Requires an authenticated `codex` CLI and Node.js 22+. No API key is needed.
+`codex-local` implements the AI SDK 6 language-model v3 protocol in
+`ai/codex-local.ts`. The production core/web model defaults are unchanged.
+
+From the repository root, run both six-turn variants entirely through Codex:
+
+```bash
+PULSE_PLAYER_MODEL=codex-local PULSE_CLASSIFIER_MODEL=codex-local PULSE_JUDGE_MODEL=codex-local pnpm cli:langfuse-experiment --offline --story shadow-over-innsmouth --variants mechanical,minimal --items 1 --max-turns 6 --narrator codex-local --players 2
+```
+
+`--offline` explicitly bypasses Langfuse and requires all roles to use Codex;
+without it, the existing missing-Langfuse-keys no-op is unchanged. Both variants
+share one generated friend group. It saves normal reports and judge output under
+`packages/test-harness/sessions/<sessionId>/`, plus `codex-run.json` with wall
+time, subprocess attempts/failures/retries, and scores. `PULSE_CODEX_LOG` optionally
+names a JSONL audit file (timings and usage only, never prompts or credentials).
+
+Model selection:
+- `--narrator codex-local`: narrator.
+- `PULSE_PLAYER_MODEL`: group generation, players, spokesperson, character/state
+  extraction, and final player feedback.
+- `PULSE_CLASSIFIER_MODEL`: narration classification and private-moment checks.
+- `PULSE_JUDGE_MODEL`: evaluation (default remains Gemini).
+- `PULSE_CODEX_MODEL`: underlying CLI model (default `gpt-6.1-sol`).
+
+Differences from gateway runs:
+- Codex uses the authenticated subscription, not metered AI Gateway APIs. Local
+  cost tracker values are zero, meaning **not priced**, not a measured free API
+  cost. Judge and group generation are still outside the session token totals.
+- Usage comes from Codex `turn.completed`: input, cached input, and output tokens.
+  It can include CLI framing/reasoning overhead; missing counts stay unknown in
+  the provider (legacy report totals treat absent usage as zero).
+- Streaming is buffered: one complete answer is emitted after the CLI finishes.
+  Reasoning text is not exposed. Temperature and sampling/token-limit settings
+  are not forwarded, so results are not sampling-equivalent to gateway runs.
+- System and conversation messages are serialized into one prompt. Each call
+  starts an ephemeral session in an isolated temporary directory; no conversation
+  state, project rules, configured MCP servers, or user configuration is reused.
+- Shell, browsing, image, apps, multi-agent and plan tools are disabled; attempted
+  tool events fail the call. Text-only input and JSON-schema output are supported.
+- At most three subprocesses run concurrently per Node process. Each attempt has
+  a three-minute timeout and one retry; failures do not trigger paid fallbacks.
+- The judge uses the same model family as the narrator when both select Codex,
+  reducing evaluator independence. Two turns only exercise an opening, not a
+  full story. Offline runs have no hosted Langfuse traces/datasets/pricing.
+
+Offline provider regression checks:
+
+```bash
+pnpm --filter @pulse/test-harness exec tsx --test tests/codex-local.test.ts
+```

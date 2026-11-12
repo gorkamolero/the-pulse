@@ -5,6 +5,8 @@
  * executes main loop until story ends or max turns reached.
  */
 
+import { resolveModel } from '../ai/models';
+import { CodexLocalError } from '../ai/codex-local';
 import { tracePlayer, withGameSession, traceSession, traceTurn, telemetry, getLangfuse, type SpanContext } from '../langfuse';
 import { PerformanceTracker, type PerformanceMetrics } from './metrics';
 import { nanoid } from 'nanoid';
@@ -12,7 +14,6 @@ import {
   streamText,
   wrapLanguageModel,
   extractReasoningMiddleware,
-  gateway,
   type LanguageModelUsage,
   type UserModelMessage,
   type AssistantModelMessage,
@@ -304,10 +305,10 @@ async function generateNarratorResponse(
   const needsThinkMiddleware = THINK_TAG_MODELS.includes(narratorConfig.model);
   const model = needsThinkMiddleware
     ? wrapLanguageModel({
-        model: gateway(modelId),
+        model: resolveModel(modelId, 'narrator'),
         middleware: extractReasoningMiddleware({ tagName: 'think' }),
       })
-    : gateway(modelId);
+    : resolveModel(modelId, 'narrator');
 
   const maxRetries = 3;
   let lastError: Error | null = null;
@@ -368,6 +369,7 @@ async function generateNarratorResponse(
 
       return { text: fullText, reasoning: reasoning || undefined, usage };
     } catch (error) {
+      if (error instanceof CodexLocalError) throw error;
       lastError = error instanceof Error ? error : new Error(String(error));
       const errorMsg = lastError.message.slice(0, 80);
       console.error(`   ⚠ Narrator error (attempt ${attempt}/${maxRetries}): ${errorMsg}`);
@@ -429,7 +431,7 @@ async function generatePlayerResponse(
     async (modelId) => {
       const result = streamText({
         experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
-        model: modelId,
+        model: resolveModel(modelId),
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
@@ -511,7 +513,7 @@ Respond in character as ${agent.name}.`,
     async (modelId) => {
       const result = streamText({
         experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
-        model: modelId,
+        model: resolveModel(modelId),
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
@@ -569,7 +571,7 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
     async (modelId) => {
       const result = streamText({
         experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
-        model: modelId,
+        model: resolveModel(modelId),
         system: spokesperson.systemPrompt,
         messages,
         temperature: 0.7,

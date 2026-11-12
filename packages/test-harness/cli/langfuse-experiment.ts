@@ -6,6 +6,8 @@ import { generateGroup, type GeneratedGroup } from '../agents/player';
 import { ARCHETYPES } from '../archetypes/definitions';
 import type { ArchetypeId } from '../archetypes/types';
 import { NARRATOR_MODEL_MAP, type NarratorModel } from '../agents/narrator';
+import { saveSessionReport } from '../report/markdown';
+import { codexStats } from '../ai/codex-local';
 import { getStory } from '../stories/loader';
 import {
   getSystemPrompt,
@@ -53,6 +55,7 @@ export async function runExperiment(options: {
   maxTurns: number;
   narrator: string;
   players: number;
+  offline?: boolean;
 }): Promise<void> {
   const story = getStory(options.story);
   const variants = [
@@ -63,6 +66,94 @@ export async function runExperiment(options: {
   if (!(options.narrator in NARRATOR_MODEL_MAP))
     throw new Error('Unknown narrator model');
   if (options.players > 5) throw new Error('--players must be between 1 and 5');
+  if (options.offline) {
+    // Offline is explicit: never initialize telemetry even if credentials are inherited.
+    process.env.LANGFUSE_PUBLIC_KEY = '';
+    process.env.LANGFUSE_SECRET_KEY = '';
+    if (
+      options.narrator !== 'codex-local' ||
+      [
+        'PULSE_PLAYER_MODEL',
+        'PULSE_CLASSIFIER_MODEL',
+        'PULSE_JUDGE_MODEL',
+      ].some((key) => process.env[key] !== 'codex-local') ||
+      (process.env.PULSE_NARRATOR_MODEL &&
+        process.env.PULSE_NARRATOR_MODEL !== 'codex-local')
+    ) {
+      throw new Error(
+        '--offline requires narrator, players, classifier and judge on codex-local',
+      );
+    }
+    const started = Date.now();
+    const results = [];
+    for (let index = 0; index < options.items; index++) {
+      const archetypes = Array.from(
+        { length: options.players },
+        (_, i) =>
+          ARCHETYPES[(index * options.players + i) % ARCHETYPES.length].id,
+      );
+      const group = await generateGroup(
+        {
+          storyId: story.id,
+          title: story.title,
+          description: story.description || 'Unknown setting',
+          genre: 'Interactive fiction',
+        },
+        archetypes,
+      );
+      for (const variant of variants) {
+        const session = await runSession({
+          story: {
+            storyId: story.id,
+            storyTitle: story.title,
+            storySetting: story.description || 'Unknown setting',
+            storyGenre: 'Interactive fiction',
+          },
+          storyGuide: story.storyGuide,
+          systemPrompt: getSystemPrompt(story.storyGuide, 'english', variant),
+          narratorModel: 'codex-local',
+          promptStyle: variant,
+          archetypes,
+          preGeneratedGroup: structuredClone(group),
+          groupSize: options.players,
+          maxTurns: options.maxTurns,
+        });
+        const report = await saveSessionReport(session);
+        if (session.outcome === 'failed')
+          throw new Error(
+            `Session failed: ${session.error}; report: ${report}`,
+          );
+        const evaluation = await evaluateWithGemini(
+          session,
+          session.config.systemPrompt,
+          session.config.storyGuide,
+          false,
+        );
+        const sessionDir = `sessions/${session.sessionId}`;
+        await saveGeminiEvaluation(evaluation, sessionDir);
+        const result = {
+          sessionId: session.sessionId,
+          variant,
+          outcome: session.outcome,
+          turns: session.finalTurn,
+          report,
+          scores: evaluationScores(evaluation),
+        };
+        results.push(result);
+        const summary = {
+          wallMs: Date.now() - started,
+          codex: { ...codexStats },
+          results,
+        };
+        await writeFile(
+          `${sessionDir}/codex-run.json`,
+          JSON.stringify(summary, null, 2),
+        );
+        console.log(JSON.stringify(summary, null, 2));
+      }
+    }
+    return;
+  }
   const client = getLangfuse();
   if (!client) return; // No keys means no API calls, including group generation.
 
@@ -229,6 +320,10 @@ if (
     .option('--items <number>', 'Dataset items', positiveInteger, 1)
     .option('--max-turns <number>', 'Turns per session', positiveInteger, 6)
     .option('--narrator <model>', 'Narrator model', 'deepseek-v4-flash')
+    .option(
+      '--offline',
+      'Run fully on Codex without Langfuse credentials or network telemetry',
+    )
     .option('--players <number>', 'Players per item (1-5)', positiveInteger, 2);
   program.parse();
   runExperiment(program.opts())

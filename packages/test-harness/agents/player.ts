@@ -7,6 +7,7 @@
  */
 
 import type { ArchetypeId, PlayerModel } from '../archetypes/types';
+import { modelIdFor } from '../ai/models';
 import { ARCHETYPE_BY_ID } from '../archetypes/definitions';
 import { ARCHETYPE_MODEL_MAP } from '../archetypes/types';
 import {
@@ -233,7 +234,7 @@ export async function createPlayerAgents(
       archetype: archetypeId,
       name: player.name,
       model: archetype.model,
-      modelId: ARCHETYPE_MODEL_MAP[archetype.model] || '',
+      modelId: modelIdFor(ARCHETYPE_MODEL_MAP[archetype.model] || ''),
       identity: player,
       systemPrompt,
     });
