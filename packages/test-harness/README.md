@@ -186,14 +186,17 @@ Model selection:
 - `--narrator codex-local`: narrator.
 - `PULSE_PLAYER_MODEL`: group generation, players, spokesperson, character/state
   extraction, and final player feedback.
-- `PULSE_CLASSIFIER_MODEL`: narration classification and private-moment checks.
+- `PULSE_CLASSIFIER_MODEL`: narration classification, private-moment checks, and
+  semantic contradiction detection in reports (triggered after five turns).
 - `PULSE_JUDGE_MODEL`: evaluation (default remains Gemini).
 - `PULSE_CODEX_MODEL`: underlying CLI model (default `gpt-6.1-sol`).
 
 Differences from gateway runs:
 - Codex uses the authenticated subscription, not metered AI Gateway APIs. Local
   cost tracker values are zero, meaning **not priced**, not a measured free API
-  cost. Judge and group generation are still outside the session token totals.
+  cost; local Markdown/HTML reports omit dollar figures. Group generation, state
+  extraction, feedback, report issue detection and judge calls remain outside
+  the legacy session token totals.
 - Usage comes from Codex `turn.completed`: input, cached input, and output tokens.
   It can include CLI framing/reasoning overhead; missing counts stay unknown in
   the provider (legacy report totals treat absent usage as zero).
@@ -218,3 +221,43 @@ Offline provider regression checks:
 ```bash
 pnpm --filter @pulse/test-harness exec tsx --test tests/codex-local.test.ts
 ```
+
+### Measured local run
+
+On 2026-11-12, the six-turn command above with `--variants mechanical` and
+`--max-turns 2` completed with exit 0:
+
+- Session `ykNq5k0lWGe71DHaEaLGB`, two players, `gpt-6.1-sol` for every role.
+- End-to-end wall time: **190.15 seconds** including pnpm startup; internal
+  experiment clock: **189.017 seconds**. Session-only time shown in the report
+  excludes group generation and judging.
+- **15 Codex subprocess calls**, zero failed attempts, zero retries. Group setup:
+  1; pre-game players: 2; two gameplay turns including classification,
+  player/spokesperson responses and state extraction: 11; judge: 1.
+- Outcome `timeout` is the expected max-turns stop, not a subprocess timeout.
+- Code-computed weighted score **5.62069/10**; judge-reported score **5.32/10**.
+- Report: `packages/test-harness/sessions/ykNq5k0lWGe71DHaEaLGB/report.md`.
+  The same directory contains `transcript.md`, `gemini-eval.json`,
+  `gemini-eval.md`, `codex-run.json`, and `codex-calls.jsonl`.
+
+The first attempt ran two turns but failed character extraction and judging:
+Codex rejected optional properties absent from JSON Schema `required`. A direct
+CLI diagnostic confirmed `invalid_json_schema`; the strict-schema conversion
+above fixed it. That attempt took 163.02 seconds and 21 subprocess calls; its
+session is `0fMJCZ9kP-jqB4Lhi5CU-`. No paid providers were called: semantic issue
+detection only runs after five narrator messages, and judging used Codex.
+
+Estimate, not a six-turn measurement: **6–9 minutes per six-turn session**, or
+roughly **12–18 minutes for both variants**. The observed split was about 45
+seconds group/pre-game setup, 91 seconds for two turns, and 53 seconds judging.
+Extending the turn work to six gives about 6.1 minutes before longer context,
+extra discussions, and the two semantic report checks add variability.
+
+Interpret scores cautiously: this run stayed in character setup. The existing
+judge transcript includes narrator and spokesperson messages only, omitting
+individual directed player replies. Here it therefore incorrectly called
+character details “unsupported” even though players had provided them. This
+pre-existing gateway evaluator limitation is intentionally unchanged.
+
+Checks: harness TypeScript passes; provider plus Langfuse regression tests pass
+(14 tests, mocked network); targeted Biome lint passes. No changes were pushed.
