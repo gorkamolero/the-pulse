@@ -267,7 +267,7 @@ Some dimensions matter more than others. Apply these weights:
 
 **Weighted formula:**
 ((Agency × 2) + (Declaration × 1.5) + (Invitation × 1.5) + (Branching × 1.5) +
- Equipment + NPC + Spatial + CharCreation + Atmosphere + Curiosity + Pacing + Actionable) / 15.5
+ Equipment + NPC + Spatial + CharCreation + Atmosphere + Curiosity + Pacing + Actionable) / 14.5
 
 ## Experiential Smell Test
 

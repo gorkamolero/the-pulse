@@ -8,6 +8,7 @@ import type { ArchetypeId } from '../archetypes/types';
 import { NARRATOR_MODEL_MAP, type NarratorModel } from '../agents/narrator';
 import { saveSessionReport } from '../report/markdown';
 import { codexStats } from '../ai/codex-local';
+import { deserializeCheckpoint } from '../checkpoint/schema';
 import { getStory } from '../stories/loader';
 import {
   getSystemPrompt,
@@ -56,6 +57,7 @@ export async function runExperiment(options: {
   narrator: string;
   players: number;
   offline?: boolean;
+  rejudgeSessions?: string;
 }): Promise<void> {
   const story = getStory(options.story);
   const variants = [
@@ -66,6 +68,13 @@ export async function runExperiment(options: {
   if (!(options.narrator in NARRATOR_MODEL_MAP))
     throw new Error('Unknown narrator model');
   if (options.players > 5) throw new Error('--players must be between 1 and 5');
+  const rejudgeIds = options.rejudgeSessions?.split(',').map((id) => id.trim());
+  if (rejudgeIds && (
+    rejudgeIds.length !== variants.length * options.items ||
+    rejudgeIds.some((id) => !/^[A-Za-z0-9_-]+$/.test(id))
+  )) throw new Error('--rejudge-sessions requires one session per item, in variant then item order');
+  if (rejudgeIds && options.offline)
+    throw new Error('--rejudge-sessions requires Langfuse');
   if (options.offline) {
     // Offline is explicit: never initialize telemetry even if credentials are inherited.
     process.env.LANGFUSE_PUBLIC_KEY = '';
@@ -217,7 +226,7 @@ export async function runExperiment(options: {
     const sessions = new Map<string, SessionResult>();
     const run = await client.experiment.run({
       name: 'pulse-narrator',
-      runName: `pulse-${variant}-${date}`,
+      runName: `pulse-${variant}-${rejudgeIds ? 'judge-full-replies-' : ''}${date}`,
       data: data.map((item) => {
         const input = item.input as PlayerGroupInput;
         return {
@@ -237,6 +246,8 @@ export async function runExperiment(options: {
         variant,
         maxTurns: options.maxTurns,
         git_commit: gitCommit(),
+        measurement: 'full-player-replies-divisor-14.5',
+        rejudgeSessions: rejudgeIds,
       },
       maxConcurrency: 1,
       task: async (item) => {
@@ -245,6 +256,32 @@ export async function runExperiment(options: {
           rawInput: PlayerGroupInput;
         };
         const input = metadata.rawInput;
+        if (rejudgeIds) {
+          const index = data.findIndex((entry) => entry.id === metadata.datasetItemId);
+          const id = rejudgeIds[variants.indexOf(variant) * options.items + index];
+          const directory = `sessions/${id}`;
+          const checkpoint = deserializeCheckpoint(
+            await readFile(`${directory}/turn-${String(options.maxTurns).padStart(3, '0')}.json`, 'utf8'),
+          );
+          const saved = JSON.parse(await readFile(`${directory}/langfuse.json`, 'utf8'));
+          if (checkpoint.sessionConfig.promptStyle !== variant ||
+              checkpoint.sessionConfig.story.storyId !== story.id ||
+              checkpoint.sessionConfig.group.players.length !== options.players)
+            throw new Error(`Rejudge session configuration mismatch: ${id}`);
+          const session: SessionResult = {
+            sessionId: id,
+            config: checkpoint.sessionConfig,
+            conversationHistory: checkpoint.conversationHistory,
+            outcome: saved.outcome,
+            finalTurn: checkpoint.turn,
+            duration: saved.duration,
+            error: saved.error,
+            privateMoments: checkpoint.privateMoments,
+            tangents: checkpoint.detectedTangents,
+          };
+          sessions.set(metadata.datasetItemId, session);
+          return { ...sessionOutput(session), sourceSessionId: id };
+        }
         const session = await runSession({
           langfuseExperiment: true,
           story: {
@@ -275,9 +312,11 @@ export async function runExperiment(options: {
             session.config.storyGuide,
             false,
           );
+          if (rejudgeIds)
+            await mkdir(`sessions/${session.sessionId}/judge-full-replies`, { recursive: true });
           await saveGeminiEvaluation(
             evaluation,
-            `sessions/${session.sessionId}`,
+            `sessions/${session.sessionId}${rejudgeIds ? '/judge-full-replies' : ''}`,
           );
           return [
             ...evaluationScores(evaluation),
@@ -326,6 +365,7 @@ if (
       '--offline',
       'Run fully on Codex without Langfuse credentials or network telemetry',
     )
+    .option('--rejudge-sessions <ids>', 'Rejudge saved sessions without playing; variant then dataset-item order')
     .option('--players <number>', 'Players per item (1-5)', positiveInteger, 2);
   program.parse();
   runExperiment(program.opts())

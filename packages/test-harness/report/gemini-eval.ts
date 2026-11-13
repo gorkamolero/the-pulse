@@ -106,13 +106,16 @@ const evaluationSchema = z.object({
 export type GeminiEvaluation = z.infer<typeof evaluationSchema>;
 
 /**
- * Format transcript for evaluation (narrator + spokesperson only, compressed)
+ * Format the complete transcript, including individual character-creation replies.
  */
 function formatTranscriptForEval(messages: Message[]): string {
   return messages
-    .filter((m) => m.role === 'narrator' || m.role === 'spokesperson')
     .map((m) => {
-      const role = m.role === 'narrator' ? 'NARRATOR' : `PLAYERS (${m.player})`;
+      const role = m.role === 'narrator'
+        ? 'NARRATOR'
+        : m.role === 'spokesperson'
+          ? `SPOKESPERSON (${m.player})`
+          : `PLAYER (${m.player})`;
       // Include thinking for narrator if present
       const thinking = m.reasoning ? `\n[Thinking: ${m.reasoning.slice(0, 500)}...]` : '';
       return `--- Turn ${m.turn} ---\n${role}:${thinking}\n${m.content}`;

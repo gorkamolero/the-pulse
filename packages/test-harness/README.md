@@ -140,7 +140,7 @@ Run scores are `mean_weighted_overall` and `mean_cost_usd`.
 `weighted_overall` is computed in code with agency weighted 2.0,
 declaration/invitation/branching weighted 1.5, and the eight remaining criteria
 weighted 1.0. The denominator is their sum, **14.5**. Any of the four smell checks
-caps the result at 8.5. The evaluator prompt contains a **15.5 divisor bug**.
+caps the result at 8.5. The evaluator prompt uses the same **14.5** denominator.
 `judge_reported_overall` retains its returned number so discrepancies are visible.
 Generation pricing comes from Langfuse's model pricing table. Session cost scores
 use the existing tracker and cover its recorded session calls. Judge and group
@@ -151,6 +151,14 @@ are present. `sessions/<id>/langfuse.json` retains the trace parent and performa
 metrics so a later evaluation attaches to the original trace. Older sessions
 without this sidecar get a trace when evaluated; unavailable historical timings
 and costs are not invented. All four CLIs flush and shut down telemetry on exit.
+
+To rejudge existing transcripts without generating new play, pass
+`--rejudge-sessions <comma-separated IDs>` to `cli:langfuse-experiment`, ordered
+by variant then dataset item. Use the original story, players, items and max-turns.
+This creates separate `pulse-<variant>-judge-full-replies-<ISO date>` runs;
+baseline scores and files remain unchanged. Corrected reports are saved under
+`sessions/<id>/judge-full-replies/`. The judge now receives all individual replies,
+with separate PLAYER and SPOKESPERSON labels. See `ITERATION.md` for the measured comparison.
 
 Offline checks (no provider calls):
 
@@ -253,11 +261,9 @@ seconds group/pre-game setup, 91 seconds for two turns, and 53 seconds judging.
 Extending the turn work to six gives about 6.1 minutes before longer context,
 extra discussions, and the two semantic report checks add variability.
 
-Interpret scores cautiously: this run stayed in character setup. The existing
-judge transcript includes narrator and spokesperson messages only, omitting
-individual directed player replies. Here it therefore incorrectly called
-character details “unsupported” even though players had provided them. This
-pre-existing gateway evaluator limitation is intentionally unchanged.
+The initial short run's judge omitted individual player replies. The corrected
+judge now includes them; the six-session controlled rejudgment and the limits of
+that measurement fix are documented in `ITERATION.md`.
 
 Checks: harness TypeScript passes; provider plus Langfuse regression tests pass
 (14 tests, mocked network); targeted Biome lint passes. No changes were pushed.
