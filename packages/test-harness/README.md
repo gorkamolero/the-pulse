@@ -160,6 +160,11 @@ baseline scores and files remain unchanged. Corrected reports are saved under
 `sessions/<id>/judge-full-replies/`. The judge now receives all individual replies,
 with separate PLAYER and SPOKESPERSON labels. See `ITERATION.md` for the measured comparison.
 
+`--variants minimal-character` runs minimal plus a short explicit setup checkpoint
+that distinguishes opening banter from completed character creation. It leaves the
+base minimal prompt unchanged. `ITERATION.md` quotes the addition and records
+the three-item comparison, including pacing regressions and answer-routing limits.
+
 Offline checks (no provider calls):
 
 ```bash

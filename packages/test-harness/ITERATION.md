@@ -47,3 +47,54 @@ Langfuse project URL prefix: `https://us.cloud.langfuse.com/project/cmw3rq7z302c
 - Baseline minimal: `4540cdc32b01f350`.
 - Corrected mechanical `pulse-mechanical-judge-full-replies-2026-11-13T00:11:52.565Z`: `83a79b3c42f14622`.
 - Corrected minimal `pulse-minimal-judge-full-replies-2026-11-13T00:11:52.565Z`: `c122a785ab8ad6d0`.
+
+## Step 2 — minimal-character setup checkpoint
+
+Corrected minimal's weakest criterion is character_creation (1.00), below equipment_engagement (5.33). `minimal` already says to ask identity, belongings and motivation first, wait, and ask personality questions (`packages/core/ai/prompts/minimal.ts:26`). It mentions equipment in its turn checklist (44) and “Don't let equipment become invisible” (52). We follow the actual scores rather than the expected equipment hypothesis.
+
+Hypothesis: the narrator mistakes pre-game player banter, names, and notebook mentions for sufficient character setup. Add a concrete checkpoint to distinguish those from complete character details and remember completed answers. No base minimal instructions, criteria, weights, story guide, model, or runner behavior changed.
+
+Change: `prompts/loader.ts:13-22,40-46` registers `minimal-character` and returns exactly the existing minimal prompt plus these lines:
+
+```text
+## Setup Checkpoint
+Opening table banter, player names, and passing item mentions are not completed character creation.
+Until each player has supplied a character identity, belongings, and motivation, ask for the missing details instead of starting a scene; acknowledge answers already supplied rather than asking for them again.
+Once those details are present, ask a personal follow-up for each character and wait for the replies before beginning the story.
+```
+
+Command (same local-model environment): `pnpm exec tsx cli/langfuse-experiment.ts --story shadow-over-innsmouth --variants minimal-character --items 3 --max-turns 6 --players 2 --narrator codex-local`. Exit 0; 913.00 seconds wall time. Background via nohup, waited once. Log `/tmp/pulse/minimal-character.log`; Codex audit `/tmp/pulse/minimal-character-codex.jsonl`. Same hosted dataset item IDs and stored friend groups as the baseline. New in-story characters and play are generated, so this is not an identical-transcript comparison. Run metadata contains the preceding measurement commit because this run was completed before committing its prompt and results together; the exact addition is quoted above.
+
+| Criterion | Corrected minimal | minimal-character | Delta |
+|---|---:|---:|---:|
+| agency_respect | 9.33 | 9.67 | +0.33 |
+| declaration_vs_acknowledgment | 9.33 | 10.00 | +0.67 |
+| invitation_architecture | 9.00 | 7.67 | -1.33 |
+| branching_persistence | 6.67 | 6.33 | -0.33 |
+| equipment_engagement | 5.33 | 8.33 | +3.00 |
+| npc_dialogue | 8.33 | 7.67 | -0.67 |
+| spatial_consistency | 8.67 | 8.67 | 0.00 |
+| character_creation | 1.00 | 8.33 | +7.33 |
+| atmosphere | 9.00 | 8.33 | -0.67 |
+| curiosity_following | 8.33 | 7.33 | -1.00 |
+| pacing_breath | 7.33 | 6.00 | -1.33 |
+| actionable_vs_atmospheric | 9.00 | 8.67 | -0.33 |
+| weighted_overall | 7.805 | 8.184 | +0.379 |
+| judge_reported_overall | 8.053 | 8.170 | +0.117 |
+
+Character scores by item are 10, 5, 10; pacing 8, 2, 8. Sessions: `UAqdvaNVFe2YPohGNI13J`, `-fI1Vr5fbf_V1xjTQYjjg`, `y7spPzwavaml7NQYCXUhx`. The weakest remaining mean is pacing_breath (6.00), then branching_persistence (6.33).
+
+Side-by-side excerpt, same Johann/Velma stored group:
+
+| Corrected minimal baseline (nw6Q35cDuZzb9kITJ8Mha) | minimal-character (UAqdvaNVFe2YPohGNI13J) |
+|---|---|
+| Turn 1: “Rain blurs the last line of the letter tucked into Velma’s notebook” — scene starts immediately. | Turn 1: “Before we begin, what is each character’s occupation, what brought each of you to Innsmouth, and what has Johann brought along?” |
+| Character score 1; no identity/motivation or personal follow-ups. | Players establish Arthur/Clara and belongings, receive personal follow-ups at turn 2; their answers reach the narrator through a turn-3 spokesperson relay; scene begins turn 4. Character score 10. |
+
+What differs/what this did not fix: one new session repeats answered questions through turn 5, leaving only one story turn. In `-fI1Vr5fbf_V1xjTQYjjg`, Ruth explicitly answers at turn 2, “She once approved a convincing claim built around photographs of the wrong property”; the narrator asks again at turn 4, “Celia, has Ruth ever trusted a photograph and regretted it?” This is not merely weak prompt compliance: `session/runner.ts:260-290` filters narrator input to narrator and spokesperson messages, drops directed `player` replies, then injects “[The players acknowledge and wait for the narrator to continue.]” or “[The players consider their response.]”. The judge now sees answers the narrator cannot. Separately, turns 2 in the other two sessions direct questions to character names (Arthur/Clara, Thomas/Clara) and produce no player replies until a discussion turn. These are observed routing/input failures, deliberately NOT fixed in this one-prompt-change step.
+
+Next iteration according to the numbers: repair public directed-answer delivery to the narrator while keeping genuinely private player discussion private; verify player-name/character-name routing. Pacing is now the weakest dimension, and the 2/10 outlier is explained by dropped answers, not a need for a more forceful pacing prompt. Then rerun the same three groups before expanding the sample and story length. Three items show a promising setup improvement, not a reliable overall winner: stochastic play/judging, shared narrator/judge model family, setup consuming a six-turn budget, large per-item variation, and seven declining dimensions all limit the claim. Equipment improved without an equipment instruction, so do not attribute its +3.00 causally to targeted equipment work.
+
+Langfuse new run `pulse-minimal-character-2026-11-13T00:19:52.758Z`: `https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=ceaebbcc4f57c9f3`. Open beside corrected minimal `https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=c122a785ab8ad6d0`.
+
+Combined measured subprocess wall time: 1,292.02 seconds (21m32s); inspection/editing/documentation adds elapsed time. No build, lint, or unit tests were run in this builder assignment; the two explicitly requested experiment executions are the exercised verification. Baseline and corrected report JSON files are retained on disk, as are the new session checkpoints and judgments. No paid model API was selected; all four role selections were codex-local, and no push was performed.
