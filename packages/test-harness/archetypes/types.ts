@@ -33,7 +33,7 @@ export interface Archetype {
  * AI Gateway model identifiers for player agents
  */
 export const ARCHETYPE_MODEL_MAP: Record<PlayerModel, string> = {
-  grok: 'xai/grok-4.3',
+  grok: 'spacexai/grok-4.3',
   qwen: 'alibaba/qwen-3-32b',
   deepseek: 'deepseek/deepseek-v3.2',
   'kimi-k2': 'moonshotai/kimi-k2',

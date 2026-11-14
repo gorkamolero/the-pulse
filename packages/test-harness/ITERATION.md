@@ -108,3 +108,9 @@ The companion routing defect is also observed, not hypothetical: `UAqdvaNVFe2YPo
 Hypothesis: repair this single harness path, public directed question → owning player → narrator, instead of strengthening the pacing prompt. `session/runner.ts` adds `narratorVisibleHistory` (uses the preceding narrator's saved directed classification), labels public replies by player, and resolves directed targets against real names and unique full/first character names. Private replies and deliberation remain excluded. `cli/langfuse-experiment.ts` adds only `--run-label` for descriptive run names. `tests/narrator-routing.test.ts` covers visibility, privacy, character aliases, and ambiguous aliases. No narrator prompt, judge, criteria, weights, story, or turn budget changed.
 
 Step-3 experiment and measurements are pending execution below; this checkpoint records the implementation before its long run. Step-4 paid-session ledger: 0 used / 40; exactly 6 authorized for this assignment.
+
+## Step 4 — gateway transfer check
+
+Authorized player-only substitution: default Grok `xai/grok-4.3` → `spacexai/grok-4.3`, the closest available gateway model (same Grok version under the current namespace). The authenticated gateway model catalog returned HTTP 200 but omitted the old ID; it lists this replacement, along with newer Grok 4.5/4.6/4.7 versions. Main explicitly authorized the substitution after the original stop condition triggered. `archetypes/types.ts:36` is the only model-selection line changed; both variants use the same defaults. Narrator remains `deepseek/deepseek-v4-flash`; judge remains `google/gemini-3.1-pro-preview`. Prerequisite evidence: `/tmp/pulse/step4-prerequisites.json`. No model generation was used for the catalog check.
+
+Paid-session ledger before execution: 0 / 40 used; six sessions reserved for this step (three minimal, three minimal-character), no additional paid session authorized here.
