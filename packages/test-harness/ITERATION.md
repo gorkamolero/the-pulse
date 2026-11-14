@@ -107,7 +107,34 @@ The companion routing defect is also observed, not hypothetical: `UAqdvaNVFe2YPo
 
 Hypothesis: repair this single harness path, public directed question → owning player → narrator, instead of strengthening the pacing prompt. `session/runner.ts` adds `narratorVisibleHistory` (uses the preceding narrator's saved directed classification), labels public replies by player, and resolves directed targets against real names and unique full/first character names. Private replies and deliberation remain excluded. `cli/langfuse-experiment.ts` adds only `--run-label` for descriptive run names. `tests/narrator-routing.test.ts` covers visibility, privacy, character aliases, and ambiguous aliases. No narrator prompt, judge, criteria, weights, story, or turn budget changed.
 
-Step-3 experiment and measurements are pending execution below; this checkpoint records the implementation before its long run. Step-4 paid-session ledger: 0 used / 40; exactly 6 authorized for this assignment.
+Exact code locations for the committed repair: `session/runner.ts:244-276` visibility/target helpers, `294-295` history selection, `305-306` player labels, `321` corrected comment, `781` target resolution; `cli/langfuse-experiment.ts:61,230,370` run-label support. Implementation checkpoint: `fe8d300`.
+
+Command: `nohup sh /tmp/pulse-step3.sh` wraps `pnpm exec tsx cli/langfuse-experiment.ts --story shadow-over-innsmouth --variants minimal-character --items 3 --max-turns 6 --players 2 --narrator codex-local --run-label directed-answer-delivery-codex`, with all other roles explicitly `codex-local` and the same Langfuse keys/dataset. Exit 0; measured subprocess wall time **1,006.80s (16m47s)** (`time -p`: 1,006.72s). Audit `/tmp/pulse/step3-codex.jsonl`; aggregate `/tmp/pulse/step3-results.json`. Sessions in stored-item order: `KmdnL8NCL-Zr9G2J5lQ12`, `0zVq_2BiAJRKX0Yb9cY9E`, `Y_IxUV4seOGmHgwNerh3r`. Each retains six checkpoints, `langfuse.json`, and `gemini-eval.{json,md}`. The run used repair commit `fe8d300`; the subsequent player namespace change is irrelevant to explicit Codex overrides.
+
+| Criterion | Step 2 | Step 3 | Delta |
+|---|---:|---:|---:|
+| agency_respect | 9.667 | 10.000 | +0.333 |
+| declaration_vs_acknowledgment | 10.000 | 10.000 | 0.000 |
+| invitation_architecture | 7.667 | 9.000 | +1.333 |
+| branching_persistence | 6.333 | 7.333 | +1.000 |
+| equipment_engagement | 8.333 | 8.667 | +0.333 |
+| npc_dialogue | 7.667 | 9.000 | +1.333 |
+| spatial_consistency | 8.667 | 9.000 | +0.333 |
+| character_creation | 8.333 | 9.667 | +1.333 |
+| atmosphere | 8.333 | 8.667 | +0.333 |
+| curiosity_following | 7.333 | 9.000 | +1.667 |
+| pacing_breath | 6.000 | 8.000 | +2.000 |
+| actionable_vs_atmospheric | 8.667 | 9.000 | +0.333 |
+| weighted_overall | 8.184 | 9.000 | +0.816 |
+| judge_reported_overall | 8.170 | 9.003 | +0.833 |
+
+No mean criterion got worse in this three-item rerun; individual character scores are 9,10,10 (the first item fell from 10 to 9), and pacing is 8,8,8 (previously 8,2,8). Do not confuse the absence of a mean regression with proof of no regression. Branching remains weakest at 7.333; this fix does not demonstrate sustained branches, complete-story pacing, or final-act quality.
+
+Side by side, same stored Celia/Marcelo group: before, Ruth's turn-2 account of the wrong-property photograph is followed by the turn-4 repeated question and the first scene only at turn 6. After (`0zVq_2BiAJRKX0Yb9cY9E`), turn 2 asks “Ruth, when your brother’s letter contradicts the certainty of your maps, which do you trust”; Celia answers “Ruth trusts her brother’s letter enough to question the maps”; turn 3 starts “The afternoon bus stands outside Innsmouth’s shuttered ticket office”. In the Johann/Velma item, character-addressed “Arthur” and “Clara” both receive directed replies at turn 2 and the scene also starts at turn 3. All three scenes begin at turn 3, leaving four fiction turns rather than the outlier's one. Generated fiction differs, so these are matched stored groups, not identical play.
+
+Open step 2 and step 3 side by side:
+- Step 2 `pulse-minimal-character-2026-11-13T00:19:52.758Z`: https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=ceaebbcc4f57c9f3
+- Step 3 `pulse-minimal-character-directed-answer-delivery-codex-2026-11-14T12:40:48.798Z`: https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=532b08bc929ef2ed
 
 ## Step 4 — gateway transfer check
 
