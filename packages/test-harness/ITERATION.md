@@ -140,4 +140,59 @@ Open step 2 and step 3 side by side:
 
 Authorized player-only substitution: default Grok `xai/grok-4.3` → `spacexai/grok-4.3`, the closest available gateway model (same Grok version under the current namespace). The authenticated gateway model catalog returned HTTP 200 but omitted the old ID; it lists this replacement, along with newer Grok 4.5/4.6/4.7 versions. Main explicitly authorized the substitution after the original stop condition triggered. `archetypes/types.ts:36` is the only model-selection line changed; both variants use the same defaults. Narrator remains `deepseek/deepseek-v4-flash`; judge remains `google/gemini-3.1-pro-preview`. Prerequisite evidence: `/tmp/pulse/step4-prerequisites.json`. No model generation was used for the catalog check.
 
-Paid-session ledger before execution: 0 / 40 used; six sessions reserved for this step (three minimal, three minimal-character), no additional paid session authorized here.
+Paid-session ledger: **6 / 40 used; 34 remain**. Exactly three `minimal` and three `minimal-character` sessions ran, with no extra paid generation/preflight session. The catalog lookup was not a model call. Command: `nohup sh /tmp/pulse-step4.sh` wraps `pnpm exec tsx cli/langfuse-experiment.ts --story shadow-over-innsmouth --variants minimal,minimal-character --items 3 --max-turns 6 --players 2 --narrator deepseek-v4-flash --run-label directed-answer-delivery-gateway-grok-namespace`, after clearing all four role overrides and loading the gateway key from Keychain. Exit 0; **1,363.93s (22m44s)** measured subprocess wall time (`time -p`: 1,363.84s). Run metadata uses `5fb94a7`, which includes both the harness repair and the one-line player substitution.
+
+Observation/hypothesis for this step: Codex's setup improvement might not survive a different narrator and independent Gemini judge. This step changes no prompt or evaluator; it reruns both ends on the gateway with the same three hosted player groups and repaired harness. The only additional model-default edit is `archetypes/types.ts:36` in `5fb94a7`.
+
+| Criterion | Codex minimal¹ | Codex character² | Gateway minimal | Gateway character | Gateway Δ |
+|---|---:|---:|---:|---:|---:|
+| agency_respect | 9.333 | 10.000 | 6.667 | 6.000 | -0.667 |
+| declaration_vs_acknowledgment | 9.333 | 10.000 | 7.000 | 7.000 | 0.000 |
+| invitation_architecture | 9.000 | 9.000 | 9.000 | 9.667 | +0.667 |
+| branching_persistence | 6.667 | 7.333 | 8.333 | 8.333 | 0.000 |
+| equipment_engagement | 5.333 | 8.667 | 7.000 | 4.333 | -2.667 |
+| npc_dialogue | 8.333 | 9.000 | 7.000 | 7.333 | +0.333 |
+| spatial_consistency | 8.667 | 9.000 | 9.000 | 9.000 | 0.000 |
+| character_creation | 1.000 | 9.667 | 1.333 | 1.333 | 0.000 |
+| atmosphere | 9.000 | 8.667 | 9.667 | 9.667 | 0.000 |
+| curiosity_following | 8.333 | 9.000 | 8.333 | 9.000 | +0.667 |
+| pacing_breath | 7.333 | 8.000 | 8.333 | 9.000 | +0.667 |
+| actionable_vs_atmospheric | 9.000 | 9.000 | 9.000 | 9.667 | +0.667 |
+| weighted_overall | 7.805 | 9.000 | 7.552 | 7.506 | -0.046 |
+| judge_reported_overall | 8.053 | 9.003 | 7.583 | 7.413 | -0.170 |
+
+¹ Corrected step-1 minimal (before routing repair). ² Step-3 minimal-character (after repair). The Codex columns therefore describe the endpoints of the iteration, not a new prompt-only controlled comparison: prompt and harness both differ between those columns. The gateway columns share the repaired harness and player defaults, so their only intended difference is the setup checkpoint. Cross-stack score differences conflate narrator, players, classifier, and judge; they are not a causal estimate of narrator quality alone.
+
+**The setup improvement does not transfer.** Gemini gives character_creation 1,1,2 to gateway minimal-character, mean 1.333, unchanged from minimal. All three variants' opening scenes start immediately rather than asking the mandatory setup/personal questions. The saved `Byu4CNy79RjGsV0R8yl-E/turn-006.json` confirms `promptStyle: minimal-character` and that the actual system prompt contains `## Setup Checkpoint`: this is not a missing-variant artifact.
+
+Side-by-side observed excerpt, Furman/Johanna: Codex step-3 turn 2 asks “Thomas, what unresolved quarrel with your brother makes his disappearance harder to bear?” and receives the player's answer before scene turn 3. Gateway minimal-character `eVYHdhgk8lvS-k7LgkTP2` starts “The bus wheezes to a halt” at turn 1 with no setup; at turn 3 the narrator writes the player's speech, “Eleanor answers after a beat: ‘Just a shovel.’” Gemini scores agency 2 for this item. What got worse on the real stack with the checkpoint: equipment 7.000 → 4.333, agency 6.667 → 6.000, weighted overall 7.552 → 7.506. Better invitation/pacing do not compensate for failing setup. The repair did not make DeepSeek follow the setup instruction or prevent authored player speech/actions.
+
+Open these runs beside the Codex endpoints:
+- Codex minimal (corrected judge): https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=c122a785ab8ad6d0
+- Codex minimal-character (routing repair): https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=532b08bc929ef2ed
+- Gateway `pulse-minimal-directed-answer-delivery-gateway-grok-namespace-2026-11-14T12:42:25.865Z`: https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=a53fa64d8e498596
+- Gateway `pulse-minimal-character-directed-answer-delivery-gateway-grok-namespace-2026-11-14T12:42:25.865Z`: https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=1f67c75a923434ab
+
+### Recorded per-session costs (USD), not a complete invoice
+
+The run's `cost_usd` uses the legacy session tracker: it excludes judging/state extraction and estimates player prices (the log explicitly warns that current player IDs lack pricing). Langfuse observation costs include the independent Gemini judge and state/classifier calls, but every streamed narrator/player generation has `totalCost: null`. Null is unknown, not free. Record both measures rather than silently presenting either as the full cost including judge; these columns overlap and MUST NOT be added.
+
+| Variant | Session | Run/tracker cost | Langfuse recorded subtotal incl. judge | Judge alone | Unpriced streamed generations |
+|---|---|---:|---:|---:|---:|
+| minimal | IPmq1aUrK9BiG2-tB5KU0 | $0.053487 | $0.137146 | $0.120596 | 26 |
+| minimal | rIsWUxN8a667WdmMHwFXi | $0.053561 | $0.119032 | $0.098312 | 26 |
+| minimal | _EiITsBM5_B2JRrHrzwTL | $0.029160 | $0.103319 | $0.091584 | 24 |
+| minimal-character | M_aahwcuZI4xtBAqrMtwH | $0.050061 | $0.119249 | $0.105820 | 26 |
+| minimal-character | Byu4CNy79RjGsV0R8yl-E | $0.044620 | $0.098457 | $0.085222 | 25 |
+| minimal-character | eVYHdhgk8lvS-k7LgkTP2 | $0.031125 | $0.114892 | $0.100286 | 26 |
+| Total (six sessions) | | $0.262014 | **$0.692096 incomplete** | $0.601820 | 153 |
+
+Costs were read from the supported `GET /api/public/v2/observations?traceId=...&fields=core,basic,usage,model` endpoint, bounded from `2026-11-14T12:40:00Z` to the retrieval time and exhaustively retrieved (no continuation cursor). The legacy trace getter returned HTTP 410 and was not used. Evidence: `/tmp/pulse/step4-results.json` (full per-trace cost observations and exact score aggregates), `/tmp/pulse/step4-cost-summary.json` (compact costs/coverage), `/tmp/pulse/step4-prerequisites.json` (model catalog), and six session folders with checkpoints, `langfuse.json`, and Gemini JSON/Markdown. Recorded total cost including streamed generations is unavailable in this telemetry; this is a cost-measurement limitation, not an authorization to spend more sessions.
+
+### Interpretation and verification boundary
+
+Next iteration should target **production setup compliance** (1.333, the lowest gateway criterion), not tune pacing again. Inspect the conflict between “start now” behavior and the setup checkpoint; make one small production-stack change and compare on the same groups with Gemini before expanding the sample. Also inspect the agency failures before treating atmospheric prose as overall success. No additional iteration or paid session was run here.
+
+Three items can expose a reproducible harness defect, confirm actual public-answer delivery, and reveal that the large Codex setup gain fails to appear in this small production-stack sample. They cannot establish significance, population-level win rates, generalization across stories, sustained equipment/branch handling, complete-story pacing, or which model-role change explains a cross-stack gap. Friend groups are matched, but character choices, spokesperson selection, play, and judgments are stochastic; six-turn truncation limits every dimension. Gemini provides model-family independence, not ground truth.
+
+Measured subprocess wall times: Codex 1,006.80s; gateway 1,363.93s; summed compute-wait wall time **2,370.73s (39m31s)**. The two requested experiment processes overlapped; their wall times must not be presented as 39m31s of elapsed clock time. From Codex run creation `12:40:48.798Z` through approximately gateway completion `13:05:07Z`, the experiment window is about **24m18s**, excluding initial diagnosis/edits and final analysis/documentation. Both commands exited 0 with complete three-item judgments; no build, lint, formatter, or unit-test command was run by this builder. The added routing tests remain for Main to exercise. Nothing was pushed; all commits stay on `codex-local`.
