@@ -170,6 +170,9 @@ Private replies and player deliberation still require a spokesperson relay.
 Directed questions can address either player names or unique character names
 (including a unique character first name). `--run-label <label>` adds a change
 or stack description to the hosted experiment run name.
+The first-turn request starts a group session and defers to the narrator's setup
+instructions. Pre-game banter is retained as context, never certified as completed
+character setup or used to order the narrator to skip questions.
 
 Offline checks (no provider calls):
 

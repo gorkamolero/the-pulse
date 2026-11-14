@@ -224,21 +224,20 @@ function buildNarratorSystemPrompt(systemPrompt: string): string {
   return systemPrompt;
 }
 
-function buildFirstTurnPrompt(conversationHistory: Message[]): string {
+export function buildFirstTurnPrompt(conversationHistory: Message[]): string {
   const preGameContext = conversationHistory
     .filter((message) => message.turn === 0)
     .map((message) => `${message.role}: ${message.content}`)
     .join('\n\n');
 
-  if (!preGameContext.trim()) {
-    return 'Begin the story now at Pulse 1. Do not ask setup questions.';
-  }
+  const opening = "Let's start the group session. Follow your setup instructions before beginning the story.";
+  if (!preGameContext.trim()) return opening;
 
-  return `The group has already completed pre-game setup. Use this context as the established player and character material:
+  return `${opening}
 
-${preGameContext}
+Pre-game conversation (not confirmation that character setup is complete):
 
-Begin the story now at Pulse 1. Do not ask for player count, player names, character backstories, or gear unless a detail is genuinely absent.`;
+${preGameContext}`;
 }
 
 /** Public directed replies reach the narrator; discussion/private replies do not. */

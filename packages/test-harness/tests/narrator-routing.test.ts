@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { PlayerAgent } from '../agents/player';
-import { directedPlayer, narratorVisibleHistory } from '../session/runner';
+import { buildFirstTurnPrompt, directedPlayer, narratorVisibleHistory } from '../session/runner';
 import type { Message } from '../session/turn';
 import { createInitialState } from '../session/state';
 
@@ -35,4 +35,19 @@ test('directed routing accepts player and unique character names, never guesses 
   assert.equal(directedPlayer('Unknown', players, state), undefined);
   state.characters[1].idName = 'Arthur Vale';
   assert.equal(directedPlayer('Arthur', players, state), undefined);
+});
+
+test('opening request never certifies banter as completed setup or orders setup skipped', () => {
+  const empty = buildFirstTurnPrompt([]);
+  const banter = buildFirstTurnPrompt([
+    { role: 'player', player: 'Alex', content: 'Ready for game night!', turn: 0, timestamp: 0 },
+    { role: 'narrator', content: 'Later narration', turn: 1, timestamp: 1 },
+  ]);
+  for (const prompt of [empty, banter]) {
+    assert.match(prompt, /Follow your setup instructions before beginning the story/);
+    assert.doesNotMatch(prompt, /already completed|Do not ask|Begin the story now/);
+  }
+  assert.match(banter, /not confirmation that character setup is complete/);
+  assert.match(banter, /Ready for game night!/);
+  assert.doesNotMatch(banter, /Later narration/);
 });
