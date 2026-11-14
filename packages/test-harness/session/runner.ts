@@ -241,6 +241,40 @@ ${preGameContext}
 Begin the story now at Pulse 1. Do not ask for player count, player names, character backstories, or gear unless a detail is genuinely absent.`;
 }
 
+/** Public directed replies reach the narrator; discussion/private replies do not. */
+export function narratorVisibleHistory(history: Message[]): Message[] {
+  let directedTurn = -1;
+  return history.filter((message) => {
+    if (message.role === 'narrator') {
+      directedTurn = message.classification === 'directed-questions' ? message.turn : -1;
+    }
+    return message.turn > 0 && (
+      message.role === 'narrator' ||
+      message.role === 'spokesperson' ||
+      (message.role === 'player' && message.turn === directedTurn)
+    );
+  });
+}
+
+/** Resolve player names or unambiguous character names to their owning player. */
+export function directedPlayer(
+  target: string,
+  players: PlayerAgent[],
+  state: GameState,
+): PlayerAgent | undefined {
+  const name = target.toLowerCase();
+  const player = players.find((agent) => agent.name.toLowerCase() === name);
+  if (player) return player;
+  const characters = state.characters.filter((character) =>
+    character.idName.toLowerCase() === name ||
+    character.idName.toLowerCase().split(/\s+/)[0] === name,
+  );
+  if (characters.length !== 1) return undefined;
+  return players.find((agent) =>
+    agent.name.toLowerCase() === characters[0].odName.toLowerCase(),
+  );
+}
+
 /**
  * Generate narrator response
  */
@@ -257,12 +291,8 @@ async function generateNarratorResponse(
 
   const systemPrompt = buildNarratorSystemPrompt(narratorConfig.systemPrompt);
 
-  // Narrator only sees its own outputs and spokesperson syntheses
-  // Player discussions are private - narrator only hears what spokesperson relays
-  // Exclude turn 0 (pre-game chat - that's players talking before game starts)
-  const narratorHistory = conversationHistory.filter(
-    (m) => (m.role === 'narrator' || m.role === 'spokesperson') && m.turn > 0,
-  );
+  // Public directed answers bypass the spokesperson; private discussion stays hidden.
+  const narratorHistory = narratorVisibleHistory(conversationHistory);
 
   // Build messages with proper user/assistant alternation
   // Some response types (private, directed, none) don't add spokesperson messages,
@@ -272,7 +302,8 @@ async function generateNarratorResponse(
 
   for (const m of narratorHistory) {
     const newRole = m.role === 'narrator' ? 'assistant' : 'user';
-    const content = m.role === 'spokesperson' ? `Players: ${m.content}` : m.content;
+    const content = m.role === 'spokesperson' ? `Players: ${m.content}`
+      : m.role === 'player' ? `${m.player}: ${m.content}` : m.content;
 
     // If we'd create consecutive assistant messages, inject a placeholder user message
     if (newRole === 'assistant' && lastRole === 'assistant') {
@@ -287,7 +318,7 @@ async function generateNarratorResponse(
   }
 
   // If the last message is assistant (narrator), we need a user message before generating
-  // This happens when directed/private responses aren't visible to narrator (role='player' not 'spokesperson')
+  // Private responses and narration-only turns may leave no public user message.
   if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
     messages.push({
       role: 'user',
@@ -747,9 +778,7 @@ async function executeTurn(
       console.log(`🎯 Directed questions for: ${targets.join(', ')}`);
 
       for (const targetName of targets) {
-        const agent = playerAgents.find(
-          (a) => a.name.toLowerCase() === targetName.toLowerCase(),
-        );
+        const agent = directedPlayer(targetName, playerAgents, ctx.gameState);
         if (agent) {
           const { text: response, usage: playerUsage } =
             await generateDirectedResponse(agent, narratorOutput, conversationHistory);

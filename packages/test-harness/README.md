@@ -165,6 +165,12 @@ that distinguishes opening banter from completed character creation. It leaves t
 base minimal prompt unchanged. `ITERATION.md` quotes the addition and records
 the three-item comparison, including pacing regressions and answer-routing limits.
 
+Public directed answers now reach the narrator directly, labeled by player.
+Private replies and player deliberation still require a spokesperson relay.
+Directed questions can address either player names or unique character names
+(including a unique character first name). `--run-label <label>` adds a change
+or stack description to the hosted experiment run name.
+
 Offline checks (no provider calls):
 
 ```bash

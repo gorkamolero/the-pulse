@@ -58,6 +58,7 @@ export async function runExperiment(options: {
   players: number;
   offline?: boolean;
   rejudgeSessions?: string;
+  runLabel?: string;
 }): Promise<void> {
   const story = getStory(options.story);
   const variants = [
@@ -226,7 +227,7 @@ export async function runExperiment(options: {
     const sessions = new Map<string, SessionResult>();
     const run = await client.experiment.run({
       name: 'pulse-narrator',
-      runName: `pulse-${variant}-${rejudgeIds ? 'judge-full-replies-' : ''}${date}`,
+      runName: `pulse-${variant}-${options.runLabel ? `${options.runLabel}-` : ''}${rejudgeIds ? 'judge-full-replies-' : ''}${date}`,
       data: data.map((item) => {
         const input = item.input as PlayerGroupInput;
         return {
@@ -366,6 +367,7 @@ if (
       'Run fully on Codex without Langfuse credentials or network telemetry',
     )
     .option('--rejudge-sessions <ids>', 'Rejudge saved sessions without playing; variant then dataset-item order')
+    .option('--run-label <label>', 'Describe the change or stack in the run name')
     .option('--players <number>', 'Players per item (1-5)', positiveInteger, 2);
   program.parse();
   runExperiment(program.opts())

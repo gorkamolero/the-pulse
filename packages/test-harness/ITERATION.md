@@ -1,6 +1,6 @@
 # Narrator iteration: measure, then change one thing
 
-All model roles use local Codex (`codex-local`), never paid model APIs. Nothing is pushed. Langfuse is telemetry only. Story: shadow-over-innsmouth; six turns; two players; three stored dataset groups per variant. Times below are measured wall time, not estimates. API timestamps are UTC and crossed into November 13 during this work.
+Steps 1–3 use local Codex for every model role, never paid model APIs. Step 4 explicitly authorizes six gateway sessions, within a hard cap of 40 paid sessions total. Nothing is pushed. Langfuse is telemetry and evaluation storage. Story: shadow-over-innsmouth; six turns; two players; three stored dataset groups per variant. Times below are measured wall time, not estimates.
 
 ## Step 1 — complete judge evidence and correct arithmetic
 
@@ -98,3 +98,13 @@ Next iteration according to the numbers: repair public directed-answer delivery 
 Langfuse new run `pulse-minimal-character-2026-11-13T00:19:52.758Z`: `https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=ceaebbcc4f57c9f3`. Open beside corrected minimal `https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=c122a785ab8ad6d0`.
 
 Combined measured subprocess wall time: 1,292.02 seconds (21m32s); inspection/editing/documentation adds elapsed time. No build, lint, or unit tests were run in this builder assignment; the two explicitly requested experiment executions are the exercised verification. Baseline and corrected report JSON files are retained on disk, as are the new session checkpoints and judgments. No paid model API was selected; all four role selections were codex-local, and no push was performed.
+
+## Step 3 — deliver public directed answers (Codex)
+
+Confirmed cause from the saved `-fI1Vr5fbf_V1xjTQYjjg/turn-006.json` transcript: at turn 2 Celia says, “She once approved a convincing claim built around photographs of the wrong property”; at turn 4 the narrator asks, “Celia, has Ruth ever trusted a photograph and regretted it?” The narrator history filter excluded every `player` message, replacing these public answers with a waiting placeholder. Its game-state injection retained names/items but not these personal answers. The judge scored pacing 2 and called turns 3–5 redundant.
+
+The companion routing defect is also observed, not hypothetical: `UAqdvaNVFe2YPohGNI13J` turn 2 addresses “Clara” and “Arthur”; `y7spPzwavaml7NQYCXUhx` addresses “Thomas” and “Clara”. Neither turn has any player reply because routing only matched real player names. Both narrators wait again at turn 3.
+
+Hypothesis: repair this single harness path, public directed question → owning player → narrator, instead of strengthening the pacing prompt. `session/runner.ts` adds `narratorVisibleHistory` (uses the preceding narrator's saved directed classification), labels public replies by player, and resolves directed targets against real names and unique full/first character names. Private replies and deliberation remain excluded. `cli/langfuse-experiment.ts` adds only `--run-label` for descriptive run names. `tests/narrator-routing.test.ts` covers visibility, privacy, character aliases, and ambiguous aliases. No narrator prompt, judge, criteria, weights, story, or turn budget changed.
+
+Step-3 experiment and measurements are pending execution below; this checkpoint records the implementation before its long run. Step-4 paid-session ledger: 0 used / 40; exactly 6 authorized for this assignment.
