@@ -2,6 +2,7 @@
 import { pathToFileURL } from 'node:url';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { Command, InvalidArgumentError } from 'commander';
+import type { FetchedDataset } from '@langfuse/client';
 import { generateGroup, type GeneratedGroup } from '../agents/player';
 import { ARCHETYPES } from '../archetypes/definitions';
 import type { ArchetypeId } from '../archetypes/types';
@@ -174,10 +175,10 @@ export async function runExperiment(options: {
     name: datasetName,
     description: 'Stored friend groups shared across narrator prompt variants',
   });
-  const data = [];
+  const data: FetchedDataset['items'] = [];
   for (let index = 0; index < options.items; index++) {
     const id = stableItemId(story.id, options.players, index);
-    let item: Awaited<ReturnType<typeof client.api.datasetItems.get>>;
+    let item: FetchedDataset['items'][number];
     try {
       item = await client.api.datasetItems.get(id);
     } catch (error) {
