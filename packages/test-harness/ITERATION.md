@@ -209,4 +209,48 @@ Quoted evidence: in gateway character session `Byu4CNy79RjGsV0R8yl-E`, the entir
 
 Exact edit: `session/runner.ts:227-241`, `buildFirstTurnPrompt`, removes the two “begin now”/“setup complete” branches and uses the neutral group-session opener with or without banter. The helper is exported solely for regression coverage in `tests/narrator-routing.test.ts:40-53`, checking empty/bare-banter openings, retained context, and exclusion of later turns. No system prompt, checkpoint position, model selection, story, evaluator, scoring, or response routing changed.
 
-Step-5 paid budget: at most 12 authorized; execution planned here is one three-item production rerun (3 sessions), then a free Codex check only if setup compliance improves. Ledger before execution: **6 / 40** paid sessions used, three reserved for this run.
+Step-5 paid budget: at most 12 authorized; **3 used for this step, 9 / 40 cumulative** (31 remain). Exactly one three-item production rerun completed, no extra paid generation/preflight session. Because setup improved, one three-item **free** Codex compatibility experiment follows; it does not consume the paid allowance.
+
+### Production result
+
+Command: `nohup sh /tmp/pulse-step5-gateway.sh` wraps `pnpm exec tsx cli/langfuse-experiment.ts --story shadow-over-innsmouth --variants minimal-character --items 3 --max-turns 6 --players 2 --narrator deepseek-v4-flash --run-label honest-group-session-opening-gateway`, with default players/classifier and Gemini judge. Exit 0; **809.67s (13m30s)** measured wall time (`time -p`: 809.55s). Implementation commit `baed487`; no further behavior change. Sessions in stored-item order: `wuI3U41D-bp6QK58DyTBK`, `yfhnFIJPKDF810qASOjW3`, `uO3Zx7_gdUPxwb53gc3we`.
+
+| Criterion | Gateway step 4 | Gateway step 5 | Delta |
+|---|---:|---:|---:|
+| agency_respect | 6.000 | 9.000 | +3.000 |
+| declaration_vs_acknowledgment | 7.000 | 8.667 | +1.667 |
+| invitation_architecture | 9.667 | 9.667 | 0.000 |
+| branching_persistence | 8.333 | 9.333 | +1.000 |
+| equipment_engagement | 4.333 | 9.000 | +4.667 |
+| npc_dialogue | 7.333 | 8.667 | +1.333 |
+| spatial_consistency | 9.000 | 10.000 | +1.000 |
+| character_creation | 1.333 | 10.000 | +8.667 |
+| atmosphere | 9.667 | 10.000 | +0.333 |
+| curiosity_following | 9.000 | 9.333 | +0.333 |
+| pacing_breath | 9.000 | 9.667 | +0.667 |
+| actionable_vs_atmospheric | 9.667 | 10.000 | +0.333 |
+| weighted_overall | 7.506 | 9.391 | +1.885 |
+| judge_reported_overall | 7.413 | 9.367 | +1.953 |
+
+No mean criterion got worse on production. Gemini's character scores are 10,10,10, and all three actual sessions ask setup at turn 1, personal follow-ups at turn 2, and begin their first scene at turn 3. The system prompts remain exactly 9,221 characters with checkpoint offset 8,762, ruling out checkpoint relocation as the explanation. This supports the opening-conflict hypothesis without attributing the result to a longer or higher-positioned system instruction.
+
+Side by side, Celia/Marcelo: step-4 `Byu4CNy79RjGsV0R8yl-E` starts the bus scene at turn 1 after table banter. Step-5 `yfhnFIJPKDF810qASOjW3` instead says, “before any fog rolls in or any floorboard creaks beneath a stranger's step, I need to know the hands that will be turning those old brass doorknobs,” asks identity/belongings/motivation, and receives both player replies; turn 2 asks about Althea's mentor and Leo's coded letters. The bus scene waits until turn 3.
+
+**Scores are not proof of flawless setup.** The first new item incorrectly says “Three characters” for two players, having extracted Velma as a separate character instead of Eleanor Voss. In the third item, Johanna is mapped to **Dr. Eleanor Vance**; the directed target **Eleanor** fails the existing unique-first-token match (its first token is “Dr.”), so her turn-2 follow-up has no reply, yet the scene starts at turn 3. Gemini still awarded each item 10 for character creation and called the setup “textbook”/“perfect”. This one change fixes the blanket scene-first behavior, not every character mapping or setup-completion error; the unchanged judge is overgenerous on these observed counterexamples. No extra routing fix or evaluator change is bundled into this step.
+
+Open the production runs side by side:
+- Before `pulse-minimal-character-directed-answer-delivery-gateway-grok-namespace-2026-11-14T12:42:25.865Z`: https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=1f67c75a923434ab
+- After `pulse-minimal-character-honest-group-session-opening-gateway-2026-11-14T13:10:29.886Z`: https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=dd599855a1c46532
+
+### Step-5 recorded paid costs (USD)
+
+Same coverage limitation as step 4: the run/tracker estimates exclude judge/state calls; Langfuse subtotals include judging but omit null-priced streamed narrator/player generations. These measures overlap; do not sum them or call either a complete invoice.
+
+| Session | Run/tracker | Langfuse recorded subtotal incl. judge | Judge alone | Unpriced streams |
+|---|---:|---:|---:|---:|
+| wuI3U41D-bp6QK58DyTBK | $0.050654 | $0.115469 | $0.101482 | 24 |
+| yfhnFIJPKDF810qASOjW3 | $0.052286 | $0.112190 | $0.102366 | 24 |
+| uO3Zx7_gdUPxwb53gc3we | $0.031070 | $0.123544 | $0.109798 | 23 |
+| Step-5 total | $0.134010 | **$0.351203 incomplete** | $0.313646 | 71 |
+
+Cumulative recorded Langfuse subtotal over nine paid sessions is **$1.043299 incomplete**; cumulative tracker estimate is $0.396024, not additive. Observations were exhaustively retrieved via the supported v2 endpoint, bounded from `2026-11-14T13:09:00Z`; no continuation cursors. Evidence retained: `/tmp/pulse/step5-gateway-results.json` (exact score aggregates, full observations, cost coverage), `/tmp/pulse/step5-opening-after.json` (same prompt size/position, turn progression, replies), `/tmp/pulse/step5-opening-diagnosis.json` (six baseline openings), and normal checkpoints/judgments in the three new session folders.
