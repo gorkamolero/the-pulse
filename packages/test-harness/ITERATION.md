@@ -254,3 +254,39 @@ Same coverage limitation as step 4: the run/tracker estimates exclude judge/stat
 | Step-5 total | $0.134010 | **$0.351203 incomplete** | $0.313646 | 71 |
 
 Cumulative recorded Langfuse subtotal over nine paid sessions is **$1.043299 incomplete**; cumulative tracker estimate is $0.396024, not additive. Observations were exhaustively retrieved via the supported v2 endpoint, bounded from `2026-11-14T13:09:00Z`; no continuation cursors. Evidence retained: `/tmp/pulse/step5-gateway-results.json` (exact score aggregates, full observations, cost coverage), `/tmp/pulse/step5-opening-after.json` (same prompt size/position, turn progression, replies), `/tmp/pulse/step5-opening-diagnosis.json` (six baseline openings), and normal checkpoints/judgments in the three new session folders.
+
+### Free Codex compatibility result
+
+Production setup improved, so the conditional free check ran once as a three-item experiment: `nohup sh /tmp/pulse-step5-codex.sh` wraps `pnpm exec tsx cli/langfuse-experiment.ts --story shadow-over-innsmouth --variants minimal-character --items 3 --max-turns 6 --players 2 --narrator codex-local --run-label honest-group-session-opening-codex`, with player/classifier/judge all explicitly `codex-local`. Exit 0; **1,026.43s (17m06s)** measured wall time (`time -p`: 1,026.34s). The same setup-request behavior and dataset groups were used; run metadata points to implementation `baed487`. Sessions: `hdOxvUUpICLKtTqXD5xl1`, `Le5_LF08N56fJo1aGS4wI`, `-6TRhe9i-Xvg2bMJCcaKP`. Audit `/tmp/pulse/step5-codex.jsonl`; exact score aggregate `/tmp/pulse/step5-codex-results.json`; checkpoints/judgments in each session directory.
+
+| Criterion | Codex step 3 | Codex step 5 | Delta |
+|---|---:|---:|---:|
+| agency_respect | 10.000 | 9.333 | -0.667 |
+| declaration_vs_acknowledgment | 10.000 | 10.000 | 0.000 |
+| invitation_architecture | 9.000 | 9.000 | 0.000 |
+| branching_persistence | 7.333 | 7.333 | 0.000 |
+| equipment_engagement | 8.667 | 8.000 | -0.667 |
+| npc_dialogue | 9.000 | 8.667 | -0.333 |
+| spatial_consistency | 9.000 | 8.000 | -1.000 |
+| character_creation | 9.667 | 10.000 | +0.333 |
+| atmosphere | 8.667 | 8.667 | 0.000 |
+| curiosity_following | 9.000 | 9.000 | 0.000 |
+| pacing_breath | 8.000 | 7.667 | -0.333 |
+| actionable_vs_atmospheric | 9.000 | 9.000 | 0.000 |
+| weighted_overall | 9.000 | 8.770 | -0.230 |
+| judge_reported_overall | 9.003 | 9.030 | +0.027 |
+
+Setup behavior remains intact on Codex: all three character scores are 10, all ask identity/belongings/motivation at turn 1 and personal questions at turn 2, with player replies before the first scene at turn 3. Example `hdOxvUUpICLKtTqXD5xl1`: “let’s establish your characters before we begin” at turn 1, then asks about Arthur's brother and Miriam's father at turn 2. This is a compatibility check of the target behavior, **not evidence of no regression overall**.
+
+What got worse: Codex agency and equipment each -0.667, NPC dialogue -0.333, spatial consistency -1.000, pacing -0.333, weighted overall -0.230. In `Le5_LF08N56fJo1aGS4wI`, the NPC's turn-6 account of the brother going upstairs and then refusing to fetch paper upstairs is unclear; both players ask to repair the timeline. The judge flags `experientiallyWrong` and caps that item at 8.5. These declines are recorded, not dismissed as noise or silently omitted. The unchanged judge also reports an overall mean that moves opposite the code-computed weighted mean; use `weighted_overall` for consistent arithmetic.
+
+Open the Codex runs beside each other and the production result:
+- Codex before: https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=532b08bc929ef2ed
+- Codex after `pulse-minimal-character-honest-group-session-opening-codex-2026-11-14T13:24:11.651Z`: https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=97afa9d2dbc1e582
+- Production after: https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=dd599855a1c46532
+
+**Next iteration from scores plus transcripts:** keep the truthful group-session opening; do not claim the checkpoint alone fixed production setup. Before celebrating the production 10/10 setup mean, repair the demonstrated title/character-owner routing gap (e.g. “Eleanor” → “Dr. Eleanor Vance”) as its own change, and calibrate the evaluator against the observed unanswered-follow-up/phantom-third-character counterexamples separately. Codex's weakest mean remains branching (7.333), but six-turn sessions do not give a fair persistence test. Longer/more varied sessions are needed before optimizing those dimensions or claiming an overall winner.
+
+Three items establish that the blanket scene-first behavior disappears in these production sessions while setup still works in the Codex check. They do not establish statistical significance, universal setup completion, a production win rate, robust name mapping, sustained branching, or full-story pacing. Matched friend groups are not identical play: pre-game replies, character choices, spokesperson selection, and judgments vary. The explicit observed counterexamples prevent treating Gemini's perfect setup score as ground truth.
+
+Step-5 measured experiment wall time: **809.67 + 1,026.43 = 1,836.10s (30m36s)**. These two runs are sequential (the free check was conditional on the production result), plus approximately twelve seconds between their run-creation windows; diagnosis/edits and final analysis add elapsed time. Paid sessions remain **9 / 40 total**, **3 / 12** of this step's allowance, with no second production attempt. Both requested experiment commands exited 0. No build/lint/formatter/unit-test command was run by this builder; Main should exercise `tests/narrator-routing.test.ts` and the harness typecheck. Nothing was pushed; all commits remain on `codex-local`.
