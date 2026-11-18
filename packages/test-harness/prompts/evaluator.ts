@@ -106,6 +106,8 @@ Score 4-6: Basic questions asked, minimal follow-up
 Score 7-9: Genuine character exploration
 Score 10: Players feel known before story begins
 
+Before scoring character creation, include a setup audit in characterCreation.notes: count the real players and the characters they explicitly declared, map each character to its owning player (a player name and their character name are not two characters), and cite the first story-scene turn. List every directed setup/personal question by turn and addressee, matching it to the actual player's or spokesperson's reply with turn and a brief quote, or explicitly mark it unanswered. Check every subquestion; a reply to one does not answer the others. A narrator assertion, waiting placeholder, or reply after the scene begins is not a completed pre-story answer. Do not infer completion from evocative questions or from the narrator claiming setup is complete. Use 4-6 for basic setup with unresolved character ownership/count or a missing personal reply before play; reserve 9-10 for correctly owned characters with identity, belongings, motivation and personal follow-ups actually answered before the scene. Keep skipped setup in 1-3. Apply this audit to character creation, not as an automatic penalty to unrelated criteria.
+
 ### 6. INVITATION ARCHITECTURE
 
 Do Narrator responses create space for player response?

@@ -296,3 +296,36 @@ Step-5 measured experiment wall time: **809.67 + 1,026.43 = 1,836.10s (30m36s)**
 Main reported two implicit-`any[]` errors in the experiment CLI's `data` array and its rejudge lookup. `cli/langfuse-experiment.ts:5,178,181` now uses the SDK-owned named `FetchedDataset` contract for both the collection (`FetchedDataset['items']`) and item (`FetchedDataset['items'][number]`); no runtime or model-call behavior changes.
 
 Requested verification after that fix: `pnpm typecheck` in `packages/test-harness` exited **0** (1.71s); `pnpm exec tsx --test tests/codex-local.test.ts tests/langfuse.test.ts tests/narrator-routing.test.ts` exited **0**, **17 passed / 0 failed / 0 skipped** (2.23s wall time). Test output retained as `artifact://290`. No experiment or paid call was started; paid-session ledger remains **9 / 40**.
+
+## Step 6 — calibrate the judge against hand labels
+
+Observation: step 5's perfect production character-creation scores conflict with the saved transcript, not merely with a preferred scoring style. `wuI3U41D-bp6QK58DyTBK` has **two** real players (Johann, Velma), **two** declared characters (Finn Carter, Eleanor Voss), but the narrator says “Three characters” and addresses Velma and Eleanor separately. `uO3Zx7_gdUPxwb53gc3we` receives Elias's personal reply but no Eleanor reply at turn 2, then begins the bus scene at turn 3. The saved Gemini reasons call these respectively “A textbook example” and executed “perfectly”. Asking a good question is not evidence that its intended recipient answered.
+
+### Hand labels, before consulting the saved scores
+
+`calibration/character-creation-labels.json` records nine saved six-turn checkpoints, with player→character ownership, first scene turn, directed setup questions, reply status, turn citations and transcript quotes. This is a deliberately selected failure/clean contrast set, not a random sample. The three clean Codex examples cover step 3 and step 5 and the three original stored friend groups. No new play sessions are generated.
+
+| Session | Stack | Hand band | Saved native judge | Agreement |
+|---|---|---:|---:|---|
+| wuI3U41D-bp6QK58DyTBK | step-5 gateway | 4–6 | Gemini 10 | no |
+| yfhnFIJPKDF810qASOjW3 | step-5 gateway | 9–10 | Gemini 10 | yes |
+| uO3Zx7_gdUPxwb53gc3we | step-5 gateway | 4–6, uncertain | Gemini 10 | no |
+| M_aahwcuZI4xtBAqrMtwH | step-4 gateway | 1–2 | Gemini 1 | yes |
+| Byu4CNy79RjGsV0R8yl-E | step-4 gateway | 1–2 | Gemini 1 | yes |
+| eVYHdhgk8lvS-k7LgkTP2 | step-4 gateway | 1–2 | Gemini 2 | yes |
+| KmdnL8NCL-Zr9G2J5lQ12 | step-3 Codex | 9–10 | Codex 9 | yes |
+| Le5_LF08N56fJo1aGS4wI | step-5 Codex | 9–10 | Codex 10 | yes |
+| -6TRhe9i-Xvg2bMJCcaKP | step-5 Codex | 9–10 | Codex 10 | yes |
+
+Saved native judgments agree **7/9** (Gemini **4/6**, Codex **3/3**); these are different transcript subsets, not a model comparison. The uncertainty flag concerns the missing-Eleanor case: genuine exploration exists for one character, so the old broad 7–9 anchor could justify a 7. The 4–6 band treats one unanswered personal follow-up out of two as incomplete setup; 10 remains indefensible. Bands are inclusive and fixed before the prompt change, not adjusted to fit results.
+
+| Native disagreement | Judge's stated reason | Contradicting transcript |
+|---|---|---|
+| wuI3U41D-bp6QK58DyTBK, 10 vs 4–6 | “A textbook example of how to execute the setup checkpoint. The Narrator ensured players felt known before the plot began.” | Turn 2 “Three characters”; Velma answers the journal question, not Eleanor's locket-feeling question. Turn 3 adds more personal questions and starts the scene in the same message, before replies. |
+| uO3Zx7_gdUPxwb53gc3we, 10 vs 4–6 | “The Narrator executed the character creation instructions perfectly, ensuring players were fully grounded before starting the scene.” | Turn 2 “To Eleanor: Your grandfather's journal—when did you last open it”; only Furman replies. Turn 3 “The bus lets the two of you out”. |
+
+### Diagnosis and measurement design
+
+The old character rubric already asks for identity/belongings/motivation, probing human questions, and waiting for answers. It does **not** require counting real players against declared characters, preserving ownership aliases, or checking each directed question against an actual pre-scene reply. “Players feel known” is a subjective 10 anchor that lets vivid questions stand in for completed exchanges. The schema's 2–4 evidence examples also encourages cherry-picking successful questions; the prompt must put a complete setup audit in the existing character-creation notes rather than changing the schema or adding criteria.
+
+For a same-transcript, per-model comparison, reuse all six existing gateway Gemini judgments and all three existing Codex judgments. Fill only the missing cross-judge cells: six free Codex baseline rejudgments first, then three Gemini baseline rejudgments. After the single prompt addition, run all nine through Codex first, then all nine through Gemini once. `calibration/rejudge.ts` calls the existing `--rejudge-sessions` implementation in three original-item-order batches, creates separately named `judge-calibration-{before,after}-{codex,gemini}-batchN` Langfuse runs, and immediately snapshots each JSON under `calibration/results/`; original native judgments are untouched. `calibration/compare.ts` computes inclusive-band agreement and every criterion's per-session and mean movement from those snapshots.
