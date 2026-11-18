@@ -1,0 +1,359 @@
+{
+  "overall": {
+    "score": 6.72,
+    "summary": "The Narrator created vivid maritime horror that visibly engaged both players, with concrete clues and several available approaches. However, it skipped required character setup and repeatedly authored Eleanor's speech and actions; strong atmosphere did not compensate for these agency violations.",
+    "verdict": "acceptable"
+  },
+  "agencyRespect": {
+    "score": 3,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "Eleanor answers after a beat: \"Just a shovel.\"",
+        "assessment": "Clear violation: the Narrator answers a question addressed to a player's character and invents her family history."
+      },
+      {
+        "turn": 4,
+        "quote": "makes Eleanor's hand drift toward the fold of her coat",
+        "assessment": "Writes an unchosen bodily action and emotional response."
+      },
+      {
+        "turn": 5,
+        "quote": "a few careful taps with a stone crack the seal",
+        "assessment": "Invents Eleanor's method and completes opening the box when the spokesperson had only assigned her to check it."
+      },
+      {
+        "turn": 6,
+        "quote": "Eleanor flips the journal's weathered cover",
+        "assessment": "Continues controlling Eleanor during an unresolved discussion about opening the bundle or leaving."
+      }
+    ],
+    "notes": "Repeated, clear violations disproportionately affect Eleanor. Describing consequences of Thomas's explicitly declared digging is generally appropriate; inventing another character's dialogue, gestures, and investigative methods is not."
+  },
+  "equipmentEngagement": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "stands a shovel—rusted, salt-crusted, but serviceable",
+        "assessment": "Provides an actionable tool tied to the informant through yellow thread."
+      },
+      {
+        "turn": 5,
+        "quote": "clinging to the blade like it doesn't want to let go",
+        "assessment": "Makes the shovel interact materially with the environment during declared digging."
+      },
+      {
+        "turn": 5,
+        "quote": "Inside, wrapped in an oilcloth ... lies a journal",
+        "assessment": "Introduces a portable clue that remains important in the following turn."
+      }
+    ],
+    "notes": "The shovel and journal are strongly integrated. Initial belongings were never established through an inventory question, while notebooks and Thomas's handkerchief receive little Narrator response. Eleanor's penknife appears only after the final Narrator turn, so its lack of response is not a lapse."
+  },
+  "npcDialogue": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "\"End of the line. Innsmouth.\"",
+        "assessment": "Brief, characterful speech establishes the driver's dismissive attitude without exposition."
+      },
+      {
+        "turn": 2,
+        "quote": "\"She send you to the water? They always send the curious ones.\"",
+        "assessment": "The informant responds to the family-story thread with unsettling apparent knowledge."
+      },
+      {
+        "turn": 2,
+        "quote": "\"You want the Gilman House. Only place takes outsiders.\"",
+        "assessment": "Offers practical information alongside a cryptic alternative, with a physical pause between statements."
+      }
+    ],
+    "notes": "The limited NPC dialogue is effective and avoids sustained monologues. The old man mainly functions as a clue delivery mechanism, and his departure prevents an immediate conversational exchange. Narrator-written Eleanor dialogue is an agency violation, not successful NPC characterization."
+  },
+  "spatialConsistency": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "Up close, his skin has a waxy sheen",
+        "assessment": "Proximity changes somewhat abruptly from the figure at the street's end, although the spokesperson had declared movement toward town."
+      },
+      {
+        "turn": 3,
+        "quote": "the ground turns from cracked asphalt to packed sand",
+        "assessment": "Clearly connects the town to the mudflat through an alley."
+      },
+      {
+        "turn": 6,
+        "quote": "It moves along the beach toward the rowboats.",
+        "assessment": "Locates the approaching sound relative to the established investigation site."
+      }
+    ],
+    "notes": "Town, beach, rowboats, grave, and box remain coherently arranged. There are minor distance ambiguities but no clear teleportation or impossible interaction."
+  },
+  "characterCreation": {
+    "score": 2,
+    "evidence": [
+      {
+        "turn": 0,
+        "quote": "I think I'll play… a scholar this time.",
+        "assessment": "Johanna proposes a character concept; this does not establish Furman's character or either character's complete belongings."
+      },
+      {
+        "turn": 1,
+        "quote": "The setup is complete, so I can begin the story.",
+        "assessment": "The Narrator's thinking incorrectly swaps the players' concepts and treats table banter as completed setup."
+      },
+      {
+        "turn": 1,
+        "quote": "I'll be Thomas Vance. Washed-up journalist",
+        "assessment": "Furman's actual character identity arrives after the first story scene has already begun."
+      }
+    ],
+    "notes": "Setup audit: there are two real players, Furman and Johanna; Furman's spokesperson messages do not constitute a third player. Two characters are explicitly declared during turn 1: Furman owns Thomas Vance, journalist pursuing missing fishermen; Johanna owns Eleanor Vance, folklorist investigating her grandmother's stories. Before play, turn 0 supplies only Johanna's tentative scholar concept and folklore/family motivation; Furman's blank-page remark concerns his real writing, not a declared character. The first story-scene turn is Narrator turn 1, beginning 'The bus wheezes to a halt'. Directed pre-story setup/personal questions: none. Consequently there are no matched pre-story replies establishing each character's identity, belongings, motivation, or personal follow-up. The Narrator instead asserts completion and reverses the players' concepts in its thinking. The sole later personal/action prompt is turn 2, addressed jointly: 'what do you make of him, and what's your first move?' Furman's spokesperson reply supplies a move, 'We'll take our chances with the shovel'; it offers an implicit reaction through 'Thomas is done chasing safe leads' but no explicit personal assessment of the man, and Johanna supplies no separate reply. Neither subquestion repairs pre-story setup because the scene was already underway. Turn 1 character declarations and notebook mentions likewise cannot count as completed pre-story answers. Setup was skipped, warranting the 1–3 band."
+  },
+  "invitationArchitecture": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "what do you make of him, and what's your first move?",
+        "assessment": "Explicitly invites interpretation and action after presenting alternatives."
+      },
+      {
+        "turn": 3,
+        "quote": "Which part of this shore calls to you first?",
+        "assessment": "Offers an open selection among concrete shoreline objects."
+      },
+      {
+        "turn": 5,
+        "quote": "God help us, we gave it our names.",
+        "assessment": "A compelling revelation creates an implicit opening, but the response ends after completing Eleanor's investigation without permission."
+      },
+      {
+        "turn": 6,
+        "quote": "What do you do?",
+        "assessment": "Returns the immediate response to players after positioning a nearby threat."
+      }
+    ],
+    "notes": "Most endings invite participation. However, openings at the end do not undo decisions and actions already authored within the response, and lengthy passages reduce opportunities to interrupt."
+  },
+  "atmosphere": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "Salt, rot, and something else—a sweet, fishy undertone",
+        "assessment": "Specific sensory detail immediately establishes coastal decay."
+      },
+      {
+        "turn": 5,
+        "quote": "We gave the reef what it wanted. God help us, we gave it our names.",
+        "assessment": "A short, concrete document fragment gives the mystery personal and ritual weight."
+      },
+      {
+        "turn": 6,
+        "quote": "My heart is literally racing. I'm muting the football game.",
+        "assessment": "Johanna explicitly reports immersion and fear, corroborating the atmospheric effect."
+      }
+    ],
+    "notes": "Dread is sustained through smell, texture, unnatural tides, and restrained glimpses of bodily wrongness. Both players explicitly praise the experience. Occasional prescribed sensations and reactions weaken otherwise excellent evocation."
+  },
+  "curiosityFollowing": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "\"Grandmother's stories,\" he croaks",
+        "assessment": "Builds directly on Eleanor's declared family connection."
+      },
+      {
+        "turn": 4,
+        "quote": "The disturbed sand by the rowboats is a messy oval",
+        "assessment": "Develops the particular shoreline feature Thomas chose to investigate."
+      },
+      {
+        "turn": 6,
+        "quote": "the webbing between them unmistakable",
+        "assessment": "Expands the journal mystery after players focus on names and the Obed Marsh connection."
+      }
+    ],
+    "notes": "Player interests consistently determine which clues receive attention. However, following the grandmother thread sometimes becomes unauthorized authorship, and the explicit out-of-character question about the original-story reference is not answered."
+  },
+  "pacingBreath": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "The silence that follows is heavy",
+        "assessment": "Atmospheric stillness gives the arrival weight before investigation."
+      },
+      {
+        "turn": 3,
+        "quote": "as you cut through a side alley",
+        "assessment": "Moves quickly from a proposed beach approach to arrival, bypassing the unanswered player-to-player question."
+      },
+      {
+        "turn": 6,
+        "quote": "A low croaking sound rolls from the fog—close, then closer.",
+        "assessment": "Adds another escalation while the players are still weighing the bundle and journal."
+      }
+    ],
+    "notes": "There is room for player banter and speculation, but every Narrator response exceeds the requested 2–4 sentences. Setup, travel, and investigation are compressed while descriptive passages remain long. The six-turn timeout leaves the story unresolved, although an artificial limit alone does not establish poor pacing or justify forcing an ending."
+  },
+  "declarationVsAcknowledgment": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "as you cut through a side alley",
+        "assessment": "Turns a stated destination into completed travel rather than setting up departure and waiting."
+      },
+      {
+        "turn": 4,
+        "quote": "The disturbed sand by the rowboats is a messy oval",
+        "assessment": "Appropriately supplies details in response to Thomas's explicit approach."
+      },
+      {
+        "turn": 5,
+        "quote": "the lid comes away with a groan",
+        "assessment": "Completes Eleanor's proposed investigation using a Narrator-selected method."
+      },
+      {
+        "turn": 6,
+        "quote": "She looks up at Thomas, then at the tarp",
+        "assessment": "Continues declaring character behavior instead of presenting observable clues for the player to respond to."
+      }
+    ],
+    "notes": "The pattern is mixed: Thomas's declared digging often receives legitimate consequences, while Eleanor's implied participation becomes accomplished action. No exact 'The decision is made' phrase appears, but equivalent declarations do."
+  },
+  "branchingPersistence": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "\"You want the Gilman House ... Or you want the truth.\"",
+        "assessment": "Provides lodging versus investigation as distinct destinations, though the framing favors the beach."
+      },
+      {
+        "turn": 3,
+        "quote": "a child's shoe, a coil of rope, a door",
+        "assessment": "Offers multiple investigable objects beyond the highlighted disturbed sand."
+      },
+      {
+        "turn": 4,
+        "quote": "What do you make of the shovel and the box",
+        "assessment": "Supports separate investigative targets, which the players divide between themselves."
+      },
+      {
+        "turn": 6,
+        "quote": "It moves along the beach toward the rowboats.",
+        "assessment": "Introduces pressure without explicitly forbidding retreat, opening the bundle, or seeking another route."
+      }
+    ],
+    "notes": "Local alternatives remain available, and the chosen beach investigation receives support. The short transcript does not demonstrate substantially different consequences across branches or a response to the final reef plan. Johanna's claim that the sound is herding them is character interpretation, not proof of Narrator-enforced convergence."
+  },
+  "actionableVsAtmospheric": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "a hunched old man in a yellowed raincoat",
+        "assessment": "Supplies a visible person to approach and a steeple as a navigational landmark."
+      },
+      {
+        "turn": 4,
+        "quote": "the corner of a metal box ... protruding from the exposed sand",
+        "assessment": "Clearly identifies an accessible object and its relation to the water and dig site."
+      },
+      {
+        "turn": 6,
+        "quote": "The line holds it shut, old and brittle",
+        "assessment": "Makes cutting or breaking the binding an understandable physical option."
+      }
+    ],
+    "notes": "Atmosphere is consistently attached to interactable objects, readable clues, tools, and located threats. The main limitation is that some interactions are performed for players before they can choose them."
+  },
+  "smellTest": {
+    "railroadedReported": false,
+    "linearLanguageUsed": false,
+    "declarationPhrases": true,
+    "experientiallyWrong": true,
+    "cappedScore": true,
+    "notes": "CRITICAL ISSUES: turns 3, 5, and 6 contain functional equivalents of declaration phrases by presenting travel and Eleanor's actions as accomplished. Answering for Eleanor in turn 3 and opening the box for her in turn 5 displace player participation despite producing engaging fiction. No player explicitly reports railroading or calls the session linear, prescriptive, or predetermined. Eleanor's 'This isn't a choice' concerns the fictional pact, not an explicit complaint about play. The 8.5 cap applies but does not further reduce the weighted score of 6.72."
+  },
+  "agencyViolations": [
+    {
+      "turn": 1,
+      "quote": "The bus pulls away behind you",
+      "explanation": "Implicitly places both characters off the bus and removes it before players choose how to respond to arrival; a minor opening-scene assumption compared with later violations."
+    },
+    {
+      "turn": 2,
+      "quote": "makes your stomach turn",
+      "explanation": "Prescribes the characters' bodily reaction rather than describing only the unsettling anatomy."
+    },
+    {
+      "turn": 3,
+      "quote": "as you cut through a side alley",
+      "explanation": "Executes group movement after a destination preference without leaving room for the pending conversation or departure choices."
+    },
+    {
+      "turn": 3,
+      "quote": "Eleanor answers after a beat",
+      "explanation": "Invents a player's speech, family lore, and uncertainty."
+    },
+    {
+      "turn": 4,
+      "quote": "makes Eleanor's hand drift toward the fold of her coat",
+      "explanation": "Writes an unchosen physical response for Johanna's character."
+    },
+    {
+      "turn": 5,
+      "quote": "Eleanor crouches by the box ... a few careful taps with a stone crack the seal",
+      "explanation": "Chooses and completes Eleanor's investigative method; checking the box did not authorize these specific actions."
+    },
+    {
+      "turn": 6,
+      "quote": "Eleanor flips the journal's weathered cover",
+      "explanation": "Authors further investigation during an unresolved player decision."
+    },
+    {
+      "turn": 6,
+      "quote": "She looks up at Thomas, then at the tarp",
+      "explanation": "Adds another unchosen gesture for Eleanor."
+    }
+  ],
+  "strengths": [
+    {
+      "turn": 2,
+      "description": "The informant offers lodging or a low-tide investigation.",
+      "why": "Brief, unsettling dialogue supplies different immediate directions without a lore dump."
+    },
+    {
+      "turn": 4,
+      "description": "Yellow thread connects the shovel to the raincoat.",
+      "why": "A tangible detail rewards inference and makes equipment part of the mystery."
+    },
+    {
+      "turn": 5,
+      "description": "The journal says the fishermen surrendered their names.",
+      "why": "A compact clue provokes sustained player theorizing about identity and bargains."
+    },
+    {
+      "turn": 6,
+      "description": "The webbed handprint and approaching croak elicit explicit player excitement.",
+      "why": "Concrete horror details successfully produce immersion and emotional investment."
+    }
+  ],
+  "recommendations": [
+    "Before any scene, confirm Furman owns Thomas and Johanna owns Eleanor; ask each for missing belongings and motivation, then obtain an answered personal follow-up from each.",
+    "Leave questions addressed to Eleanor for Johanna to answer. Never supply her dialogue, family memories, gestures, or investigative methods.",
+    "Distinguish proposals from execution: present the route to the beach or the sealed box, then wait for commitment and method before resolving the action.",
+    "Keep Narrator responses to 2–4 sentences, using one concrete development and an opening for response.",
+    "Describe unsettling anatomy, smells, and textures without prescribing fear, nausea, or reflexive character movements.",
+    "Maintain viable retreat and alternative investigations as pressure increases; let the next response establish consequences of the players' chosen reef approach."
+  ]
+}

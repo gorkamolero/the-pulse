@@ -1,0 +1,303 @@
+{
+  "overall": {
+    "score": 6.59,
+    "summary": "The Narrator created vivid horror and followed the players' interest in the alley, but skipped character creation and repeatedly added pressure without resolving an increasingly explicit action. The session timed out at the same trapdoor decision after several turns of atmospheric repetition.",
+    "verdict": "acceptable"
+  },
+  "agencyRespect": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "when you flatten it, a second line reveals itself",
+        "assessment": "Taking the note had been proposed, but flattening it was an additional player action supplied by the Narrator."
+      },
+      {
+        "turn": 4,
+        "quote": "The light is failing faster now",
+        "assessment": "The Narrator advances environmental urgency while players are still deciding whether to open the trapdoor."
+      },
+      {
+        "turn": 5,
+        "quote": "Beneath your fingers, the iron ring is cold",
+        "assessment": "The Narrator assumes contact despite the players previously describing examination without touching."
+      }
+    ],
+    "notes": "There are several boundary slips involving handling objects and advancing pressure during deliberation. Repeating already declared crouching is less serious than inventing contact with the ring."
+  },
+  "equipmentEngagement": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "Celia, closing her notebook",
+        "assessment": "The player introduces a notebook, but the Narrator never incorporates it into the environment or investigation."
+      },
+      {
+        "turn": 2,
+        "quote": "One corner is folded oddly",
+        "assessment": "The acquired note has useful physical properties and an additional clue."
+      },
+      {
+        "turn": 2,
+        "quote": "folding the note into my pocket",
+        "assessment": "Marcelo claims the note, while the spokesperson subsequently places it in Celia's notebook. The Narrator leaves this custody ambiguity unresolved."
+      }
+    ],
+    "notes": "The note receives meaningful attention, but no starting inventory is established and other player belongings remain peripheral. The players introduce the note-custody contradiction; the Narrator fails to clarify it."
+  },
+  "npcDialogue": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "End of the line. Don't wander after dark.",
+        "assessment": "The driver's brief warning conveys attitude without exposition."
+      },
+      {
+        "turn": 5,
+        "quote": "He hasn't shouted. Hasn't moved.",
+        "assessment": "The shopkeeper has a strong threatening presence, but silence substitutes for any developing conversation."
+      }
+    ],
+    "notes": "There are no lore dumps or ignored direct NPC questions. However, only the driver speaks, so conversational responsiveness and human complexity receive little testing."
+  },
+  "spatialConsistency": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "The Gilman House hotel looms three blocks ahead",
+        "assessment": "The opening establishes usable relative locations."
+      },
+      {
+        "turn": 3,
+        "quote": "Halfway down, a heavy wooden trapdoor",
+        "assessment": "The trapdoor has a clear position within the alley."
+      },
+      {
+        "turn": 5,
+        "quote": "Down the alley, the shopkeeper's silhouette fills the doorway",
+        "assessment": "This wording blurs the earlier placement of the store across the road, although a sightline through the alley entrance remains plausible."
+      }
+    ],
+    "notes": "Positions are largely stable, with no clear teleportation. The store sightline is slightly ambiguous, and the players' proposed back-wall escape never receives concrete spatial confirmation."
+  },
+  "characterCreation": {
+    "score": 1,
+    "evidence": [
+      {
+        "turn": 0,
+        "quote": "you were terrifyingly good at that with the bus schedules",
+        "assessment": "This is table banter, not a declared character identity, inventory, or motivation."
+      },
+      {
+        "turn": 1,
+        "quote": "The bus wheezes to a halt",
+        "assessment": "The first Narrator message starts the story immediately, without any setup questions."
+      }
+    ],
+    "notes": "Setup audit: There are two real players, Celia and Marcelo; Celia also serves as spokesperson and is not a third player. Before play, neither explicitly declares a fictional character, so there are zero explicitly established characters and no confirmed ownership mapping beyond the players subsequently using their own names in play. The first story-scene turn is Narrator turn 1. Directed setup/personal questions: none at any turn, hence no matching pre-story replies. Identity, belongings, motivation, and a personal follow-up for each character were never requested or completed before the scene. Later notebook references and the turn-4 Eureka anecdote do not retroactively complete setup."
+  },
+  "invitationArchitecture": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "A scrap of paper, pinned to the bus stop's wooden post",
+        "assessment": "The note, alley, store, and hotel create several natural openings."
+      },
+      {
+        "turn": 3,
+        "quote": "you hear a single, low croak",
+        "assessment": "The sound provides a clear invitation to investigate or retreat."
+      },
+      {
+        "turn": 6,
+        "quote": "One. Two.",
+        "assessment": "This is formally open-ended but repeats a countdown the players already completed, creating a stalled response window."
+      }
+    ],
+    "notes": "Early descriptions invite exploration effectively. Later openings become repetitive demands for renewed commitment instead of opportunities to respond to consequences."
+  },
+  "atmosphere": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "its sign swinging on a single rusted hinge",
+        "assessment": "Concrete visual decay establishes the town's mood."
+      },
+      {
+        "turn": 3,
+        "quote": "brick walls weeping moisture",
+        "assessment": "Texture, narrowing space, and smell make the alley physically oppressive."
+      },
+      {
+        "turn": 5,
+        "quote": "like a man watching a spider on the wall",
+        "assessment": "The shopkeeper's posture evokes vulnerability without directly assigning an emotion to the players."
+      }
+    ],
+    "notes": "Sensory horror is consistently strong. Repeated salt, rot, copper, and ominous stillness eventually lose some force through overuse."
+  },
+  "curiosityFollowing": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "a second line reveals itself in pencil",
+        "assessment": "The Narrator rewards interest in the suspicious note with another clue."
+      },
+      {
+        "turn": 3,
+        "quote": "a heavy wooden trapdoor sits flush against the ground",
+        "assessment": "Choosing the alley over the hotel produces a substantial investigative scene."
+      }
+    ],
+    "notes": "The Narrator follows the players away from the obvious hotel hook and develops their chosen alley. Player inventions such as the driver's tattoo are not contradicted, but their material consequences remain untested."
+  },
+  "pacingBreath": {
+    "score": 3,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "there's a wet, rhythmic sound",
+        "assessment": "A further warning extends suspense while the trapdoor choice remains unresolved."
+      },
+      {
+        "turn": 5,
+        "quote": "The drag-scrape stops",
+        "assessment": "Another atmospheric variation occupies a full response without significantly changing available information."
+      },
+      {
+        "turn": 6,
+        "quote": "He's waiting for you to commit",
+        "assessment": "The players have already agreed and counted to three; requesting commitment again prevents payoff."
+      }
+    ],
+    "notes": "The problem is stagnation rather than a plot sprint. Responses also repeatedly exceed the requested 2–4 sentences. A six-turn limit need not force a complete adventure, but the session could reasonably have resolved the first trapdoor interaction."
+  },
+  "declarationVsAcknowledgment": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "The paper comes free with a tacky resistance",
+        "assessment": "The Narrator treats a stated plan to take the paper as accomplished rather than setting up execution."
+      },
+      {
+        "turn": 3,
+        "quote": "The light from the street dies behind you after a few strides",
+        "assessment": "The Narrator completes movement into the alley after the spokesperson proposes moving."
+      },
+      {
+        "turn": 6,
+        "quote": "He's waiting for you to commit",
+        "assessment": "The opposite failure appears here: excessive withholding despite an explicit coordinated plan and completed player countdown."
+      }
+    ],
+    "notes": "Early turns convert intentions into actions; later turns become overly cautious about resolving authorized actions. Effective acknowledgment needs a responsive consequence once commitment is clear."
+  },
+  "branchingPersistence": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "perhaps the general store",
+        "assessment": "The store, hotel, alley, and note offer distinct investigative directions."
+      },
+      {
+        "turn": 3,
+        "quote": "a heavy wooden trapdoor",
+        "assessment": "The chosen alley produces a new route rather than redirecting players to the hotel."
+      },
+      {
+        "turn": 5,
+        "quote": "the shopkeeper's silhouette fills the doorway",
+        "assessment": "Continuing pressure makes departure feel riskier, although the Narrator never explicitly removes alternatives."
+      }
+    ],
+    "notes": "Meaningful initial alternatives exist and the alley choice is honored. Subsequent branching is less demonstrated because play remains at one unresolved obstacle; different consequences cannot yet be assessed."
+  },
+  "actionableVsAtmospheric": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "Ask for Zadok—but not at night",
+        "assessment": "The note provides a person to seek and a concrete timing concern."
+      },
+      {
+        "turn": 3,
+        "quote": "its iron ring rusted but recently used",
+        "assessment": "A handle, disturbed grit, and fresh markings support inspection and manipulation."
+      },
+      {
+        "turn": 6,
+        "quote": "the sea at the end of the world",
+        "assessment": "The closing imagery deepens mood but adds little actionable information to an already established choice."
+      }
+    ],
+    "notes": "Most scenes contain tangible objects and useful clues. Later descriptions recycle the same interaction rather than clarifying the trapdoor, escape route, or consequences."
+  },
+  "smellTest": {
+    "railroadedReported": false,
+    "linearLanguageUsed": false,
+    "declarationPhrases": false,
+    "experientiallyWrong": true,
+    "cappedScore": true,
+    "notes": "CRITICAL ISSUE: Turn 6 treats the players as uncommitted after Marcelo counts to three and the spokesperson confirms the plan in turn 5. This technically cautious pause feels unresponsive and contributes to timeout. The 8.5 cap applies, but the weighted score is already below it."
+  },
+  "agencyViolations": [
+    {
+      "turn": 2,
+      "quote": "when you flatten it",
+      "explanation": "Supplies an unannounced manipulation of the note."
+    },
+    {
+      "turn": 3,
+      "quote": "after a few strides",
+      "explanation": "Completes proposed travel into the alley; this is a minor intention-to-execution slip because the spokesperson did request movement."
+    },
+    {
+      "turn": 4,
+      "quote": "The light is failing faster now",
+      "explanation": "Advances time pressure during an unresolved decision."
+    },
+    {
+      "turn": 5,
+      "quote": "Beneath your fingers, the iron ring",
+      "explanation": "Assigns physical contact before a player explicitly establishes it."
+    },
+    {
+      "turn": 6,
+      "quote": "One. Two.",
+      "explanation": "An unattributed countdown appears to take over or restart the coordinated player action already counted by Marcelo."
+    }
+  ],
+  "strengths": [
+    {
+      "turn": 1,
+      "description": "Several tangible hooks accompany the oppressive arrival.",
+      "why": "Players can choose between investigation sites without needing an explicit menu."
+    },
+    {
+      "turn": 3,
+      "description": "The alley choice receives its own detailed discovery.",
+      "why": "The Narrator rewards deviation from the hotel with fresh evidence and an interactive obstacle."
+    },
+    {
+      "turn": 5,
+      "description": "The silent shopkeeper feels threatening through posture and distance.",
+      "why": "NPC behavior evokes dread without a lore speech."
+    }
+  ],
+  "recommendations": [
+    "Begin by collecting each player's character identity, belongings, and motivation; ask and receive one personal follow-up per character before starting the scene.",
+    "Distinguish proposals from execution, but resolve actions once commitment is explicit. After the completed countdown, describe what the narrow opening reveals and stop before deciding whether the players drop the door or flee.",
+    "Avoid inventing contact with objects, player countdowns, or elapsed time while a decision remains pending.",
+    "Keep responses to 2–4 sentences and make each suspense beat add evidence, an option, or a consequence.",
+    "Clarify who holds the note and establish the back wall's position and climbability before the proposed escape becomes urgent."
+  ]
+}
