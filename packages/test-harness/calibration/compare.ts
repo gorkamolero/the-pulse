@@ -7,9 +7,14 @@ const criteria = ['agencyRespect', 'equipmentEngagement', 'npcDialogue', 'spatia
   'characterCreation', 'invitationArchitecture', 'atmosphere', 'curiosityFollowing', 'pacingBreath',
   'declarationVsAcknowledgment', 'branchingPersistence', 'actionableVsAtmospheric'] as const;
 type Evaluation = Record<(typeof criteria)[number], { score: number; notes: string; evidence: unknown[] }>;
+type CalibrationRow = (typeof labels.sessions)[number] & {
+  before: number; after: number; agreementBefore: boolean; agreementAfter: boolean;
+  reasonBefore: string; reasonAfter: string;
+  criteria: Record<string, { before: number; after: number; delta: number }>;
+};
 const summaries = [];
 for (const model of ['codex', 'gemini']) {
-  const rows = [];
+  const rows: CalibrationRow[] = [];
   for (const label of labels.sessions) {
     const load = async (phase: string) => JSON.parse(await readFile(`calibration/results/${phase}-${model}/${label.sessionId}.json`, 'utf8')) as Evaluation;
     const before = await load('before');

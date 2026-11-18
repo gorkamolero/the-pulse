@@ -341,3 +341,78 @@ Before scoring character creation, include a setup audit in characterCreation.no
 ```
 
 The band clarification operationalizes the existing wait-for-answers requirement. It is not just evidence formatting, and improvement against these same hand bands is partly expected from explicitly stating their interpretation. No second prompt revision is permitted after inspecting the changed results.
+
+### Same-transcript result
+
+| Session | Hand band | Codex before → after | Gemini before → after |
+|---|---:|---:|---:|
+| wuI3U41D-bp6QK58DyTBK | 4–6 | 5 → 5 | 10 → 5 |
+| yfhnFIJPKDF810qASOjW3 | 9–10 | 9 → 9 | 10 → 10 |
+| uO3Zx7_gdUPxwb53gc3we | 4–6, uncertain | 7 → 5 | 10 → 10 |
+| M_aahwcuZI4xtBAqrMtwH | 1–2 | 1 → 1 | 1 → 1 |
+| Byu4CNy79RjGsV0R8yl-E | 1–2 | 1 → 1 | 1 → 1 |
+| eVYHdhgk8lvS-k7LgkTP2 | 1–2 | 1 → 2 | 2 → 1 |
+| KmdnL8NCL-Zr9G2J5lQ12 | 9–10 | 9 → 10 | 10 → 10 |
+| Le5_LF08N56fJo1aGS4wI | 9–10 | 10 → 10 | 10 → 10 |
+| -6TRhe9i-Xvg2bMJCcaKP | 9–10 | 10 → 10 | 10 → 10 |
+
+Agreement: **Codex 8/9 → 9/9; Gemini 7/9 → 8/9**. Excluding the uncertain label: **Codex 8/8 → 8/8; Gemini 7/8 → 8/8**. Character mean: Codex 5.889 → 5.889 (no change despite improved agreement); Gemini 7.111 → 6.444. A lower mean is not itself calibration success.
+
+**What it did not fix:** Gemini still hallucinates the missing reply. Beside the reference transcript—turn 2 contains only Furman's reply—the changed Gemini audit for `uO3Zx7_gdUPxwb53gc3we` says: “Turn 2: Narrator asks follow-up questions to Furman (uncle close? letter details?) and Johanna (last opened journal? Marsh convergence meaning?). Turn 2: Both players reply. Turn 3: Story begins. Perfect execution of the character creation checkpoint.” It still gives **10**. This is a factual evidence failure, not only disagreement over whether the appropriate partial score is 6 or 7. Its audit supplies neither the requested quote nor the missing Johanna answer. No second prompt change or paid retry was made.
+
+In contrast, changed Codex states: “Turn 2, to Eleanor: when she last opened the journal before the trip; a recurring page or phrase; whether 'Marsh convergence' means a place, family, or something else. All three remain unanswered before turn 3.” It scores 5. For the phantom-character case, changed Gemini now identifies two players/two characters and “mistakenly addresses Eleanor and Velma as two different people,” scoring 5; it still compresses the question/reply audit instead of listing every subquestion. Requesting an audit does not guarantee faithful or exhaustive evidence. Neither model result repairs actual routing, character extraction, narrator agency, or any saved play.
+
+### Every other criterion moved or checked
+
+Means over the exact same nine transcripts; `n` is the count of individual sessions whose score changed. Zero mean delta does not imply no movement. Exact per-session before/after/delta for all twelve criteria is retained in `calibration/results/comparison.json`, together with every character score, agreement and reason.
+
+| Criterion | Codex before → after | Δ; n | Gemini before → after | Δ; n |
+|---|---:|---:|---:|---:|
+| agency_respect | 6.333 → 6.222 | -0.111; 3 | 8.333 → 8.333 | 0.000; 2 |
+| equipment_engagement | 6.333 → 6.444 | +0.111; 1 | 7.556 → 7.889 | +0.333; 4 |
+| npc_dialogue | 6.222 → 6.444 | +0.222; 4 | 8.444 → 8.444 | 0.000; 4 |
+| spatial_consistency | 7.222 → 8.000 | +0.778; 6 | 9.444 → 9.333 | -0.111; 3 |
+| invitation_architecture | 7.556 → 7.556 | 0.000; 2 | 9.778 → 9.333 | -0.444; 4 |
+| atmosphere | 8.556 → 8.778 | +0.222; 2 | 9.444 → 9.778 | +0.333; 3 |
+| curiosity_following | 7.222 → 7.556 | +0.333; 5 | 9.222 → 9.333 | +0.111; 3 |
+| pacing_breath | 5.667 → 5.889 | +0.222; 2 | 9.222 → 9.000 | -0.222; 5 |
+| declaration_vs_acknowledgment | 6.556 → 6.778 | +0.222; 4 | 8.333 → 8.556 | +0.222; 4 |
+| branching_persistence | 6.000 → 6.667 | +0.667; 6 | 8.778 → 8.778 | 0.000; 6 |
+| actionable_vs_atmospheric | 8.444 → 8.444 | 0.000; 0 | 9.667 → 9.556 | -0.111; 3 |
+
+The judge change is **not harmless on other dimensions**: ten of eleven non-target dimensions move in at least one Codex transcript and all eleven move in Gemini. In particular Gemini invitation, spatial, pacing and actionable means decline; Codex agency declines. These are rejudgments of unchanged play, not narrator regressions or improvements. A single stochastic pass cannot separate prompt spillover from judgment variability, and averaging can hide offsetting movements.
+
+### Commands, run links, timing and paid ledger
+
+Commands, sequentially: `nohup sh /tmp/pulse-step6.sh before codex`, `before gemini`, `after codex`, `after gemini`, redirecting each to `/tmp/pulse/step6-{phase}-{model}.log`; all four exit **0**. The launcher loads the three Langfuse credentials from Keychain into environment variables only. Codex sets player/classifier/judge to `codex-local` and unsets narrator override; Gemini clears all role overrides and loads `Vercel AI Gateway` / `vercel-ai-gateway` into `AI_GATEWAY_API_KEY`. Each invokes `pnpm exec tsx calibration/rejudge.ts <phase> <model>`. Only saved checkpoints are judged; no narrator/player/classifier calls or new group generation are exercised. Existing saved baseline JSONs are reused exactly, not regenerated. `pnpm exec tsx calibration/compare.ts` exits **0**.
+
+The helper calls `runExperiment` with the same arguments as `pnpm exec tsx cli/langfuse-experiment.ts --story shadow-over-innsmouth --variants minimal-character --items 3 --max-turns 6 --players 2 --narrator <codex-local|deepseek-v4-flash> --rejudge-sessions <three IDs in the table's batch order> --run-label judge-calibration-<phase>-<model>-batch<N>`. Rejudge metadata's narrator value is a CLI compatibility field, **not a new narrator call**; source narrator/system prompt and conversation come from the original checkpoint. Batches 1, 2, 3 are respectively step-5 gateway, step-4 gateway, mixed clean Codex. New runs:
+
+| Pass | Batch | Langfuse |
+|---|---:|---|
+| before Codex | 1 | https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=26f079b60b1494e7 |
+| before Codex | 2 | https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=f4929e8423e5767a |
+| before Gemini | 3 | https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=9cf52b3074544f6a |
+| after Codex | 1 | https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=8f4d5da04ab37bff |
+| after Codex | 2 | https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=d1ccdca0d15c310e |
+| after Codex | 3 | https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=32afe17df5f1d2a3 |
+| after Gemini | 1 | https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=71a9716c31ec5535 |
+| after Gemini | 2 | https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=27cb1e255aeb8b5a |
+| after Gemini | 3 | https://us.cloud.langfuse.com/project/cmw3rq7z302clad0kw2n81fln/experiments/results?baseline=6b22ad7a4869e194 |
+
+Reused native run links remain in steps 3–5: Codex `532b08bc929ef2ed` and `97afa9d2dbc1e582`; Gemini `1f67c75a923434ab` and `dd599855a1c46532`. No existing hosted run was overwritten. The CLI's intermediate `sessions/<id>/judge-full-replies/` files are replaced by later passes, so the durable comparison source is the four separately named `calibration/results/{before,after}-{codex,gemini}/` snapshots and manifests, not that intermediate path.
+
+| Pass | New judgments | Reused | Internal wall seconds | Measured subprocess wall seconds |
+|---|---:|---:|---:|---:|
+| before Codex | 6 free | 3 | 438.413 | 439.89 |
+| before Gemini | 3 paid | 6 | 150.987 | 152.29 |
+| after Codex | 9 free | 0 | 690.222 | 691.49 |
+| after Gemini | 9 paid | 0 | 557.902 | 559.30 |
+
+Sequential subprocess wall total **1,842.97s (30m43s)**; internal runner total 1,837.524s. Diagnosis, hand reading, edits and checks add elapsed time. Logs show no model retry warnings. Paid ledger: **9/40 entering → 12/40 after the three missing baseline judgments → 21/40 after the single nine-transcript changed pass**. Step 6 uses **12 paid rejudged transcripts**, with **19/40 remaining** and **4 sessions below the hard stop at 25/40**. Six saved Gemini judgments cost no new session. No new play, extra Gemini pass, push or publication occurred. This ledger is a request/session count, not a dollar invoice.
+
+### Limits and verification
+
+Nine labels from one labeller, one story, two players and six turns are not an independent benchmark or population estimate. Two known failures were deliberately selected; the same examples informed the prompt and its evaluation, with no held-out set or inter-rater agreement. One band is explicitly uncertain. Bands measure a particular operational interpretation, not flawless setup; all subquestions being answered is stricter than merely feeling known. Existing baseline judgments were retained across dates and stacks, and free Codex uses the narrator's model family. Single rejudgments have stochastic variation and no uncertainty intervals. The surviving Gemini fabricated reply prevents declaring the judge calibrated or universally trustworthy; a fuller evidence-validated evaluator is not implemented in this one-change experiment.
+
+No new unit test is added: checking prompt substrings would not test model evidence fidelity. The saved-checkpoint experiments exercise the actual judging behavior. Initial end-of-step `pnpm typecheck` exited **2**, finding an implicit `any[]` in the new comparison script's `rows` captured by aggregation callbacks; it is corrected with an explicit `CalibrationRow` type (no runtime or prompt change). Final `pnpm typecheck` exits **0**, 0.72s subprocess wall. Harness tests `pnpm exec tsx --test tests/codex-local.test.ts tests/langfuse.test.ts tests/narrator-routing.test.ts` exited **0**, **17 passed / 0 failed / 0 skipped**, 1.65s subprocess wall. Verification results are retained in `calibration/results/verification.txt`; the already-passing tests were not rerun after the type-only annotation. All changes are committed on `codex-local`; nothing is pushed.
