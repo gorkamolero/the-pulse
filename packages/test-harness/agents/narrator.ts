@@ -2,10 +2,11 @@
  * Narrator Wrapper
  *
  * Wraps narrator model configuration and provides interface for generating
- * story content. All models are accessed through Vercel AI Gateway.
+ * story content through AI Gateway or the local Codex CLI.
  */
 
 export type NarratorModel =
+  | 'codex-local'
   | 'opus-4.6'
   | 'xai/grok-4.3'
   | 'deepseek-v4-pro'
@@ -21,10 +22,10 @@ export interface NarratorConfig {
 }
 
 /**
- * AI Gateway model identifiers
- * All narrator models use Vercel AI Gateway for unified access
+ * Narrator model identifiers.
  */
 export const NARRATOR_MODEL_MAP: Record<NarratorModel, string> = {
+  'codex-local': 'codex-local',
   'opus-4.6': 'anthropic/claude-opus-4.6',
   'xai/grok-4.3': 'xai/grok-4.3',
   'deepseek-v4-pro': 'deepseek/deepseek-v4-pro',
@@ -37,11 +38,11 @@ export const NARRATOR_MODEL_MAP: Record<NarratorModel, string> = {
  */
 export const THINK_TAG_MODELS: NarratorModel[] = [];
 
-/**
- * All narrator models use AI Gateway
- */
-export function getNarratorProvider(_model: NarratorModel): 'ai-gateway' {
-  return 'ai-gateway';
+/** Identify the transport used by a narrator. */
+export function getNarratorProvider(
+  model: NarratorModel,
+): 'ai-gateway' | 'codex-cli' {
+  return model === 'codex-local' ? 'codex-cli' : 'ai-gateway';
 }
 
 /**

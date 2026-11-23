@@ -1,0 +1,291 @@
+{
+  "overall": {
+    "score": 8.5,
+    "summary": "The Narrator establishes both characters thoroughly, rewards their questions, and builds an intimate mystery without taking over their decisions. The main weakness is a confusing account of the brother's movements that makes both players stop to reconcile the timeline; the weighted score of 9.41 is capped at 8.5 by the experiential smell test.",
+    "verdict": "good"
+  },
+  "agencyRespect": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The bus leaves you both in Innsmouth’s market square",
+        "assessment": "A minor assumption about arrival and placement, acceptable as an opening premise but not explicitly chosen by the players."
+      },
+      {
+        "turn": 4,
+        "quote": "keeping it pinched between her fingers",
+        "assessment": "The key becomes available for interaction without the Narrator making Silas take it."
+      },
+      {
+        "turn": 6,
+        "quote": "her grip loosens enough for the key to tremble against her wedding ring",
+        "assessment": "Describes only the NPC's reaction, leaving the players free to question her or refuse entry."
+      }
+    ],
+    "notes": "Strong separation of NPC behavior from player decisions. No invented player speech, emotions, or consequential commitments."
+  },
+  "equipmentEngagement": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "what belongings have they brought",
+        "assessment": "Explicitly inventories both characters rather than treating table banter as their equipment."
+      },
+      {
+        "turn": 4,
+        "quote": "the captain’s name remains concealed within the folded claims",
+        "assessment": "Tracks Ruth's handling of the paperwork and makes the woman's knowledge testable."
+      },
+      {
+        "turn": 5,
+        "quote": "beneath it, seawater has blurred the date",
+        "assessment": "The inspected claim gains a physical clue."
+      },
+      {
+        "turn": 6,
+        "quote": "He asked whether you’d kept his letter",
+        "assessment": "Silas's starting letter becomes relevant to the mystery."
+      }
+    ],
+    "notes": "Documents are actively integrated. Camera, torch, and tools have no opportunity for use yet; the short excerpt does not establish that they were forgotten."
+  },
+  "npcDialogue": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "Elias Wray. This morning",
+        "assessment": "Answers Ruth's specific questions directly and briefly."
+      },
+      {
+        "turn": 5,
+        "quote": "I know his handwriting from the rent envelopes",
+        "assessment": "Provides a mundane, credible explanation when challenged."
+      },
+      {
+        "turn": 6,
+        "quote": "I haven’t seen him come down, but there’s a back stair I can’t watch",
+        "assessment": "Gives the woman limited knowledge rather than omniscience, although the surrounding chronology is confusing."
+      }
+    ],
+    "notes": "The woman responds conversationally and expresses apprehension through gestures. Dialogue remains concise, though nearly every answer adds another ominous hook."
+  },
+  "spatialConsistency": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "Beside the bus shelter, a marine repair shop",
+        "assessment": "Establishes a clear initial relationship between the characters, shop, notice, and woman."
+      },
+      {
+        "turn": 5,
+        "quote": "Your brother rents my upstairs room",
+        "assessment": "Introduces a comprehensible vertical layout and distinguishes the workshop from the locked upstairs."
+      },
+      {
+        "turn": 6,
+        "quote": "He went upstairs afterward",
+        "assessment": "Sits awkwardly beside the later account that he would not go upstairs for paper; both players request clarification."
+      }
+    ],
+    "notes": "Current character positions remain stable, with no teleportation. The brother's reported movements have an unresolved chronology problem, rather than a conclusively impossible route."
+  },
+  "characterCreation": {
+    "score": 10,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "we still need to establish your characters",
+        "assessment": "Correctly distinguishes player banter from completed character creation."
+      },
+      {
+        "turn": 2,
+        "quote": "what would make Ruth doubt a conclusion she could prove on paper?",
+        "assessment": "Probes Ruth's personality and standards of trust."
+      },
+      {
+        "turn": 2,
+        "quote": "what is Silas afraid his brother might say",
+        "assessment": "Elicits a specific emotional vulnerability before beginning play."
+      }
+    ],
+    "notes": "Setup audit: two real players, Celia and Marcelo, explicitly declare two characters: Celia owns Ruth Bellamy; Marcelo owns Silas Venn. Celia's spokesperson entries summarize the same pair and add no characters. First story scene: Narrator turn 3. Turn 1 asks each player three subquestions: character identity, belongings, and motivation. Celia answers all at player turn 1: 'Ruth Bellamy, an insurance investigator'; 'a pocket camera, a notebook, and copies of the claims'; 'sent to Innsmouth' over identical missing-cargo claims. Marcelo answers all at player turn 1: 'Silas Venn, a marine engine mechanic'; 'a tool roll, a pocket torch, and the letter with the ticket'; his missing brother sent a ferry ticket six years after disappearing. Turn 2 asks Celia what would make Ruth doubt a paper-proven conclusion; Celia answers at player turn 2: 'someone she trusted contradicted it with a detail they couldn’t possibly know.' Turn 2 asks Marcelo what Silas fears his brother might say about his absence; Marcelo answers at player turn 2: 'I needed you to believe I was dead, because you’d have come looking,' and explains the associated guilt. Every directed setup subquestion and personal follow-up receives an actual pre-scene reply; none is unanswered."
+  },
+  "invitationArchitecture": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "MECHANIC WANTED—ASK FOR VENN",
+        "assessment": "Creates a concrete personal hook without requiring the characters to pursue it."
+      },
+      {
+        "turn": 4,
+        "quote": "drawing a brass key from her glove",
+        "assessment": "Offers a physical invitation while leaving acceptance unresolved."
+      },
+      {
+        "turn": 5,
+        "quote": "even if you heard him calling",
+        "assessment": "Ends on a warning that invites questions or competing actions."
+      }
+    ],
+    "notes": "Responses consistently leave room for player input without repetitive explicit prompts. The final opening is weakened by confusing information."
+  },
+  "atmosphere": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "a bell tolls once, then stops mid-stroke",
+        "assessment": "An interrupted familiar sound evokes unease without naming a player emotion."
+      },
+      {
+        "turn": 5,
+        "quote": "seawater has blurred the date into a blue-green bruise",
+        "assessment": "Makes an investigative object tactile and unsettling."
+      },
+      {
+        "turn": 6,
+        "quote": "the key to tremble against her wedding ring",
+        "assessment": "A small physical reaction gives the NPC's fear emotional weight."
+      }
+    ],
+    "notes": "Consistent sensory horror grounded in ordinary objects and personal stakes. The atmosphere supports interaction rather than replacing it."
+  },
+  "curiosityFollowing": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "He orders two breakfasts, eats neither",
+        "assessment": "Specifically rewards Silas's unexpected question about whether the captain eats."
+      },
+      {
+        "turn": 5,
+        "quote": "from the rent envelopes",
+        "assessment": "Follows the players' skepticism about handwriting instead of steering them immediately inside."
+      },
+      {
+        "turn": 6,
+        "quote": "there’s a back stair I can’t watch from the shop",
+        "assessment": "Responds to the question about the brother's whereabouts with qualified, investigable information."
+      }
+    ],
+    "notes": "Player questions determine the conversation throughout. Their final request to compare documents falls beyond the last Narrator response and cannot yet be assessed."
+  },
+  "pacingBreath": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "what is Silas afraid his brother might say",
+        "assessment": "Makes time for emotional grounding before introducing the mystery."
+      },
+      {
+        "turn": 4,
+        "quote": "keeping it pinched between her fingers",
+        "assessment": "Sustains a small, unresolved moment rather than rushing into entry or danger."
+      },
+      {
+        "turn": 6,
+        "quote": "he wanted to write another—and then wouldn’t go upstairs",
+        "assessment": "Adds another mystery before clearly establishing the existing timeline, producing avoidable friction."
+      }
+    ],
+    "notes": "The session breathes and avoids a plot sprint, but ends during the first conversation without a local resolution. Six turns and two necessary setup exchanges limit what could reasonably conclude; the timeout alone does not establish poor pacing."
+  },
+  "declarationVsAcknowledgment": {
+    "score": 10,
+    "evidence": [
+      {
+        "turn": 5,
+        "quote": "The signature reads Elias Wray",
+        "assessment": "Resolves Ruth's explicitly performed inspection without inventing her conclusion or next action."
+      },
+      {
+        "turn": 6,
+        "quote": "At Silas’s words, her grip loosens",
+        "assessment": "Acknowledges his speech through an NPC response without completing the interrupted reach for the key."
+      }
+    ],
+    "notes": "No player plan becomes a completed commitment through Narrator fiat. The Narrator consistently supplies consequences and waits."
+  },
+  "branchingPersistence": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "If you’ve come about that captain",
+        "assessment": "Introduces Ruth's investigative lead alongside the separate Venn notice."
+      },
+      {
+        "turn": 5,
+        "quote": "Only the workshop",
+        "assessment": "Makes authorized workshop access distinct from investigating the forbidden upstairs."
+      },
+      {
+        "turn": 6,
+        "quote": "there’s a back stair",
+        "assessment": "Adds a possible alternate route and an uncertainty players could investigate."
+      }
+    ],
+    "notes": "Players can keep questioning, investigate documents, pursue the harbor lead, or consider different shop entrances. These remain plausible alternatives, but the short excerpt does not demonstrate lasting divergent consequences."
+  },
+  "actionableVsAtmospheric": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "a marine repair shop displays a recent notice",
+        "assessment": "Provides a readable object, nearby destination, and NPC to question."
+      },
+      {
+        "turn": 5,
+        "quote": "leave the upstairs door locked",
+        "assessment": "Defines a concrete obstacle with clear personal stakes."
+      },
+      {
+        "turn": 6,
+        "quote": "He asked whether you’d kept his letter",
+        "assessment": "Points toward an existing item the players can examine; they subsequently propose comparing it with the notice."
+      }
+    ],
+    "notes": "Descriptions regularly supply physical objects and investigable claims. The final timeline ambiguity complicates interpretation without eliminating possible actions."
+  },
+  "smellTest": {
+    "railroadedReported": false,
+    "linearLanguageUsed": false,
+    "declarationPhrases": false,
+    "experientiallyWrong": true,
+    "cappedScore": true,
+    "notes": "CRITICAL ISSUE: Turn 6 leaves the brother's sequence of movements unclear. Both players independently ask how he went upstairs yet later refused to go upstairs for paper. A compatible chronology may exist, but the presented account interrupts investigation with a need to repair basic scene understanding. This triggers the 8.5 cap; it is not evidence of railroading."
+  },
+  "agencyViolations": [],
+  "strengths": [
+    {
+      "turn": 2,
+      "description": "Both personal follow-ups are answered before play begins.",
+      "why": "The mystery starts with established emotional stakes and correctly owned characters."
+    },
+    {
+      "turn": 4,
+      "description": "The woman names the captain despite Ruth concealing the paperwork.",
+      "why": "Rewards the player's deliberate test and connects to Ruth's stated vulnerability."
+    },
+    {
+      "turn": 5,
+      "description": "The workshop key comes with a warning about the upstairs voice.",
+      "why": "Creates dread and a decision point without making either character accept the key or enter."
+    }
+  ],
+  "recommendations": [
+    "Clarify the brother's chronology before adding another clue: state where he gave the warning, when he went upstairs, and when he refused to return for paper.",
+    "Answer the players' final location question directly, then present the letter and notice for their requested comparison without assuming they unlock anything.",
+    "Continue giving separate traction to Ruth's captain investigation and Silas's family mystery so the shop does not become the sole practical route.",
+    "Within a short session, aim for a small completed discovery after setup while preserving player control over the larger mystery."
+  ]
+}

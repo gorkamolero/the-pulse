@@ -6,7 +6,9 @@
  */
 
 import { telemetry } from '../langfuse';
-import { generateObject, gateway, type LanguageModelUsage } from 'ai';
+import { generateObject, type LanguageModelUsage } from 'ai';
+import { resolveModel, modelIdFor } from '../ai/models';
+import { CodexLocalError } from '../ai/codex-local';
 import { z } from 'zod';
 
 // Classification models - ordered by cost/reliability for structured output
@@ -147,14 +149,15 @@ export async function classifyOutput(
   const userContent = `Narrator output to classify:\n\n${narratorOutput}\n\nPlayer names: ${context?.playerNames?.join(', ') || 'Unknown'}`;
 
   // Try each model in the fallback chain
-  for (let i = 0; i < CLASSIFICATION_MODELS.length; i++) {
-    const modelId = CLASSIFICATION_MODELS[i];
-    const isLastModel = i === CLASSIFICATION_MODELS.length - 1;
+  const models = process.env.PULSE_CLASSIFIER_MODEL ? [process.env.PULSE_CLASSIFIER_MODEL] : CLASSIFICATION_MODELS;
+  for (let i = 0; i < models.length; i++) {
+    const modelId = modelIdFor(models[i], 'classifier');
+    const isLastModel = i === models.length - 1;
 
     try {
       const response = await generateObject({
         experimental_telemetry: telemetry('classify-narration', { model: modelId }),
-        model: gateway(modelId),
+        model: resolveModel(modelId, 'classifier'),
         schema: classificationSchema,
         messages: [
           { role: 'system', content: CLASSIFICATION_PROMPT },
@@ -181,6 +184,7 @@ export async function classifyOutput(
         usage: response.usage,
       } as Classification;
     } catch (error) {
+      if (error instanceof CodexLocalError) throw error;
       const errMsg = error instanceof Error ? error.message.slice(0, 80) : String(error);
 
       if (isLastModel) {

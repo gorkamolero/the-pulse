@@ -1,0 +1,20 @@
+Observed command results (summary, not raw logs)
+Working directory: packages/test-harness
+
+Initial pnpm typecheck: exit 2, 0.84s subprocess wall.
+TS7034/TS7005: calibration/compare.ts rows implicitly any[] in aggregation callbacks.
+Corrected with explicit CalibrationRow[] annotation; no runtime or evaluator prompt change.
+
+pnpm exec tsx --test tests/codex-local.test.ts tests/langfuse.test.ts tests/narrator-routing.test.ts
+Exit 0; 17 tests passed, 0 failed, 0 skipped, 0 cancelled.
+Test runner duration 1277.429834ms; subprocess wall 1.65s.
+Tests were run once; not rerun after the type-only annotation.
+
+Final pnpm typecheck: exit 0; subprocess wall 0.72s.
+
+pnpm exec tsx calibration/compare.ts: exit 0.
+Codex agreement: 8/9 -> 9/9. Gemini agreement: 7/9 -> 8/9.
+All four saved-session rejudge commands exited 0.
+Before Codex 439.89s; before Gemini 152.29s; after Codex 691.49s; after Gemini 559.30s.
+Paid ledger: 9 entering + 3 missing Gemini baselines + 9 changed Gemini rejudgments = 21/40.
+No new play sessions and no extra Gemini pass.

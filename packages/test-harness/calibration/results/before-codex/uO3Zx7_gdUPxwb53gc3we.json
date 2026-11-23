@@ -1,0 +1,320 @@
+{
+  "overall": {
+    "score": 6.55,
+    "summary": "Strong sensory horror and effective use of character belongings drew explicit player enthusiasm. However, the Narrator began before Eleanor answered her personal follow-up, repeatedly exceeded the requested response length, assigned player reactions, and increasingly replaced conversation with directional exposition. The weighted score reflects these weaknesses; the six-turn cutoff limits assessment of resolution and lasting branches.",
+    "verdict": "acceptable"
+  },
+  "agencyRespect": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The bus lets the two of you out",
+        "assessment": "Establishes an arrival and transport choice the players had not supplied; a minor opening-scene imposition."
+      },
+      {
+        "turn": 4,
+        "quote": "even as you both try to pretend you're not hearing it",
+        "assessment": "Clearly assigns both characters a coping behavior and intention."
+      },
+      {
+        "turn": 3,
+        "quote": "Where do you go first?",
+        "assessment": "Leaves the first destination to the players."
+      }
+    ],
+    "notes": "Destination choices generally remain with players, but narration crosses into subjective reactions and assumed behavior. Traveling toward the wharf was explicitly authorized by the spokesperson, so acknowledging that movement is not itself a violation."
+  },
+  "equipmentEngagement": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "Your grandfather's journal—when did you last open it before this trip?",
+        "assessment": "Treats an inventory item as a personal object with history."
+      },
+      {
+        "turn": 3,
+        "quote": "The letter is warm against Elias's chest.",
+        "assessment": "Makes a carried item physically present and potentially uncanny."
+      },
+      {
+        "turn": 6,
+        "quote": "Your grandfather's maps. You said he surveyed this coastline",
+        "assessment": "An NPC directly engages Eleanor's research equipment."
+      }
+    ],
+    "notes": "The letter, journal, and maps become central scene elements. The magnifying glass receives no specific payoff, while the typewriter and flask largely remain player-maintained details."
+  },
+  "npcDialogue": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 5,
+        "quote": "\"Aye,\" he says, answering the tide question",
+        "assessment": "Directly responds to Elias and includes a listening pause."
+      },
+      {
+        "turn": 5,
+        "quote": "Zadok'd tell you about the gold, the ceremonies, the deals made in the dark.",
+        "assessment": "Launches unsolicited historical exposition instead of answering Eleanor's request for a family representative or property office."
+      },
+      {
+        "turn": 6,
+        "quote": "He doesn't wait for an answer.",
+        "assessment": "Explicitly closes an exchange before delivering more clues and directions; Eleanor's safe-path and inheritance questions remain unresolved."
+      }
+    ],
+    "notes": "The fisherman has distinctive physical behavior and a threatening voice, but functions increasingly as a lore and destination dispenser. Long responses prevent players from interrupting his revelations or departure."
+  },
+  "spatialConsistency": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "From the wharf at the end of the road, something croaks.",
+        "assessment": "Clearly places an audible destination relative to the arrival point."
+      },
+      {
+        "turn": 4,
+        "quote": "At the end of the wharf, a figure sits on an overturned crate.",
+        "assessment": "Establishes the fisherman and sack at a concrete location."
+      },
+      {
+        "turn": 6,
+        "quote": "The sack, left on the crate",
+        "assessment": "Moves the sack from the fisherman's feet to the crate without describing him lifting it."
+      }
+    ],
+    "notes": "Road, wharf, warehouse, and distant town remain broadly coherent. The sack has a small continuity gap; the fisherman's disappearance is presented as an uncanny event rather than an unexplained relocation elsewhere."
+  },
+  "characterCreation": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "What's your name? ... And what's actually in your bag",
+        "assessment": "Requests character identity and belongings instead of treating table banter as completed creation."
+      },
+      {
+        "turn": 2,
+        "quote": "This uncle—was he a close one",
+        "assessment": "Probes a human relationship beyond occupation and equipment."
+      },
+      {
+        "turn": 2,
+        "quote": "Your grandfather's journal—when did you last open it before this trip?",
+        "assessment": "Gives Eleanor a tailored follow-up, but begins the story on turn 3 without receiving her answer."
+      }
+    ],
+    "notes": "Both players supply identity, belongings, and motivation, and receive meaningful follow-ups. The explicit requirement to wait for each personal reply is nevertheless breached, leaving Eleanor's exploration incomplete."
+  },
+  "invitationArchitecture": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "Where do you go first?",
+        "assessment": "Provides an open destination choice grounded in visible surroundings."
+      },
+      {
+        "turn": 4,
+        "quote": "A pause. The sack at his feet squirms.",
+        "assessment": "Offers an evocative interaction hook, though the response continues past the apparent pause."
+      },
+      {
+        "turn": 6,
+        "quote": "He steps into the haze of sea spray, and by the time it clears he's gone",
+        "assessment": "Completes the NPC's exit before players can respond to his questions, bargain, or interrupt."
+      }
+    ],
+    "notes": "Descriptions consistently supply hooks, but internal pauses often fail to become actual response windows. The extended final monologue narrows conversational participation."
+  },
+  "atmosphere": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "salt, rot, and something sweeter beneath it, like flowers left too long in a closed room",
+        "assessment": "Combines familiar smells into a vivid, unsettling arrival."
+      },
+      {
+        "turn": 4,
+        "quote": "like something singing a single note just beneath the surface of hearing",
+        "assessment": "Creates restrained auditory dread; Furman explicitly says this detail will stay with him."
+      },
+      {
+        "turn": 6,
+        "quote": "He puts a boot on it gently, almost absently, pressing it still.",
+        "assessment": "Makes the fisherman's casual relationship to the disturbing sack especially unsettling."
+      }
+    ],
+    "notes": "Sensory detail and small uncanny gestures consistently work, with direct player praise supporting the assessment. Occasional prescribed feelings and dense ominous imagery keep this below a perfect score."
+  },
+  "curiosityFollowing": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "MARSH & SONS—EST. 1846",
+        "assessment": "Connects the players' property investigation to a tangible nearby clue."
+      },
+      {
+        "turn": 6,
+        "quote": "Did he mark Gold Street?",
+        "assessment": "Builds on Eleanor's maps and the party's interest in Marsh property."
+      },
+      {
+        "turn": 6,
+        "quote": "They say the tide never fully leaves that house.",
+        "assessment": "Provides a new destination rather than directly exploring Eleanor's questions about safe paths and inheritance."
+      }
+    ],
+    "notes": "Player-created family materials substantially influence the clues. However, the Narrator selectively follows interests that lead toward the house while leaving several direct questions and the examined carving unexplored. The player-authored sack revelation occurs after the final Narrator turn and cannot count as Narrator responsiveness."
+  },
+  "pacingBreath": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The street is empty. The windows are empty.",
+        "assessment": "Allows a quiet arrival before direct confrontation."
+      },
+      {
+        "turn": 5,
+        "quote": "They call it the Deep One curse. But Zadok called it the inheritance.",
+        "assessment": "Reveals major thematic lore during the first NPC exchange rather than letting investigation develop it."
+      },
+      {
+        "turn": 6,
+        "quote": "Gold Street's at the edge of town, past the church.",
+        "assessment": "Arrives after a lengthy sequence of clues, warnings, gestures, and departure, greatly exceeding the requested two to four sentences."
+      }
+    ],
+    "notes": "There are atmospheric pauses, but response length and accumulating revelations overwhelm conversational rhythm. The session ends before the house investigation; a six-turn cap and required setup make resolution difficult, so timeout alone is not evidence of poor pacing."
+  },
+  "declarationVsAcknowledgment": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The town waits.",
+        "assessment": "Presents the world as available for action rather than announcing a player decision."
+      },
+      {
+        "turn": 4,
+        "quote": "he doesn't move as you approach",
+        "assessment": "Assumes the party approaches the fisherman after choosing the wharf, a small extension beyond the declared destination."
+      },
+      {
+        "turn": 6,
+        "quote": "The sack remains on the crate",
+        "assessment": "Leaves an object available for player action without declaring that they open it or follow the directions."
+      }
+    ],
+    "notes": "No explicit decision-finalizing formula appears. Most narration acknowledges authorized travel and leaves subsequent choices open, with minor assumptions about arrival and approach. No Narrator response follows the final Gold Street plan, so its handling cannot be assessed."
+  },
+  "branchingPersistence": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "Where do you go first?",
+        "assessment": "Initially permits investigation of the street, markings, windows, or waterfront."
+      },
+      {
+        "turn": 5,
+        "quote": "Your grandfather ... he ever mention a man named Zadok?",
+        "assessment": "Redirects the property-office inquiry into a prepared-seeming lore thread."
+      },
+      {
+        "turn": 6,
+        "quote": "Mind the garden. What looks like weeds might be something else.",
+        "assessment": "Adds another pointer toward the same house, though leaving the sack offers an immediate alternative interaction."
+      }
+    ],
+    "notes": "Players retain freedom to interact locally, and nothing explicitly forces Gold Street. Still, meaningful alternative routes or different consequences are not demonstrated; the principal NPC increasingly funnels attention toward one destination."
+  },
+  "actionableVsAtmospheric": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "a crude circle with three wavy lines inside",
+        "assessment": "Supplies a specific marking that Eleanor immediately examines and interprets."
+      },
+      {
+        "turn": 4,
+        "quote": "At his feet, a burlap sack writhes faintly.",
+        "assessment": "Provides a concrete object with an obvious reason to inspect, question, or avoid it."
+      },
+      {
+        "turn": 6,
+        "quote": "Gold Street's at the edge of town, past the church.",
+        "assessment": "Offers usable navigation and an identifiable target."
+      }
+    ],
+    "notes": "Most atmospheric passages contain objects, sounds, people, or landmarks that support action. Some clues remain cryptic, but descriptions rarely become purely conceptual."
+  },
+  "smellTest": {
+    "railroadedReported": false,
+    "linearLanguageUsed": false,
+    "declarationPhrases": false,
+    "experientiallyWrong": true,
+    "cappedScore": true,
+    "notes": "Critical issues: turn 4 assigns both characters an intention to pretend they cannot hear the sound, and turn 6 asks questions but completes the fisherman's monologue and disappearance without a response window. These undermine experiential agency despite otherwise open choices. No player explicitly complains of railroading; the 8.5 cap does not change the lower weighted score."
+  },
+  "agencyViolations": [
+    {
+      "turn": 3,
+      "quote": "The bus lets the two of you out",
+      "explanation": "Minor opening imposition: establishes player travel and disembarkation without prior player input."
+    },
+    {
+      "turn": 3,
+      "quote": "Elenora's grandfather's journal feels heavier than it did on the train.",
+      "explanation": "Assigns a subjective equipment sensation and an unestablished earlier journey rather than describing an observable change."
+    },
+    {
+      "turn": 4,
+      "quote": "even as you both try to pretend you're not hearing it",
+      "explanation": "Clear violation: writes both characters' intentional response to the sound."
+    },
+    {
+      "turn": 4,
+      "quote": "he doesn't move as you approach",
+      "explanation": "Minor extension: assumes approach to the fisherman beyond the players' declared movement toward the waterfront."
+    }
+  ],
+  "strengths": [
+    {
+      "turn": 2,
+      "description": "Personal follow-ups connect family relationships with carried documents.",
+      "why": "Makes equipment and motivation useful foundations for the mystery."
+    },
+    {
+      "turn": 3,
+      "description": "The carved symbol and distant croak support an open arrival scene.",
+      "why": "Players have concrete investigative options within a strong atmosphere."
+    },
+    {
+      "turn": 4,
+      "description": "The harbor's barely audible single note earns explicit player praise.",
+      "why": "Demonstrates successful emotional impact rather than merely decorative prose."
+    },
+    {
+      "turn": 6,
+      "description": "The fisherman gently restrains the moving sack with his boot.",
+      "why": "Communicates unsettling familiarity through behavior rather than explanation."
+    }
+  ],
+  "recommendations": [
+    "Wait for Eleanor's personal follow-up answer before beginning the arrival scene.",
+    "Keep each response to two to four sentences and make a pause an actual turn ending.",
+    "Describe the sound and physical surroundings without assigning fear, pretense, or other player intentions.",
+    "Answer the property-office, safe-path, and inheritance questions directly or give a clear, character-driven refusal before introducing additional lore.",
+    "Stop after the fisherman asks about the maps or prepares to leave so players can answer or interrupt.",
+    "Develop the carving, warehouse, and sack as viable investigative routes with distinct information rather than making every clue point toward the house.",
+    "Track object placement explicitly, including moving the sack onto the crate, and give player-used tools such as the magnifying glass concrete investigative payoffs."
+  ]
+}

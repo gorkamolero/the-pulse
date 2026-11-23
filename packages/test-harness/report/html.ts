@@ -272,7 +272,9 @@ export async function generateHTMLReport(
 
   // Cost section
   let costSection = '';
-  if (result.costBreakdown) {
+  if (result.costBreakdown && result.config.narratorConfig.model === 'codex-local') {
+    costSection = '<div class="section"><h2>Subscription usage</h2><p>Not priced: Codex subscription, no per-call API cost figures. See the Markdown report and Codex audit for token usage.</p></div>';
+  } else if (result.costBreakdown) {
     costSection = `
     <div class="section">
       <h2>Cost Breakdown</h2>

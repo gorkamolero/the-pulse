@@ -5,6 +5,8 @@
  * executes main loop until story ends or max turns reached.
  */
 
+import { resolveModel } from '../ai/models';
+import { CodexLocalError } from '../ai/codex-local';
 import { tracePlayer, withGameSession, traceSession, traceTurn, telemetry, getLangfuse, type SpanContext } from '../langfuse';
 import { PerformanceTracker, type PerformanceMetrics } from './metrics';
 import { nanoid } from 'nanoid';
@@ -12,7 +14,6 @@ import {
   streamText,
   wrapLanguageModel,
   extractReasoningMiddleware,
-  gateway,
   type LanguageModelUsage,
   type UserModelMessage,
   type AssistantModelMessage,
@@ -223,21 +224,54 @@ function buildNarratorSystemPrompt(systemPrompt: string): string {
   return systemPrompt;
 }
 
-function buildFirstTurnPrompt(conversationHistory: Message[]): string {
+export function buildFirstTurnPrompt(conversationHistory: Message[]): string {
   const preGameContext = conversationHistory
     .filter((message) => message.turn === 0)
     .map((message) => `${message.role}: ${message.content}`)
     .join('\n\n');
 
-  if (!preGameContext.trim()) {
-    return 'Begin the story now at Pulse 1. Do not ask setup questions.';
-  }
+  const opening = "Let's start the group session. Follow your setup instructions before beginning the story.";
+  if (!preGameContext.trim()) return opening;
 
-  return `The group has already completed pre-game setup. Use this context as the established player and character material:
+  return `${opening}
 
-${preGameContext}
+Pre-game conversation (not confirmation that character setup is complete):
 
-Begin the story now at Pulse 1. Do not ask for player count, player names, character backstories, or gear unless a detail is genuinely absent.`;
+${preGameContext}`;
+}
+
+/** Public directed replies reach the narrator; discussion/private replies do not. */
+export function narratorVisibleHistory(history: Message[]): Message[] {
+  let directedTurn = -1;
+  return history.filter((message) => {
+    if (message.role === 'narrator') {
+      directedTurn = message.classification === 'directed-questions' ? message.turn : -1;
+    }
+    return message.turn > 0 && (
+      message.role === 'narrator' ||
+      message.role === 'spokesperson' ||
+      (message.role === 'player' && message.turn === directedTurn)
+    );
+  });
+}
+
+/** Resolve player names or unambiguous character names to their owning player. */
+export function directedPlayer(
+  target: string,
+  players: PlayerAgent[],
+  state: GameState,
+): PlayerAgent | undefined {
+  const name = target.toLowerCase();
+  const player = players.find((agent) => agent.name.toLowerCase() === name);
+  if (player) return player;
+  const characters = state.characters.filter((character) =>
+    character.idName.toLowerCase() === name ||
+    character.idName.toLowerCase().split(/\s+/)[0] === name,
+  );
+  if (characters.length !== 1) return undefined;
+  return players.find((agent) =>
+    agent.name.toLowerCase() === characters[0].odName.toLowerCase(),
+  );
 }
 
 /**
@@ -256,12 +290,8 @@ async function generateNarratorResponse(
 
   const systemPrompt = buildNarratorSystemPrompt(narratorConfig.systemPrompt);
 
-  // Narrator only sees its own outputs and spokesperson syntheses
-  // Player discussions are private - narrator only hears what spokesperson relays
-  // Exclude turn 0 (pre-game chat - that's players talking before game starts)
-  const narratorHistory = conversationHistory.filter(
-    (m) => (m.role === 'narrator' || m.role === 'spokesperson') && m.turn > 0,
-  );
+  // Public directed answers bypass the spokesperson; private discussion stays hidden.
+  const narratorHistory = narratorVisibleHistory(conversationHistory);
 
   // Build messages with proper user/assistant alternation
   // Some response types (private, directed, none) don't add spokesperson messages,
@@ -271,7 +301,8 @@ async function generateNarratorResponse(
 
   for (const m of narratorHistory) {
     const newRole = m.role === 'narrator' ? 'assistant' : 'user';
-    const content = m.role === 'spokesperson' ? `Players: ${m.content}` : m.content;
+    const content = m.role === 'spokesperson' ? `Players: ${m.content}`
+      : m.role === 'player' ? `${m.player}: ${m.content}` : m.content;
 
     // If we'd create consecutive assistant messages, inject a placeholder user message
     if (newRole === 'assistant' && lastRole === 'assistant') {
@@ -286,7 +317,7 @@ async function generateNarratorResponse(
   }
 
   // If the last message is assistant (narrator), we need a user message before generating
-  // This happens when directed/private responses aren't visible to narrator (role='player' not 'spokesperson')
+  // Private responses and narration-only turns may leave no public user message.
   if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
     messages.push({
       role: 'user',
@@ -304,10 +335,10 @@ async function generateNarratorResponse(
   const needsThinkMiddleware = THINK_TAG_MODELS.includes(narratorConfig.model);
   const model = needsThinkMiddleware
     ? wrapLanguageModel({
-        model: gateway(modelId),
+        model: resolveModel(modelId, 'narrator'),
         middleware: extractReasoningMiddleware({ tagName: 'think' }),
       })
-    : gateway(modelId);
+    : resolveModel(modelId, 'narrator');
 
   const maxRetries = 3;
   let lastError: Error | null = null;
@@ -344,6 +375,7 @@ async function generateNarratorResponse(
       let hasStartedText = false;
 
       for await (const part of result.fullStream) {
+        if (part.type === 'error') throw part.error;
         if (part.type === 'reasoning-delta') {
           reasoning += part.text;
         } else if (part.type === 'text-delta') {
@@ -368,6 +400,7 @@ async function generateNarratorResponse(
 
       return { text: fullText, reasoning: reasoning || undefined, usage };
     } catch (error) {
+      if (error instanceof CodexLocalError) throw error;
       lastError = error instanceof Error ? error : new Error(String(error));
       const errorMsg = lastError.message.slice(0, 80);
       console.error(`   ⚠ Narrator error (attempt ${attempt}/${maxRetries}): ${errorMsg}`);
@@ -429,7 +462,7 @@ async function generatePlayerResponse(
     async (modelId) => {
       const result = streamText({
         experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
-        model: modelId,
+        model: resolveModel(modelId),
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
@@ -511,7 +544,7 @@ Respond in character as ${agent.name}.`,
     async (modelId) => {
       const result = streamText({
         experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
-        model: modelId,
+        model: resolveModel(modelId),
         system: agent.systemPrompt,
         messages,
         temperature: 0.8,
@@ -569,7 +602,7 @@ As ${spokesperson.name}, synthesize these responses into a single coherent messa
     async (modelId) => {
       const result = streamText({
         experimental_telemetry: telemetry('generate-player-response', { model: modelId }),
-        model: modelId,
+        model: resolveModel(modelId),
         system: spokesperson.systemPrompt,
         messages,
         temperature: 0.7,
@@ -744,9 +777,7 @@ async function executeTurn(
       console.log(`🎯 Directed questions for: ${targets.join(', ')}`);
 
       for (const targetName of targets) {
-        const agent = playerAgents.find(
-          (a) => a.name.toLowerCase() === targetName.toLowerCase(),
-        );
+        const agent = directedPlayer(targetName, playerAgents, ctx.gameState);
         if (agent) {
           const { text: response, usage: playerUsage } =
             await generateDirectedResponse(agent, narratorOutput, conversationHistory);

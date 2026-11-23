@@ -5,6 +5,7 @@
  * Evaluates narrator performance against the philosophical framework.
  */
 
+import { resolveModel, modelIdFor } from '../ai/models';
 import { traceJudge, telemetry } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
@@ -105,13 +106,16 @@ const evaluationSchema = z.object({
 export type GeminiEvaluation = z.infer<typeof evaluationSchema>;
 
 /**
- * Format transcript for evaluation (narrator + spokesperson only, compressed)
+ * Format the complete transcript, including individual character-creation replies.
  */
 function formatTranscriptForEval(messages: Message[]): string {
   return messages
-    .filter((m) => m.role === 'narrator' || m.role === 'spokesperson')
     .map((m) => {
-      const role = m.role === 'narrator' ? 'NARRATOR' : `PLAYERS (${m.player})`;
+      const role = m.role === 'narrator'
+        ? 'NARRATOR'
+        : m.role === 'spokesperson'
+          ? `SPOKESPERSON (${m.player})`
+          : `PLAYER (${m.player})`;
       // Include thinking for narrator if present
       const thinking = m.reasoning ? `\n[Thinking: ${m.reasoning.slice(0, 500)}...]` : '';
       return `--- Turn ${m.turn} ---\n${role}:${thinking}\n${m.content}`;
@@ -221,8 +225,8 @@ export async function evaluateWithGemini(
   const evaluation = await withRetry(
     async () => {
       const response = await generateObject({
-        experimental_telemetry: telemetry('generate-judgment', { model: 'google/gemini-3.1-pro-preview' }),
-        model: 'google/gemini-3.1-pro-preview',
+        experimental_telemetry: telemetry('generate-judgment', { model: modelIdFor('google/gemini-3.1-pro-preview', 'judge') }),
+        model: resolveModel('google/gemini-3.1-pro-preview', 'judge'),
         schema: evaluationSchema,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,

@@ -6,6 +6,7 @@
  * - All individual characters with names and relationships
  */
 
+import { resolveModel } from '../ai/models';
 import { telemetry } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
@@ -240,7 +241,7 @@ Make them feel like real friends with history, not strangers.${languageInstructi
     async () => {
       return generateObject({
         experimental_telemetry: telemetry('generate-player-group'),
-        model: 'xai/grok-4.3',
+        model: resolveModel('xai/grok-4.3'),
         schema: generatedGroupSchema,
         prompt,
         temperature: 0.8,

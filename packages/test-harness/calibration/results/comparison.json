@@ -1,0 +1,2104 @@
+[
+  {
+    "model": "codex",
+    "agreementBefore": 8,
+    "agreementAfter": 9,
+    "count": 9,
+    "certainAgreementBefore": 8,
+    "certainAgreementAfter": 8,
+    "certainCount": 8,
+    "meanCriteria": {
+      "agencyRespect": {
+        "before": 6.333333333333333,
+        "after": 6.222222222222222,
+        "delta": -0.11111111111111072,
+        "movedSessions": 3
+      },
+      "equipmentEngagement": {
+        "before": 6.333333333333333,
+        "after": 6.444444444444445,
+        "delta": 0.1111111111111116,
+        "movedSessions": 1
+      },
+      "npcDialogue": {
+        "before": 6.222222222222222,
+        "after": 6.444444444444445,
+        "delta": 0.22222222222222232,
+        "movedSessions": 4
+      },
+      "spatialConsistency": {
+        "before": 7.222222222222222,
+        "after": 8,
+        "delta": 0.7777777777777777,
+        "movedSessions": 6
+      },
+      "characterCreation": {
+        "before": 5.888888888888889,
+        "after": 5.888888888888889,
+        "delta": 0,
+        "movedSessions": 3
+      },
+      "invitationArchitecture": {
+        "before": 7.555555555555555,
+        "after": 7.555555555555555,
+        "delta": 0,
+        "movedSessions": 2
+      },
+      "atmosphere": {
+        "before": 8.555555555555555,
+        "after": 8.777777777777779,
+        "delta": 0.2222222222222232,
+        "movedSessions": 2
+      },
+      "curiosityFollowing": {
+        "before": 7.222222222222222,
+        "after": 7.555555555555555,
+        "delta": 0.33333333333333304,
+        "movedSessions": 5
+      },
+      "pacingBreath": {
+        "before": 5.666666666666667,
+        "after": 5.888888888888889,
+        "delta": 0.22222222222222232,
+        "movedSessions": 2
+      },
+      "declarationVsAcknowledgment": {
+        "before": 6.555555555555555,
+        "after": 6.777777777777778,
+        "delta": 0.22222222222222232,
+        "movedSessions": 4
+      },
+      "branchingPersistence": {
+        "before": 6,
+        "after": 6.666666666666667,
+        "delta": 0.666666666666667,
+        "movedSessions": 6
+      },
+      "actionableVsAtmospheric": {
+        "before": 8.444444444444445,
+        "after": 8.444444444444445,
+        "delta": 0,
+        "movedSessions": 0
+      }
+    },
+    "rows": [
+      {
+        "sessionId": "wuI3U41D-bp6QK58DyTBK",
+        "stack": "step-5 gateway",
+        "expectedScoreBand": [
+          4,
+          6
+        ],
+        "uncertain": false,
+        "players": [
+          "Johann",
+          "Velma"
+        ],
+        "characters": {
+          "Johann": "Finn Carter",
+          "Velma": "Eleanor Voss"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 0,
+            "quote": "I’ll play Eleanor Voss, a journalist",
+            "observation": "Velma explicitly owns Eleanor, not a third character."
+          },
+          {
+            "turn": 1,
+            "quote": "Eleanor: What did you bring with you on this trip?",
+            "observation": "Velma replies with uncle’s journal, locket and UV light. Johann answers identity, equipment and motivation: 'I'm Finn Carter, freelance photographer chasing a shot.' Narrator also asks 'Anyone else at the table?' with no third player reply."
+          },
+          {
+            "turn": 2,
+            "quote": "Three characters, three secrets",
+            "observation": "Two players have named two characters. Narrator splits Velma/Eleanor into separate characters."
+          },
+          {
+            "turn": 2,
+            "quote": "Eleanor ... What does it feel like when you hold it?",
+            "observation": "No answer to locket sensation before scene starts."
+          },
+          {
+            "turn": 2,
+            "quote": "Finn ... What's the one image you're still chasing?",
+            "observation": "Johann replies 'there was this silhouette in one frame' at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "Velma ... What's the last entry?",
+            "observation": "Velma replies 'They’re not just in the water anymore. They’re waking up. And they remember me.' at turn 2, answering journal not locket question."
+          },
+          {
+            "turn": 3,
+            "quote": "you've never shown that photo to anyone, have you?",
+            "observation": "Finn also receives 'when you try to describe it, the shape feels like it shifts in your memory' (a narrator assertion, not a reply). Velma is asked 'Was the smudge from water, or from something else?' and 'does the locket ever feel warmer when you read those words?'; Eleanor is asked 'you've been holding the locket this whole time, haven't you?' and 'What does the engraving actually say?' All appear before the bus scene in the same narrator message, without waiting. Scene: 'The bus groans as it crests the final hill'. Neither turn-3 player answers those specific questions; they react to arriving in town."
+          }
+        ],
+        "before": 5,
+        "after": 5,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "The initial checkpoint and Finn's personal follow-up are strong. Identity confusion, assumed personal history, and beginning before outstanding answers prevent the characters from feeling reliably established.",
+        "reasonAfter": "Setup audit: there are two real players, Johann and Velma; Velma also serves as spokesperson. Explicit declarations establish Johann → Finn Carter (turn 1: 'I'm Finn Carter, freelance photographer') and Velma → Eleanor Voss (turn 0: 'I'll play Eleanor Voss'). No third character is explicitly declared. Later player wording becomes inconsistent, but does not establish a separately owned third character. First story scene: turn 3, 'The bus groans as it crests the final hill.' Turn 1 questions: Eleanor's belongings → Velma answers at turn 1, 'my uncle’s old field journal,' a silver locket, and a UV light. Johann's identity, camera-bag contents, and reason for joining → Johann answers all three at turn 1: Finn Carter, Hasselblad/coffee/jerky, and Eleanor's promised story plus friendship. 'Anyone else at the table?' → unanswered explicitly; no additional player appears. Turn 2 questions: Eleanor's locket sensation, cold/warm quality, and unusual heaviness → all unanswered before the scene. Finn's desired image, its personal hold, and why it prompted accepting the story → Johann answers at turn 2 with the unexplained silhouette, continued coastal search, and 'the next frame in that roll.' 'Velma' is asked for the journal's last entry and what made her pack → owning player Velma answers at turn 2, quoting 'They’re waking up. And they remember me' and 'I packed the next morning'; this develops Eleanor, not a third character. Turn 3 questions: Finn's whether-he-shared-the-photo question → unanswered; Velma's water-versus-other smudge question and whether reading warms the locket → both unanswered before the scene; Eleanor's whether-she-is-holding-and-turning-the-locket question and exact engraving → both unanswered before the scene. Later spokesperson narration gives the locket warmth, but occurs after the scene begins and does not complete pre-story setup. Identity, belongings, and motivation were supplied for both actual characters; ownership/count errors and the missing locket follow-up prevent a high score.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 4,
+            "after": 4,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 4,
+            "after": 4,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 4,
+            "after": 5,
+            "delta": 1
+          },
+          "spatialConsistency": {
+            "before": 6,
+            "after": 8,
+            "delta": 2
+          },
+          "characterCreation": {
+            "before": 5,
+            "after": 5,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 6,
+            "after": 7,
+            "delta": 1
+          },
+          "atmosphere": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 4,
+            "after": 4,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 4,
+            "after": 4,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 3,
+            "after": 3,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 4,
+            "after": 5,
+            "delta": 1
+          },
+          "actionableVsAtmospheric": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "yfhnFIJPKDF810qASOjW3",
+        "stack": "step-5 gateway",
+        "expectedScoreBand": [
+          9,
+          10
+        ],
+        "uncertain": false,
+        "players": [
+          "Celia",
+          "Marcelo"
+        ],
+        "characters": {
+          "Celia": "Althea Reed",
+          "Marcelo": "Leo Vance"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "Give me your names, your faces, your reasons",
+            "observation": "Both directed identity/belongings/motivation requests answered: 'I'll play Althea Reed' with journal/recorder/mentor theory; 'I'll be Leo Vance' with Leica/sketches/missing great-uncle. Two players, two characters."
+          },
+          {
+            "turn": 2,
+            "quote": "Celia ... What happened to them? ... what's the one superstition ... couldn't explain away?",
+            "observation": "Celia answers mentor’s heart attack, unsent 'It's a pump' letter and Norwegian slow-bell story at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "Marcelo ... What was the code, what did it say ... And the Leica",
+            "observation": "Marcelo answers architectural substitution cipher, 'It's built for something else entirely', and camera found at grandmother’s house at turn 2."
+          },
+          {
+            "turn": 3,
+            "quote": "The bus spits you out onto a cracked asphalt apron",
+            "observation": "First scene follows both complete personal replies."
+          }
+        ],
+        "before": 9,
+        "after": 9,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "Excellent compliance with the setup checkpoint. Follow-ups explore relationships and meaningful objects, though they emphasize mystery hooks more than everyday personality.",
+        "reasonAfter": "Setup audit: two real players and two explicitly declared characters: Celia owns Althea Reed; Marcelo, also labeled spokesperson, owns Leo Vance. First story scene: turn 3, 'The bus spits you out'; turn 1's sea-air remark is introductory framing, not an enacted scene. Turn 1 to Celia: who she is/room presence, occupation, belongings, and hoped-for discovery. Celia's turn 1 answers 'folklorist and archivist,' journal and recorder, comparative study and mentor's theory; room presence is only indirectly characterized through skepticism. Turn 1 to Marcelo: identity/person behind the grin, business, pockets, and pull toward Innsmouth. Marcelo's turn 1 answers 'Leo Vance,' freelance photographer, Leica and sketches, and 'I want to see what he saw'; personality is conveyed through stubborn disbelief. The closing request to both for 'names, your faces, your reasons' receives names and reasons in turn 1; physical appearance remains unanswered. Turn 2 to Celia/Althea: what happened to her mentor, whether death/disappearance/silence left something unsettled, and one unexplained superstition. Celia's turn 2 answers official heart attack, suspicious final behavior and letter, and the underwater bell with crew transfers. Turn 2 to Marcelo/Leo: the last letter's code, contents, decisive final line, and whether the Leica was inherited or found somewhere personally significant. Marcelo's turn 2 answers architectural substitution cipher, unstable foundations and light-swallowing corners, 'It's built for something else entirely,' and discovery at his grandmother's house with an impossible photograph. All substantive personal follow-ups are answered before turn 3. Later player changes to the mentor's identity do not retroactively invalidate setup.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 7,
+            "after": 6,
+            "delta": -1
+          },
+          "equipmentEngagement": {
+            "before": 5,
+            "after": 6,
+            "delta": 1
+          },
+          "npcDialogue": {
+            "before": 6,
+            "after": 6,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 6,
+            "after": 7,
+            "delta": 1
+          },
+          "characterCreation": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 6,
+            "after": 7,
+            "delta": 1
+          },
+          "declarationVsAcknowledgment": {
+            "before": 5,
+            "after": 6,
+            "delta": 1
+          },
+          "branchingPersistence": {
+            "before": 6,
+            "after": 7,
+            "delta": 1
+          },
+          "actionableVsAtmospheric": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "uO3Zx7_gdUPxwb53gc3we",
+        "stack": "step-5 gateway",
+        "expectedScoreBand": [
+          4,
+          6
+        ],
+        "uncertain": true,
+        "uncertainty": "Both identities and basic details are established and one rich follow-up is answered; 7 might be defensible under the old broad 'genuine exploration' anchor. Band 4-6 reflects one of two characters missing the required personal reply before play, not a claim that all setup was skipped.",
+        "players": [
+          "Furman",
+          "Johanna"
+        ],
+        "characters": {
+          "Furman": "Elias Crane",
+          "Johanna": "Dr. Eleanor Vance"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "And both of you: what's the real reason neither of you said no to this trip?",
+            "observation": "Spokesperson and Johanna identity, bag and motivation prompts answered by both players. Furman: 'I'll play Elias Crane' with typewriter/flask/estate letter. Johanna: 'I'll play Dr. Eleanor Vance' with maps/magnifying glass/grandfather’s journal."
+          },
+          {
+            "turn": 2,
+            "quote": "To Elias: This uncle—was he a close one ... what did it look like?",
+            "observation": "Furman answers 'Met him twice' and describes shaky handwriting/fish-anchor watermark at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "To Eleanor: Your grandfather's journal—when did you last open it ... particular page ... Marsh convergence",
+            "observation": "No Johanna reply at turn 2; only Furman speaks. His answer does not answer Eleanor’s journal questions."
+          },
+          {
+            "turn": 3,
+            "quote": "The bus lets the two of you out",
+            "observation": "Scene starts before Eleanor’s personal reply. Johanna’s later turn-3 warding-symbol investigation is after scene start, not the missing setup answer. Narrator also calls her 'Elenora'."
+          }
+        ],
+        "before": 7,
+        "after": 5,
+        "agreementBefore": false,
+        "agreementAfter": true,
+        "reasonBefore": "Both players supply identity, belongings, and motivation, and receive meaningful follow-ups. The explicit requirement to wait for each personal reply is nevertheless breached, leaving Eleanor's exploration incomplete.",
+        "reasonAfter": "Setup audit: Two real players and two explicitly declared characters: Furman owns Elias Crane; Johanna owns Dr. Eleanor Vance. SPOKESPERSON Furman is the same player, not a third participant. First story scene: Narrator turn 3. Turn 1, to Furman: character name, appearance, bag contents, and concealed item; answered in Furman's turn 1 with 'Elias Crane,' 'Forty-two, weathered,' flask/typewriter, and 'A letter from my uncle's estate.' The implied reason for Innsmouth is answered by the Marsh property letter. Turn 1, to Johanna: character name, belongings expressing identity, and why Innsmouth; answered in Johanna's turn 1 with 'Dr. Eleanor Vance,' maps/magnifying glass/journal, and 'I need to see what they tried to erase.' Turn 1, to both: real reason neither refused the trip; Furman answers 'Deadlines don't scare me. Silence does'; Johanna answers that she would rather investigate 'with someone watching my back.' Turn 2, to Elias: closeness to uncle; letter appearance; handwriting; paper; anything strange beyond its words. All answered in Furman's turn 2: 'Met him twice,' shaky handwriting, thin cheap paper, and fish-and-anchor watermark, with additional quoted contents. Turn 2, to Eleanor: when she last opened the journal before the trip; a recurring page or phrase; whether 'Marsh convergence' means a place, family, or something else. All three remain unanswered before turn 3. Later in-scene journal references do not complete pre-story setup. The Narrator's thinking claims everyone answered, but the transcript does not support that claim.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 6,
+            "after": 6,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 7,
+            "after": 7,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 4,
+            "after": 4,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "characterCreation": {
+            "before": 7,
+            "after": 5,
+            "delta": -2
+          },
+          "invitationArchitecture": {
+            "before": 7,
+            "after": 6,
+            "delta": -1
+          },
+          "atmosphere": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 6,
+            "after": 6,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 4,
+            "after": 4,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 5,
+            "after": 5,
+            "delta": 0
+          },
+          "actionableVsAtmospheric": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "M_aahwcuZI4xtBAqrMtwH",
+        "stack": "step-4 gateway minimal-character",
+        "expectedScoreBand": [
+          1,
+          2
+        ],
+        "uncertain": false,
+        "players": [
+          "Johann",
+          "Velma"
+        ],
+        "characters": {
+          "Johann": null,
+          "Velma": "Eleanor Marsh"
+        },
+        "sceneStartTurn": 1,
+        "facts": [
+          {
+            "turn": 0,
+            "quote": "Eleanor Marsh, local historian and skeptic, here to document the madness",
+            "observation": "One volunteered character for two players; no completed two-character equipment/motivation inventory."
+          },
+          {
+            "turn": 1,
+            "quote": "The road to Innsmouth peels away from the coastal highway",
+            "observation": "Scene starts immediately; narrator addresses Eleanor and real-player Johann. No directed identity/equipment/motivation or personal setup questions before play, hence no setup replies to wait for. 'Where do you want to take this rust-bucket of a story first' is an in-scene action question, not setup."
+          }
+        ],
+        "directedSetupQuestions": [],
+        "before": 1,
+        "after": 1,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "Eleanor supplies a partial identity and motivation in turn 0, but neither character receives the required inventory and personal follow-up. The Narrator mistakes table banter for completed setup and never repairs the omission.",
+        "reasonAfter": "Setup audit: two real players, Johann and Velma; Velma also serves as spokesperson and is not a third player. One character is explicitly declared before play: Eleanor Marsh, owned by Velma. Johann's character identity is undeclared; addressing him as Johann does not complete character creation. Eleanor has identity and motivation at turn 0 ('local historian and skeptic' and 'here to document the madness'); Velma's notebook is mentioned in table-stage narration, but no character belongings inventory is explicitly supplied. Johann supplies none of the required character details before play. Directed pre-story setup/personal questions: none; consequently there are no matched answers or completed personal follow-ups. First story-scene turn: Narrator turn 1. Its closing destination question is an in-scene action prompt, not character setup. The narrator's thinking claim that setup is complete is unsupported. Later character behavior and equipment mentions cannot retroactively complete pre-story setup.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 4,
+            "after": 4,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 5,
+            "after": 5,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 5,
+            "after": 5,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 7,
+            "after": 8,
+            "delta": 1
+          },
+          "characterCreation": {
+            "before": 1,
+            "after": 1,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 7,
+            "after": 7,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 8,
+            "after": 9,
+            "delta": 1
+          },
+          "curiosityFollowing": {
+            "before": 6,
+            "after": 6,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 5,
+            "after": 5,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 5,
+            "after": 4,
+            "delta": -1
+          },
+          "branchingPersistence": {
+            "before": 6,
+            "after": 6,
+            "delta": 0
+          },
+          "actionableVsAtmospheric": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "Byu4CNy79RjGsV0R8yl-E",
+        "stack": "step-4 gateway minimal-character",
+        "expectedScoreBand": [
+          1,
+          2
+        ],
+        "uncertain": false,
+        "players": [
+          "Celia",
+          "Marcelo"
+        ],
+        "characters": {
+          "Celia": null,
+          "Marcelo": null
+        },
+        "sceneStartTurn": 1,
+        "facts": [
+          {
+            "turn": 0,
+            "quote": "hoping I’ll spot the inconsistencies before the narrator does?",
+            "observation": "Table banter only; two real players, no named characters."
+          },
+          {
+            "turn": 1,
+            "quote": "The bus wheezes to a halt at the end of a cracked asphalt road",
+            "observation": "First scene begins without any identity/belongings/motivation or personal setup questions/replies. Both players discuss driver, hymn and note after scene begins."
+          }
+        ],
+        "directedSetupQuestions": [],
+        "before": 1,
+        "after": 1,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "The explicit setup checkpoint is entirely skipped. Neither character receives a personal follow-up or an opportunity to establish why they are in Innsmouth.",
+        "reasonAfter": "Setup audit: There are two real players, Celia and Marcelo; Celia also serves as spokesperson and is not a third player. Before play, neither explicitly declares a fictional character, so there are zero explicitly established characters and no confirmed ownership mapping beyond the players subsequently using their own names in play. The first story-scene turn is Narrator turn 1. Directed setup/personal questions: none at any turn, hence no matching pre-story replies. Identity, belongings, motivation, and a personal follow-up for each character were never requested or completed before the scene. Later notebook references and the turn-4 Eureka anecdote do not retroactively complete setup.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 4,
+            "after": 5,
+            "delta": 1
+          },
+          "equipmentEngagement": {
+            "before": 4,
+            "after": 4,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 5,
+            "after": 6,
+            "delta": 1
+          },
+          "spatialConsistency": {
+            "before": 7,
+            "after": 8,
+            "delta": 1
+          },
+          "characterCreation": {
+            "before": 1,
+            "after": 1,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 6,
+            "after": 6,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 8,
+            "after": 9,
+            "delta": 1
+          },
+          "curiosityFollowing": {
+            "before": 7,
+            "after": 8,
+            "delta": 1
+          },
+          "pacingBreath": {
+            "before": 3,
+            "after": 3,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 5,
+            "after": 6,
+            "delta": 1
+          },
+          "branchingPersistence": {
+            "before": 6,
+            "after": 7,
+            "delta": 1
+          },
+          "actionableVsAtmospheric": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "eVYHdhgk8lvS-k7LgkTP2",
+        "stack": "step-4 gateway minimal-character",
+        "expectedScoreBand": [
+          1,
+          2
+        ],
+        "uncertain": false,
+        "players": [
+          "Furman",
+          "Johanna"
+        ],
+        "characters": {
+          "Furman": "Thomas Vance",
+          "Johanna": "Eleanor Vance"
+        },
+        "sceneStartTurn": 1,
+        "facts": [
+          {
+            "turn": 0,
+            "quote": "I think I’ll play… a scholar this time",
+            "observation": "Tentative occupation, not completed identity/gear/personal setup."
+          },
+          {
+            "turn": 1,
+            "quote": "The bus wheezes to a halt at the end of a cracked asphalt road",
+            "observation": "No directed setup questions or personal follow-ups; scene first. Two identities volunteered only after this narrator scene: Furman 'I'll be Thomas Vance' and Johanna 'I'm Eleanor Vance, folklorist'."
+          },
+          {
+            "turn": 3,
+            "quote": "Eleanor answers after a beat: \"Just a shovel.",
+            "observation": "Narrator-authored character speech is not a player setup reply."
+          }
+        ],
+        "directedSetupQuestions": [],
+        "before": 1,
+        "after": 2,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "The explicit setup checkpoint was bypassed. Opening table banter was mistaken for completed creation, and no individual personality exploration occurred.",
+        "reasonAfter": "Setup audit: there are two real players, Furman and Johanna; Furman's spokesperson messages do not constitute a third player. Two characters are explicitly declared during turn 1: Furman owns Thomas Vance, journalist pursuing missing fishermen; Johanna owns Eleanor Vance, folklorist investigating her grandmother's stories. Before play, turn 0 supplies only Johanna's tentative scholar concept and folklore/family motivation; Furman's blank-page remark concerns his real writing, not a declared character. The first story-scene turn is Narrator turn 1, beginning 'The bus wheezes to a halt'. Directed pre-story setup/personal questions: none. Consequently there are no matched pre-story replies establishing each character's identity, belongings, motivation, or personal follow-up. The Narrator instead asserts completion and reverses the players' concepts in its thinking. The sole later personal/action prompt is turn 2, addressed jointly: 'what do you make of him, and what's your first move?' Furman's spokesperson reply supplies a move, 'We'll take our chances with the shovel'; it offers an implicit reaction through 'Thomas is done chasing safe leads' but no explicit personal assessment of the man, and Johanna supplies no separate reply. Neither subquestion repairs pre-story setup because the scene was already underway. Turn 1 character declarations and notebook mentions likewise cannot count as completed pre-story answers. Setup was skipped, warranting the 1–3 band.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 3,
+            "after": 3,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 7,
+            "after": 7,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 6,
+            "after": 7,
+            "delta": 1
+          },
+          "spatialConsistency": {
+            "before": 7,
+            "after": 8,
+            "delta": 1
+          },
+          "characterCreation": {
+            "before": 1,
+            "after": 2,
+            "delta": 1
+          },
+          "invitationArchitecture": {
+            "before": 7,
+            "after": 7,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 7,
+            "after": 8,
+            "delta": 1
+          },
+          "pacingBreath": {
+            "before": 6,
+            "after": 6,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 3,
+            "after": 4,
+            "delta": 1
+          },
+          "branchingPersistence": {
+            "before": 6,
+            "after": 6,
+            "delta": 0
+          },
+          "actionableVsAtmospheric": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "KmdnL8NCL-Zr9G2J5lQ12",
+        "stack": "step-3 Codex",
+        "expectedScoreBand": [
+          9,
+          10
+        ],
+        "uncertain": false,
+        "players": [
+          "Johann",
+          "Velma"
+        ],
+        "characters": {
+          "Johann": "Arthur Bell",
+          "Velma": "Clara Whitcomb"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "what brings you to Innsmouth specifically? ... what belongings does each of you bring?",
+            "observation": "Johann replies 'I’ll play Arthur Bell' with missing brother/letter/camera/film/notebook/flashlight; Velma 'I’ll play Clara Whitcomb' with mother’s song/cylinder/phonograph/notes/torch. Two players, two characters."
+          },
+          {
+            "turn": 2,
+            "quote": "Arthur ... what unresolved quarrel ... disappearance hardest to bear?",
+            "observation": "Johann answers brother accused him of caring more for photographs than people, 'go find someone else to rescue him', before scene."
+          },
+          {
+            "turn": 2,
+            "quote": "Clara ... what memory of your mother ... so unsettling?",
+            "observation": "Velma answers mother stopped same melody, 'If you ever hear the rest, Clara, don’t sing along', before scene."
+          },
+          {
+            "turn": 3,
+            "quote": "At the Innsmouth bus stop, fog beads on Arthur’s camera case",
+            "observation": "Scene starts after both replies, weaving both backstories into window clues."
+          }
+        ],
+        "before": 9,
+        "after": 10,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "Both players supply identity, equipment, and motivation, followed by personal answers. The quarrel question slightly presupposes a relationship conflict, but the player determines its substance.",
+        "reasonAfter": "Setup audit: two players, Johann and Velma, explicitly declare two characters: Johann owns Arthur Bell; Velma owns Clara Whitcomb. Johann’s spokesperson entries do not create another player or character. Turn 0 is table banter, not completed setup. Directed questions: turn 1 asks Johann and Velma individually why they are in Innsmouth and what additional belongings they bring. Johann answers both in turn 1: 'a newspaper photographer tracking down his brother' and 'that letter, a folding camera, spare film, a notebook, and a flashlight,' explicitly naming Arthur Bell. Velma answers both in turn 1: 'a folklorist visiting Innsmouth after a recording ... captured my late mother’s name' and 'the wax cylinder, a portable phonograph, a notebook ... a pencil, and a small electric torch,' explicitly naming Clara Whitcomb. Turn 2 asks Arthur about the unresolved quarrel; Johann answers in turn 2 that his brother accused him of prioritizing photographs and Arthur told him to 'find someone else to rescue him next time.' Turn 2 asks Clara which maternal memory makes the song unsettling; Velma answers in turn 2 with the hair-brushing memory and 'If you ever hear the rest, Clara, don’t sing along.' No setup subquestion remains unanswered. The first story scene is Narrator turn 3, after both identities, inventories, motivations, and personal follow-ups have been supplied.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 9,
+            "after": 8,
+            "delta": -1
+          },
+          "spatialConsistency": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "characterCreation": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "invitationArchitecture": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "pacingBreath": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 7,
+            "after": 8,
+            "delta": 1
+          },
+          "actionableVsAtmospheric": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "Le5_LF08N56fJo1aGS4wI",
+        "stack": "step-5 Codex",
+        "expectedScoreBand": [
+          9,
+          10
+        ],
+        "uncertain": false,
+        "players": [
+          "Celia",
+          "Marcelo"
+        ],
+        "characters": {
+          "Celia": "Ruth Bellamy",
+          "Marcelo": "Silas Venn"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "who is your character, what belongings have they brought, and what has drawn them to Innsmouth?",
+            "observation": "Celia answers insurance investigator Ruth with camera/notebook/claims; Marcelo mechanic Silas with tools/torch/brother’s letter/ticket. Two players, two characters."
+          },
+          {
+            "turn": 2,
+            "quote": "Celia, what would make Ruth doubt a conclusion she could prove on paper?",
+            "observation": "Celia answers 'someone she trusted contradicted it with a detail they couldn’t possibly know' at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "Marcelo, what is Silas afraid his brother might say",
+            "observation": "Marcelo answers 'I needed you to believe I was dead, because you’d have come looking' at turn 2."
+          },
+          {
+            "turn": 3,
+            "quote": "The bus leaves you both in Innsmouth’s market square",
+            "observation": "Scene starts after both personal replies. Later spatial/timeline quality is not part of this label."
+          }
+        ],
+        "before": 10,
+        "after": 10,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "Fully follows the setup checkpoint: identities, belongings, motivations, individual personal follow-ups, and replies all precede the atmospheric opening.",
+        "reasonAfter": "Setup audit: two real players, Celia and Marcelo, explicitly declare two characters: Celia owns Ruth Bellamy; Marcelo owns Silas Venn. Celia's spokesperson entries summarize the same pair and add no characters. First story scene: Narrator turn 3. Turn 1 asks each player three subquestions: character identity, belongings, and motivation. Celia answers all at player turn 1: 'Ruth Bellamy, an insurance investigator'; 'a pocket camera, a notebook, and copies of the claims'; 'sent to Innsmouth' over identical missing-cargo claims. Marcelo answers all at player turn 1: 'Silas Venn, a marine engine mechanic'; 'a tool roll, a pocket torch, and the letter with the ticket'; his missing brother sent a ferry ticket six years after disappearing. Turn 2 asks Celia what would make Ruth doubt a paper-proven conclusion; Celia answers at player turn 2: 'someone she trusted contradicted it with a detail they couldn’t possibly know.' Turn 2 asks Marcelo what Silas fears his brother might say about his absence; Marcelo answers at player turn 2: 'I needed you to believe I was dead, because you’d have come looking,' and explains the associated guilt. Every directed setup subquestion and personal follow-up receives an actual pre-scene reply; none is unanswered.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 6,
+            "after": 7,
+            "delta": 1
+          },
+          "characterCreation": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 8,
+            "after": 9,
+            "delta": 1
+          },
+          "pacingBreath": {
+            "before": 7,
+            "after": 8,
+            "delta": 1
+          },
+          "declarationVsAcknowledgment": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 7,
+            "after": 8,
+            "delta": 1
+          },
+          "actionableVsAtmospheric": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "-6TRhe9i-Xvg2bMJCcaKP",
+        "stack": "step-5 Codex",
+        "expectedScoreBand": [
+          9,
+          10
+        ],
+        "uncertain": false,
+        "players": [
+          "Furman",
+          "Johanna"
+        ],
+        "characters": {
+          "Furman": "Thomas Bell",
+          "Johanna": "Clara Whitcomb"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "please clarify whether those are your characters’ names or your own",
+            "observation": "Spokesperson answers for both: 'Furman and Johanna are our names; we’re playing Thomas Bell and Clara Whitcomb', surveyor and archivist with charts/compass/letter and notebook/pencil/ledger, brother/grandfather motivations."
+          },
+          {
+            "turn": 2,
+            "quote": "Thomas, what unresolved quarrel with your brother makes his disappearance harder to bear?",
+            "observation": "Furman replies 'refused to lend him the fare home' and kept letter unanswered at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "Clara, what cherished belief about your grandfather would you be most reluctant to question?",
+            "observation": "Johanna replies belief grandfather supported dockworkers vs settlement at turn 2."
+          },
+          {
+            "turn": 3,
+            "quote": "The bus leaves Thomas and Clara beside Innsmouth’s shuttered ticket office",
+            "observation": "First scene follows both replies; ownership explicitly disambiguated."
+          }
+        ],
+        "before": 10,
+        "after": 10,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "Fully satisfies the setup checkpoint and turns initial motivations into personal vulnerabilities without dictating the answers.",
+        "reasonAfter": "Setup audit: two real players, Furman and Johanna, explicitly declare two characters. Furman owns Thomas Bell; Johanna owns Clara Whitcomb, as confirmed by their respective personal replies at turn 2. First story-scene turn: 3. Directed questions: turn 1, each player—character identity, belongings, and motivation; turn 1, Furman and Johanna—whether their names are player or character names. Spokesperson Furman answers all these at turn 1: 'Furman and Johanna are our names; we’re playing Thomas Bell and Clara Whitcomb'; Thomas is a marine surveyor with 'coastal charts, a pocket compass, and a letter' seeking his vanished brother; Clara is an archivist with 'a notebook, pencil, and shipping ledger' investigating payments to her grandfather, summarized as 'Clara follows the money.' Turn 1 also offers optional incorporation of snacks and historical curiosity; no explicit adoption follows, and this is not a required unanswered setup question. Turn 2, Thomas—what unresolved quarrel burdens him? Furman answers at turn 2: 'refused to lend him the fare home' and kept the last letter unanswered. Turn 2, Clara—what cherished belief would she resist questioning? Johanna answers at turn 2: her grandfather supposedly 'paid dockworkers out of his own pocket,' and she fears the families went hungry. All required setup subquestions and both personal follow-ups receive actual player or spokesperson answers before turn 3; none remain unanswered.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "equipmentEngagement": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "characterCreation": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "pacingBreath": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 7,
+            "after": 8,
+            "delta": 1
+          },
+          "actionableVsAtmospheric": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "model": "gemini",
+    "agreementBefore": 7,
+    "agreementAfter": 8,
+    "count": 9,
+    "certainAgreementBefore": 7,
+    "certainAgreementAfter": 8,
+    "certainCount": 8,
+    "meanCriteria": {
+      "agencyRespect": {
+        "before": 8.333333333333334,
+        "after": 8.333333333333334,
+        "delta": 0,
+        "movedSessions": 2
+      },
+      "equipmentEngagement": {
+        "before": 7.555555555555555,
+        "after": 7.888888888888889,
+        "delta": 0.3333333333333339,
+        "movedSessions": 4
+      },
+      "npcDialogue": {
+        "before": 8.444444444444445,
+        "after": 8.444444444444445,
+        "delta": 0,
+        "movedSessions": 4
+      },
+      "spatialConsistency": {
+        "before": 9.444444444444445,
+        "after": 9.333333333333334,
+        "delta": -0.11111111111111072,
+        "movedSessions": 3
+      },
+      "characterCreation": {
+        "before": 7.111111111111111,
+        "after": 6.444444444444445,
+        "delta": -0.6666666666666661,
+        "movedSessions": 2
+      },
+      "invitationArchitecture": {
+        "before": 9.777777777777779,
+        "after": 9.333333333333334,
+        "delta": -0.44444444444444464,
+        "movedSessions": 4
+      },
+      "atmosphere": {
+        "before": 9.444444444444445,
+        "after": 9.777777777777779,
+        "delta": 0.3333333333333339,
+        "movedSessions": 3
+      },
+      "curiosityFollowing": {
+        "before": 9.222222222222221,
+        "after": 9.333333333333334,
+        "delta": 0.11111111111111249,
+        "movedSessions": 3
+      },
+      "pacingBreath": {
+        "before": 9.222222222222221,
+        "after": 9,
+        "delta": -0.22222222222222143,
+        "movedSessions": 5
+      },
+      "declarationVsAcknowledgment": {
+        "before": 8.333333333333334,
+        "after": 8.555555555555555,
+        "delta": 0.22222222222222143,
+        "movedSessions": 4
+      },
+      "branchingPersistence": {
+        "before": 8.777777777777779,
+        "after": 8.777777777777779,
+        "delta": 0,
+        "movedSessions": 6
+      },
+      "actionableVsAtmospheric": {
+        "before": 9.666666666666666,
+        "after": 9.555555555555555,
+        "delta": -0.11111111111111072,
+        "movedSessions": 3
+      }
+    },
+    "rows": [
+      {
+        "sessionId": "wuI3U41D-bp6QK58DyTBK",
+        "stack": "step-5 gateway",
+        "expectedScoreBand": [
+          4,
+          6
+        ],
+        "uncertain": false,
+        "players": [
+          "Johann",
+          "Velma"
+        ],
+        "characters": {
+          "Johann": "Finn Carter",
+          "Velma": "Eleanor Voss"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 0,
+            "quote": "I’ll play Eleanor Voss, a journalist",
+            "observation": "Velma explicitly owns Eleanor, not a third character."
+          },
+          {
+            "turn": 1,
+            "quote": "Eleanor: What did you bring with you on this trip?",
+            "observation": "Velma replies with uncle’s journal, locket and UV light. Johann answers identity, equipment and motivation: 'I'm Finn Carter, freelance photographer chasing a shot.' Narrator also asks 'Anyone else at the table?' with no third player reply."
+          },
+          {
+            "turn": 2,
+            "quote": "Three characters, three secrets",
+            "observation": "Two players have named two characters. Narrator splits Velma/Eleanor into separate characters."
+          },
+          {
+            "turn": 2,
+            "quote": "Eleanor ... What does it feel like when you hold it?",
+            "observation": "No answer to locket sensation before scene starts."
+          },
+          {
+            "turn": 2,
+            "quote": "Finn ... What's the one image you're still chasing?",
+            "observation": "Johann replies 'there was this silhouette in one frame' at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "Velma ... What's the last entry?",
+            "observation": "Velma replies 'They’re not just in the water anymore. They’re waking up. And they remember me.' at turn 2, answering journal not locket question."
+          },
+          {
+            "turn": 3,
+            "quote": "you've never shown that photo to anyone, have you?",
+            "observation": "Finn also receives 'when you try to describe it, the shape feels like it shifts in your memory' (a narrator assertion, not a reply). Velma is asked 'Was the smudge from water, or from something else?' and 'does the locket ever feel warmer when you read those words?'; Eleanor is asked 'you've been holding the locket this whole time, haven't you?' and 'What does the engraving actually say?' All appear before the bus scene in the same narrator message, without waiting. Scene: 'The bus groans as it crests the final hill'. Neither turn-3 player answers those specific questions; they react to arriving in town."
+          }
+        ],
+        "before": 10,
+        "after": 5,
+        "agreementBefore": false,
+        "agreementAfter": true,
+        "reasonBefore": "A textbook example of how to execute the setup checkpoint. The Narrator ensured players felt known before the plot began.",
+        "reasonAfter": "Setup audit: Real players: Johann, Velma. Characters declared: Finn Carter (Johann), Eleanor Voss (Velma). Turn 1: Narrator asks Eleanor and Johann for details. Turn 1: Johann and Velma answer. Turn 2: Narrator asks personal follow-ups, but mistakenly addresses Eleanor and Velma as two different people. Turn 2: Johann and Velma answer. Turn 3: Narrator acknowledges Finn, Velma, and Eleanor separately, then starts the story. Score 5 due to unresolved character ownership/count confusion.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "characterCreation": {
+            "before": 10,
+            "after": 5,
+            "delta": -5
+          },
+          "invitationArchitecture": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 8,
+            "after": 9,
+            "delta": 1
+          },
+          "pacingBreath": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 6,
+            "after": 7,
+            "delta": 1
+          },
+          "branchingPersistence": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "actionableVsAtmospheric": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "yfhnFIJPKDF810qASOjW3",
+        "stack": "step-5 gateway",
+        "expectedScoreBand": [
+          9,
+          10
+        ],
+        "uncertain": false,
+        "players": [
+          "Celia",
+          "Marcelo"
+        ],
+        "characters": {
+          "Celia": "Althea Reed",
+          "Marcelo": "Leo Vance"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "Give me your names, your faces, your reasons",
+            "observation": "Both directed identity/belongings/motivation requests answered: 'I'll play Althea Reed' with journal/recorder/mentor theory; 'I'll be Leo Vance' with Leica/sketches/missing great-uncle. Two players, two characters."
+          },
+          {
+            "turn": 2,
+            "quote": "Celia ... What happened to them? ... what's the one superstition ... couldn't explain away?",
+            "observation": "Celia answers mentor’s heart attack, unsent 'It's a pump' letter and Norwegian slow-bell story at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "Marcelo ... What was the code, what did it say ... And the Leica",
+            "observation": "Marcelo answers architectural substitution cipher, 'It's built for something else entirely', and camera found at grandmother’s house at turn 2."
+          },
+          {
+            "turn": 3,
+            "quote": "The bus spits you out onto a cracked asphalt apron",
+            "observation": "First scene follows both complete personal replies."
+          }
+        ],
+        "before": 10,
+        "after": 10,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "Flawless execution of the character creation checkpoint. The Narrator ensured characters were fully fleshed out and tied to the setting before describing a single cobblestone.",
+        "reasonAfter": "Setup audit: Real players: Celia, Marcelo. Characters: Althea Reed (Celia), Leo Vance (Marcelo). First story-scene turn: Turn 3. Turn 1: Narrator asks Celia and Marcelo for identity, belongings, motivation. Turn 1: Players answer. Turn 2: Narrator asks personal follow-ups about mentor and uncle. Turn 2: Players answer. Turn 3: Story begins. Perfect execution of the setup checkpoint.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "characterCreation": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "actionableVsAtmospheric": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "uO3Zx7_gdUPxwb53gc3we",
+        "stack": "step-5 gateway",
+        "expectedScoreBand": [
+          4,
+          6
+        ],
+        "uncertain": true,
+        "uncertainty": "Both identities and basic details are established and one rich follow-up is answered; 7 might be defensible under the old broad 'genuine exploration' anchor. Band 4-6 reflects one of two characters missing the required personal reply before play, not a claim that all setup was skipped.",
+        "players": [
+          "Furman",
+          "Johanna"
+        ],
+        "characters": {
+          "Furman": "Elias Crane",
+          "Johanna": "Dr. Eleanor Vance"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "And both of you: what's the real reason neither of you said no to this trip?",
+            "observation": "Spokesperson and Johanna identity, bag and motivation prompts answered by both players. Furman: 'I'll play Elias Crane' with typewriter/flask/estate letter. Johanna: 'I'll play Dr. Eleanor Vance' with maps/magnifying glass/grandfather’s journal."
+          },
+          {
+            "turn": 2,
+            "quote": "To Elias: This uncle—was he a close one ... what did it look like?",
+            "observation": "Furman answers 'Met him twice' and describes shaky handwriting/fish-anchor watermark at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "To Eleanor: Your grandfather's journal—when did you last open it ... particular page ... Marsh convergence",
+            "observation": "No Johanna reply at turn 2; only Furman speaks. His answer does not answer Eleanor’s journal questions."
+          },
+          {
+            "turn": 3,
+            "quote": "The bus lets the two of you out",
+            "observation": "Scene starts before Eleanor’s personal reply. Johanna’s later turn-3 warding-symbol investigation is after scene start, not the missing setup answer. Narrator also calls her 'Elenora'."
+          }
+        ],
+        "before": 10,
+        "after": 10,
+        "agreementBefore": false,
+        "agreementAfter": false,
+        "reasonBefore": "The Narrator executed the character creation instructions perfectly, ensuring players were fully grounded before starting the scene.",
+        "reasonAfter": "Setup audit: Real players are Furman (Elias Crane) and Johanna (Dr. Eleanor Vance). Turn 1: Narrator asks Furman and Johanna for their names, looks, bags, and real reasons for being there. Turn 1: Both players reply with full details. Turn 2: Narrator asks follow-up questions to Furman (uncle close? letter details?) and Johanna (last opened journal? Marsh convergence meaning?). Turn 2: Both players reply. Turn 3: Story begins. Perfect execution of the character creation checkpoint.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 9,
+            "after": 8,
+            "delta": -1
+          },
+          "equipmentEngagement": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "npcDialogue": {
+            "before": 9,
+            "after": 8,
+            "delta": -1
+          },
+          "spatialConsistency": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "characterCreation": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "atmosphere": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "pacingBreath": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "declarationVsAcknowledgment": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "branchingPersistence": {
+            "before": 9,
+            "after": 8,
+            "delta": -1
+          },
+          "actionableVsAtmospheric": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          }
+        }
+      },
+      {
+        "sessionId": "M_aahwcuZI4xtBAqrMtwH",
+        "stack": "step-4 gateway minimal-character",
+        "expectedScoreBand": [
+          1,
+          2
+        ],
+        "uncertain": false,
+        "players": [
+          "Johann",
+          "Velma"
+        ],
+        "characters": {
+          "Johann": null,
+          "Velma": "Eleanor Marsh"
+        },
+        "sceneStartTurn": 1,
+        "facts": [
+          {
+            "turn": 0,
+            "quote": "Eleanor Marsh, local historian and skeptic, here to document the madness",
+            "observation": "One volunteered character for two players; no completed two-character equipment/motivation inventory."
+          },
+          {
+            "turn": 1,
+            "quote": "The road to Innsmouth peels away from the coastal highway",
+            "observation": "Scene starts immediately; narrator addresses Eleanor and real-player Johann. No directed identity/equipment/motivation or personal setup questions before play, hence no setup replies to wait for. 'Where do you want to take this rust-bucket of a story first' is an in-scene action question, not setup."
+          }
+        ],
+        "directedSetupQuestions": [],
+        "before": 1,
+        "after": 1,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "The Narrator failed to execute the mandatory setup phase.",
+        "reasonAfter": "Setup audit: Real players: Johann, Velma. Characters: Johann (unnamed), Eleanor Marsh (Velma). First story-scene turn: Turn 1. The Narrator completely skipped the setup phase, falsely assuming in its internal monologue that the user's prompt meant setup was complete. It asked no questions about identity, belongings, or motivation, and provided no personal follow-ups before starting the story.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 7,
+            "after": 7,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 7,
+            "after": 9,
+            "delta": 2
+          },
+          "spatialConsistency": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "characterCreation": {
+            "before": 1,
+            "after": 1,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "atmosphere": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 8,
+            "after": 9,
+            "delta": 1
+          },
+          "actionableVsAtmospheric": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "Byu4CNy79RjGsV0R8yl-E",
+        "stack": "step-4 gateway minimal-character",
+        "expectedScoreBand": [
+          1,
+          2
+        ],
+        "uncertain": false,
+        "players": [
+          "Celia",
+          "Marcelo"
+        ],
+        "characters": {
+          "Celia": null,
+          "Marcelo": null
+        },
+        "sceneStartTurn": 1,
+        "facts": [
+          {
+            "turn": 0,
+            "quote": "hoping I’ll spot the inconsistencies before the narrator does?",
+            "observation": "Table banter only; two real players, no named characters."
+          },
+          {
+            "turn": 1,
+            "quote": "The bus wheezes to a halt at the end of a cracked asphalt road",
+            "observation": "First scene begins without any identity/belongings/motivation or personal setup questions/replies. Both players discuss driver, hymn and note after scene begins."
+          }
+        ],
+        "directedSetupQuestions": [],
+        "before": 1,
+        "after": 1,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "A complete failure to follow the system prompt's instructions regarding setup.",
+        "reasonAfter": "Setup audit: 2 real players (Celia, Marcelo). Characters declared: None. First story-scene turn: Turn 1. Directed setup questions: None. The Narrator completely bypassed character creation, explicitly thinking they needed to start the story 'without any more setup questions' despite never having asked any.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 1,
+            "after": 3,
+            "delta": 2
+          },
+          "npcDialogue": {
+            "before": 7,
+            "after": 5,
+            "delta": -2
+          },
+          "spatialConsistency": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "characterCreation": {
+            "before": 1,
+            "after": 1,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "atmosphere": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "declarationVsAcknowledgment": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 9,
+            "after": 8,
+            "delta": -1
+          },
+          "actionableVsAtmospheric": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          }
+        }
+      },
+      {
+        "sessionId": "eVYHdhgk8lvS-k7LgkTP2",
+        "stack": "step-4 gateway minimal-character",
+        "expectedScoreBand": [
+          1,
+          2
+        ],
+        "uncertain": false,
+        "players": [
+          "Furman",
+          "Johanna"
+        ],
+        "characters": {
+          "Furman": "Thomas Vance",
+          "Johanna": "Eleanor Vance"
+        },
+        "sceneStartTurn": 1,
+        "facts": [
+          {
+            "turn": 0,
+            "quote": "I think I’ll play… a scholar this time",
+            "observation": "Tentative occupation, not completed identity/gear/personal setup."
+          },
+          {
+            "turn": 1,
+            "quote": "The bus wheezes to a halt at the end of a cracked asphalt road",
+            "observation": "No directed setup questions or personal follow-ups; scene first. Two identities volunteered only after this narrator scene: Furman 'I'll be Thomas Vance' and Johanna 'I'm Eleanor Vance, folklorist'."
+          },
+          {
+            "turn": 3,
+            "quote": "Eleanor answers after a beat: \"Just a shovel.",
+            "observation": "Narrator-authored character speech is not a player setup reply."
+          }
+        ],
+        "directedSetupQuestions": [],
+        "before": 2,
+        "after": 1,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "The Narrator failed the setup checkpoint by not asking the required follow-up questions to deepen character creation before starting the narrative.",
+        "reasonAfter": "Setup Audit: Real players: Furman, Johanna. Characters: Thomas Vance (Furman), Eleanor Vance (Johanna). In Turn 0, the players introduce their characters and motivations in out-of-character/in-character banter. In Turn 1, the Narrator immediately begins the story without asking any of the required setup questions or personal follow-ups. This is a complete failure to follow the setup instructions.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 2,
+            "after": 3,
+            "delta": 1
+          },
+          "equipmentEngagement": {
+            "before": 4,
+            "after": 5,
+            "delta": 1
+          },
+          "npcDialogue": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "characterCreation": {
+            "before": 2,
+            "after": 1,
+            "delta": -1
+          },
+          "invitationArchitecture": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "curiosityFollowing": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 8,
+            "after": 6,
+            "delta": -2
+          },
+          "declarationVsAcknowledgment": {
+            "before": 4,
+            "after": 4,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "actionableVsAtmospheric": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "KmdnL8NCL-Zr9G2J5lQ12",
+        "stack": "step-3 Codex",
+        "expectedScoreBand": [
+          9,
+          10
+        ],
+        "uncertain": false,
+        "players": [
+          "Johann",
+          "Velma"
+        ],
+        "characters": {
+          "Johann": "Arthur Bell",
+          "Velma": "Clara Whitcomb"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "what brings you to Innsmouth specifically? ... what belongings does each of you bring?",
+            "observation": "Johann replies 'I’ll play Arthur Bell' with missing brother/letter/camera/film/notebook/flashlight; Velma 'I’ll play Clara Whitcomb' with mother’s song/cylinder/phonograph/notes/torch. Two players, two characters."
+          },
+          {
+            "turn": 2,
+            "quote": "Arthur ... what unresolved quarrel ... disappearance hardest to bear?",
+            "observation": "Johann answers brother accused him of caring more for photographs than people, 'go find someone else to rescue him', before scene."
+          },
+          {
+            "turn": 2,
+            "quote": "Clara ... what memory of your mother ... so unsettling?",
+            "observation": "Velma answers mother stopped same melody, 'If you ever hear the rest, Clara, don’t sing along', before scene."
+          },
+          {
+            "turn": 3,
+            "quote": "At the Innsmouth bus stop, fog beads on Arthur’s camera case",
+            "observation": "Scene starts after both replies, weaving both backstories into window clues."
+          }
+        ],
+        "before": 10,
+        "after": 10,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "A perfect execution of the setup checkpoint. The Narrator waited for all answers before beginning the narrative.",
+        "reasonAfter": "Setup Audit: 2 real players (Johann, Velma). Characters: Arthur Bell (Johann), Clara Whitcomb (Velma). First story-scene turn: Turn 3. Directed questions: Turn 1 to both: 'what brings you to Innsmouth specifically? And... what belongings does each of you bring?' -> Answered in Turn 1 by Johann ('tracking down his brother... folding camera...') and Velma ('visiting Innsmouth after a recording... wax cylinder...'). Turn 2 to Arthur: 'what unresolved quarrel between you makes his disappearance hardest to bear?' -> Answered in Turn 2 by Johann ('Arthur’s brother accused him...'). Turn 2 to Clara: 'what memory of your mother makes hearing her name in that song so unsettling?' -> Answered in Turn 2 by Velma ('My mother used to hum that melody...'). The Narrator perfectly established characters, belongings, motivations, and personal follow-ups before starting the story.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "characterCreation": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "curiosityFollowing": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "declarationVsAcknowledgment": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "branchingPersistence": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "actionableVsAtmospheric": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          }
+        }
+      },
+      {
+        "sessionId": "Le5_LF08N56fJo1aGS4wI",
+        "stack": "step-5 Codex",
+        "expectedScoreBand": [
+          9,
+          10
+        ],
+        "uncertain": false,
+        "players": [
+          "Celia",
+          "Marcelo"
+        ],
+        "characters": {
+          "Celia": "Ruth Bellamy",
+          "Marcelo": "Silas Venn"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "who is your character, what belongings have they brought, and what has drawn them to Innsmouth?",
+            "observation": "Celia answers insurance investigator Ruth with camera/notebook/claims; Marcelo mechanic Silas with tools/torch/brother’s letter/ticket. Two players, two characters."
+          },
+          {
+            "turn": 2,
+            "quote": "Celia, what would make Ruth doubt a conclusion she could prove on paper?",
+            "observation": "Celia answers 'someone she trusted contradicted it with a detail they couldn’t possibly know' at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "Marcelo, what is Silas afraid his brother might say",
+            "observation": "Marcelo answers 'I needed you to believe I was dead, because you’d have come looking' at turn 2."
+          },
+          {
+            "turn": 3,
+            "quote": "The bus leaves you both in Innsmouth’s market square",
+            "observation": "Scene starts after both personal replies. Later spatial/timeline quality is not part of this label."
+          }
+        ],
+        "before": 10,
+        "after": 10,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "Flawless execution of the character creation framework.",
+        "reasonAfter": "Audit: Real players: Celia, Marcelo. Characters: Ruth Bellamy (Celia), Silas Venn (Marcelo). First story-scene turn: 3. Turn 1: Narrator asks who, belongings, why. Celia answers for Ruth in Turn 1. Marcelo answers for Silas in Turn 1. Turn 2: Narrator asks personal follow-ups. Celia and Marcelo answer in Turn 2. All questions answered before Turn 3. Perfect execution of the setup checkpoint.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "npcDialogue": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "spatialConsistency": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "characterCreation": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "atmosphere": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "curiosityFollowing": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "pacingBreath": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "declarationVsAcknowledgment": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          },
+          "branchingPersistence": {
+            "before": 8,
+            "after": 9,
+            "delta": 1
+          },
+          "actionableVsAtmospheric": {
+            "before": 9,
+            "after": 10,
+            "delta": 1
+          }
+        }
+      },
+      {
+        "sessionId": "-6TRhe9i-Xvg2bMJCcaKP",
+        "stack": "step-5 Codex",
+        "expectedScoreBand": [
+          9,
+          10
+        ],
+        "uncertain": false,
+        "players": [
+          "Furman",
+          "Johanna"
+        ],
+        "characters": {
+          "Furman": "Thomas Bell",
+          "Johanna": "Clara Whitcomb"
+        },
+        "sceneStartTurn": 3,
+        "facts": [
+          {
+            "turn": 1,
+            "quote": "please clarify whether those are your characters’ names or your own",
+            "observation": "Spokesperson answers for both: 'Furman and Johanna are our names; we’re playing Thomas Bell and Clara Whitcomb', surveyor and archivist with charts/compass/letter and notebook/pencil/ledger, brother/grandfather motivations."
+          },
+          {
+            "turn": 2,
+            "quote": "Thomas, what unresolved quarrel with your brother makes his disappearance harder to bear?",
+            "observation": "Furman replies 'refused to lend him the fare home' and kept letter unanswered at turn 2."
+          },
+          {
+            "turn": 2,
+            "quote": "Clara, what cherished belief about your grandfather would you be most reluctant to question?",
+            "observation": "Johanna replies belief grandfather supported dockworkers vs settlement at turn 2."
+          },
+          {
+            "turn": 3,
+            "quote": "The bus leaves Thomas and Clara beside Innsmouth’s shuttered ticket office",
+            "observation": "First scene follows both replies; ownership explicitly disambiguated."
+          }
+        ],
+        "before": 10,
+        "after": 10,
+        "agreementBefore": true,
+        "agreementAfter": true,
+        "reasonBefore": "Flawless execution of the setup instructions, ensuring characters are fully fleshed out before the narrative begins.",
+        "reasonAfter": "Setup audit: 2 real players (Furman, Johanna). Characters: Thomas Bell (Furman), Clara Whitcomb (Johanna). First story turn: 3. Turn 1: Narrator asks who, belongings, why. Turn 1: Furman replies for both. Turn 2: Narrator asks personal questions. Turn 2: Furman and Johanna reply. Turn 3: Scene begins. The Narrator followed the setup instructions flawlessly.",
+        "criteria": {
+          "agencyRespect": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "equipmentEngagement": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "npcDialogue": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "spatialConsistency": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "characterCreation": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "invitationArchitecture": {
+            "before": 10,
+            "after": 9,
+            "delta": -1
+          },
+          "atmosphere": {
+            "before": 8,
+            "after": 8,
+            "delta": 0
+          },
+          "curiosityFollowing": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "pacingBreath": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          },
+          "declarationVsAcknowledgment": {
+            "before": 10,
+            "after": 10,
+            "delta": 0
+          },
+          "branchingPersistence": {
+            "before": 9,
+            "after": 8,
+            "delta": -1
+          },
+          "actionableVsAtmospheric": {
+            "before": 9,
+            "after": 9,
+            "delta": 0
+          }
+        }
+      }
+    ]
+  }
+]

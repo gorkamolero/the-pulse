@@ -5,6 +5,7 @@
  * Injected before each narrator turn for consistency.
  */
 
+import { resolveModel } from '../ai/models';
 import { telemetry } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
@@ -157,7 +158,7 @@ For each player, identify:
       async (modelId) => {
         const result = await generateObject({
         experimental_telemetry: telemetry('classify-state', { model: modelId }),
-          model: modelId,
+          model: resolveModel(modelId),
           schema,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.2,
@@ -268,7 +269,7 @@ Be conservative - only extract clear, explicit changes.`;
       async (modelId) => {
         const result = await generateObject({
         experimental_telemetry: telemetry('classify-state', { model: modelId }),
-          model: modelId,
+          model: resolveModel(modelId),
           schema,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.2,

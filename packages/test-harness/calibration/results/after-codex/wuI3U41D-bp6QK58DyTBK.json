@@ -1,0 +1,349 @@
+{
+  "overall": {
+    "score": 5.31,
+    "summary": "The Narrator creates vivid coastal horror and concrete investigative hooks, but repeatedly advances characters through unchosen actions and overlooks player questions and tools. Setup includes meaningful answers but miscounts two players as three characters and begins the scene before completing personal follow-ups.",
+    "verdict": "poor"
+  },
+  "agencyRespect": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "you've never shown that photo to anyone, have you?",
+        "assessment": "A leading question introduces an unestablished personal history; the accompanying claim that the image shifts in Finn's memory directly authors his internal experience."
+      },
+      {
+        "turn": 4,
+        "quote": "Where do you go first—the hotel, the waterfront, or the streets beyond?",
+        "assessment": "A clear decision point preserves immediate choice."
+      },
+      {
+        "turn": 5,
+        "quote": "The figure doesn't look up as you enter",
+        "assessment": "Approaching the hotel becomes entering it without allowing a response to the porch NPC."
+      },
+      {
+        "turn": 6,
+        "quote": "The stairs groan as you climb.",
+        "assessment": "The Narrator executes movement upstairs and subsequently opens the room, exceeding the players' stated intention to investigate."
+      }
+    ],
+    "notes": "Several clear action takeovers outweigh the genuine choice offered at turn 4. Player-authored movement and internal states are not counted as Narrator violations."
+  },
+  "equipmentEngagement": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "What did you bring with you on this trip?",
+        "assessment": "The Narrator requests belongings, although it also assumes a press badge and notepad."
+      },
+      {
+        "turn": 2,
+        "quote": "Eleanor — the locket",
+        "assessment": "A personal possession receives attention, but ownership becomes muddled when the journal is assigned to a supposedly separate Velma."
+      },
+      {
+        "turn": 5,
+        "quote": "The old man on the porch doesn't stop rocking as you approach.",
+        "assessment": "The response follows the approach but gives no result for the explicitly declared UV scan of the cobbles."
+      },
+      {
+        "turn": 6,
+        "quote": "A scrap of paper, half-shoved into a gap between the boards.",
+        "assessment": "A usable clue appears, but its discovery does not engage the UV light, camera, journal, or locket."
+      }
+    ],
+    "notes": "Items receive setup attention but little environmental response. The final camera-lens and UV actions have no subsequent Narrator turn and cannot fairly be counted as ignored."
+  },
+  "npcDialogue": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "End of the line. Don't miss the last bus out",
+        "assessment": "The driver's brief warning and physical tension suggest fear without an extended explanation."
+      },
+      {
+        "turn": 5,
+        "quote": "Gilman House'll take your money. Won't take your questions.",
+        "assessment": "The porch man's speech has personality, but the Narrator moves into another encounter before players can answer him."
+      },
+      {
+        "turn": 6,
+        "quote": "The clerk's pen scratches once more, then stops.",
+        "assessment": "The clerk offers no verbal or clearly signaled evasive response to Finn's direct question about nighttime noise."
+      }
+    ],
+    "notes": "NPC voices are distinct and concise, but conversations function mainly as successive ominous warnings rather than exchanges."
+  },
+  "spatialConsistency": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "Beyond the hotel, the street slopes down toward the harbor.",
+        "assessment": "The hotel, street, and harbor have clear relative positions."
+      },
+      {
+        "turn": 5,
+        "quote": "A desk sits against the far wall, and behind it, a figure waits",
+        "assessment": "The clerk is concretely located inside the lobby while the old man remains on the porch."
+      },
+      {
+        "turn": 6,
+        "quote": "The hallway on the third floor is narrow",
+        "assessment": "The upstairs transition and room location are spatially coherent, although executing that transition violates agency."
+      }
+    ],
+    "notes": "No clear teleportation or impossible interaction occurs. Character-count confusion weakens party tracking, but most physical geography remains understandable."
+  },
+  "characterCreation": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "Who are you? What's in your camera bag besides the obvious?",
+        "assessment": "The Narrator asks for missing identity, equipment, and motivation rather than immediately starting play."
+      },
+      {
+        "turn": 2,
+        "quote": "Three characters, three secrets",
+        "assessment": "The Narrator incorrectly separates player Velma from her declared character Eleanor."
+      },
+      {
+        "turn": 3,
+        "quote": "What does the engraving actually say?",
+        "assessment": "Additional setup questions are immediately followed by the first scene, without waiting for answers."
+      }
+    ],
+    "notes": "Setup audit: there are two real players, Johann and Velma; Velma also serves as spokesperson. Explicit declarations establish Johann → Finn Carter (turn 1: 'I'm Finn Carter, freelance photographer') and Velma → Eleanor Voss (turn 0: 'I'll play Eleanor Voss'). No third character is explicitly declared. Later player wording becomes inconsistent, but does not establish a separately owned third character. First story scene: turn 3, 'The bus groans as it crests the final hill.' Turn 1 questions: Eleanor's belongings → Velma answers at turn 1, 'my uncle’s old field journal,' a silver locket, and a UV light. Johann's identity, camera-bag contents, and reason for joining → Johann answers all three at turn 1: Finn Carter, Hasselblad/coffee/jerky, and Eleanor's promised story plus friendship. 'Anyone else at the table?' → unanswered explicitly; no additional player appears. Turn 2 questions: Eleanor's locket sensation, cold/warm quality, and unusual heaviness → all unanswered before the scene. Finn's desired image, its personal hold, and why it prompted accepting the story → Johann answers at turn 2 with the unexplained silhouette, continued coastal search, and 'the next frame in that roll.' 'Velma' is asked for the journal's last entry and what made her pack → owning player Velma answers at turn 2, quoting 'They’re waking up. And they remember me' and 'I packed the next morning'; this develops Eleanor, not a third character. Turn 3 questions: Finn's whether-he-shared-the-photo question → unanswered; Velma's water-versus-other smudge question and whether reading warms the locket → both unanswered before the scene; Eleanor's whether-she-is-holding-and-turning-the-locket question and exact engraving → both unanswered before the scene. Later spokesperson narration gives the locket warmth, but occurs after the scene begins and does not complete pre-story setup. Identity, belongings, and motivation were supplied for both actual characters; ownership/count errors and the missing locket follow-up prevent a high score."
+  },
+  "invitationArchitecture": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The town waits.",
+        "assessment": "The opening scene ends with room for the players to act."
+      },
+      {
+        "turn": 4,
+        "quote": "the hotel, the waterfront, or the streets beyond?",
+        "assessment": "Concrete alternatives make responding easy."
+      },
+      {
+        "turn": 5,
+        "quote": "The figure doesn't look up as you enter",
+        "assessment": "An available porch conversation is closed by moving into the lobby within the same response."
+      },
+      {
+        "turn": 6,
+        "quote": "something glints. A scrap of paper",
+        "assessment": "The final discovery provides a strong interaction opening without automatically reading the clue."
+      }
+    ],
+    "notes": "Response endings usually invite action, but opportunities within responses are frequently crossed before players can engage."
+  },
+  "atmosphere": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "brine, rot, and something sweeter underneath",
+        "assessment": "Smell conveys bodily unease effectively."
+      },
+      {
+        "turn": 5,
+        "quote": "A wet, sucking sound that might be a laugh.",
+        "assessment": "A specific sound makes the porch NPC unsettling."
+      },
+      {
+        "turn": 6,
+        "quote": "dark blooms of mold, spreading like bruises",
+        "assessment": "Decay, damp bedding, and altered floorboards give the room tangible menace."
+      }
+    ],
+    "notes": "Sensory horror is consistently strong. Repeated claims that the town or water 'waits' and occasional prescribed perceptions reduce subtlety."
+  },
+  "curiosityFollowing": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "What's the one image you're still chasing?",
+        "assessment": "The Narrator invites a personal mystery that Johann develops into the silhouette backstory."
+      },
+      {
+        "turn": 5,
+        "quote": "Room's ready. Third floor. End of the hall.",
+        "assessment": "The response follows the hotel approach but redirects past the player's UV investigation and interest in the porch figure."
+      },
+      {
+        "turn": 6,
+        "quote": "The stairs groan as you climb.",
+        "assessment": "Moving upstairs replaces an answer to Finn's specific question about the nighttime noise."
+      }
+    ],
+    "notes": "The Narrator solicits intriguing player material but follows through weakly once scenes begin. The unexplained matching symbol is supplied as recognition rather than developed through player investigation."
+  },
+  "pacingBreath": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "Before the fog rolls in, I need one more layer",
+        "assessment": "Setup is extended by questions, yet the Narrator begins play without resolving the outstanding answers."
+      },
+      {
+        "turn": 5,
+        "quote": "The front door of the hotel stands ajar.",
+        "assessment": "The response compresses approach, porch warning, entry, clerk encounter, key offer, and another warning into one turn."
+      },
+      {
+        "turn": 6,
+        "quote": "The key turns with a click",
+        "assessment": "Another transition is completed immediately, reaching a clue without allowing the preceding conversation to breathe."
+      }
+    ],
+    "notes": "Responses repeatedly exceed the requested 2–4 sentences. The six-turn timeout leaves the story at its first unretrieved clue; this does not justify forcing an ending, but setup confusion and long transitions consume the limited interaction budget."
+  },
+  "declarationVsAcknowledgment": {
+    "score": 3,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "The town is waiting for you to make the first move.",
+        "assessment": "This correctly leaves execution with the players."
+      },
+      {
+        "turn": 5,
+        "quote": "The floorboards groan beneath your boots. The air inside is thick",
+        "assessment": "A stated approach becomes completed entry and an interior encounter."
+      },
+      {
+        "turn": 6,
+        "quote": "The stairs groan as you climb.",
+        "assessment": "Interest in investigating the room is treated as completed travel."
+      },
+      {
+        "turn": 6,
+        "quote": "The key turns with a click",
+        "assessment": "The Narrator executes using the key and opening the door rather than presenting the threshold for commitment."
+      }
+    ],
+    "notes": "Although the exact phrase 'The decision is made' is absent, functional equivalents repeatedly turn intentions into accomplished actions."
+  },
+  "branchingPersistence": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "the hotel, the waterfront, or the streets beyond?",
+        "assessment": "The session explicitly offers multiple destinations, though their different consequences remain untested."
+      },
+      {
+        "turn": 5,
+        "quote": "The figure doesn't look up as you enter",
+        "assessment": "After the hotel is selected, porch conversation and exterior investigation are bypassed."
+      },
+      {
+        "turn": 6,
+        "quote": "Room 7. End of the hall.",
+        "assessment": "The room route becomes the default continuation without preserving an opportunity to question the clerk or investigate elsewhere first."
+      }
+    ],
+    "notes": "There is a genuine initial destination choice, followed by narrowing execution. The short transcript cannot establish that all routes would converge, but it does show alternatives disappearing within the selected route."
+  },
+  "actionableVsAtmospheric": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "A fish cart sits abandoned at the corner",
+        "assessment": "The cart, porch figure, hotel, and harbor provide tangible things to inspect or approach."
+      },
+      {
+        "turn": 5,
+        "quote": "etched with a symbol ... a circle with a wavy line through it",
+        "assessment": "The key presents a specific examinable mark, although its supposed earlier appearance was not established."
+      },
+      {
+        "turn": 6,
+        "quote": "The floorboards near the window are lighter, newer",
+        "assessment": "Repairs and partly concealed paper invite clear investigative actions."
+      }
+    ],
+    "notes": "Descriptions consistently include usable physical anchors. The larger failure is allowing players to act on them before moving onward."
+  },
+  "smellTest": {
+    "railroadedReported": false,
+    "linearLanguageUsed": false,
+    "declarationPhrases": true,
+    "experientiallyWrong": true,
+    "cappedScore": true,
+    "notes": "CRITICAL ISSUES: No player explicitly reports railroading or uses the listed evaluative terms. However, 'as you enter' at turn 5 and 'as you climb' at turn 6 function as declarations of player action. Ignoring Finn's question while moving everyone upstairs and presenting a supposedly familiar symbol never previously described also undermine the experience. The 8.5 cap applies; the weighted score is already lower."
+  },
+  "agencyViolations": [
+    {
+      "turn": 3,
+      "quote": "the shape feels like it shifts in your memory",
+      "explanation": "Assigns Finn an internal experience beyond the player's established silhouette memory."
+    },
+    {
+      "turn": 4,
+      "quote": "The gulls on the rooftops don't move as you pass.",
+      "explanation": "A minor movement slip: the party is narrated passing scenery before choosing its destination."
+    },
+    {
+      "turn": 5,
+      "quote": "The figure doesn't look up as you enter",
+      "explanation": "Executes entry before the players can respond to the porch warning."
+    },
+    {
+      "turn": 5,
+      "quote": "The same symbol, you realize, that was scrawled on the wall outside.",
+      "explanation": "Assigns recognition of an exterior clue not previously presented."
+    },
+    {
+      "turn": 6,
+      "quote": "The stairs groan as you climb.",
+      "explanation": "Executes the party's ascent rather than leaving the stated investigative intention open for action."
+    },
+    {
+      "turn": 6,
+      "quote": "The key turns with a click",
+      "explanation": "Completes using the key and opening the room without a declared player action."
+    }
+  ],
+  "strengths": [
+    {
+      "turn": 1,
+      "description": "Requests missing character identities, belongings, and motivations.",
+      "why": "Treats opening banter as insufficient setup and obtains useful character material."
+    },
+    {
+      "turn": 3,
+      "description": "Introduces Innsmouth through the bus driver's tension and intrusive coastal smells.",
+      "why": "Builds dread through sensory detail and NPC behavior."
+    },
+    {
+      "turn": 4,
+      "description": "Offers the hotel, waterfront, and surrounding streets.",
+      "why": "Gives players an understandable destination choice."
+    },
+    {
+      "turn": 6,
+      "description": "Places newer floorboards and concealed paper in the room.",
+      "why": "Turns atmosphere into an actionable investigation."
+    }
+  ],
+  "recommendations": [
+    "Track two players explicitly: Johann owns Finn; Velma owns Eleanor. Ask whether later inconsistent naming changes that mapping instead of inventing a third character.",
+    "Finish Eleanor's unanswered locket follow-up before starting the scene; ask only genuinely missing questions and wait for replies.",
+    "Stop at thresholds: let the porch man speak, then wait; present the stairs or locked room before narrating anyone using them.",
+    "Answer Finn's nighttime-noise question through dialogue or an unmistakable evasive reaction before changing scenes.",
+    "Resolve declared tool use concretely: describe what the UV light reveals or fails to reveal on the cobbles and key.",
+    "Keep responses near 2–4 sentences with one immediate interaction, and establish symbols visibly before claiming characters recognize them."
+  ]
+}

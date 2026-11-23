@@ -128,6 +128,7 @@ export class CostTracker {
    * Calculate cost for a model
    */
   private calculateCost(usage: TokenUsage, modelId: string): number {
+    if (modelId === 'codex-local') return 0; // Subscription usage has no per-call API price.
     const pricing = MODEL_PRICING[modelId as keyof typeof MODEL_PRICING];
 
     if (!pricing) {
@@ -152,7 +153,7 @@ export class CostTracker {
     const playerCost = this.calculateAveragePlayerCost();
     const classificationCost = this.calculateCost(
       this.classificationUsage,
-      'google/gemini-2.5-flash',
+      process.env.PULSE_CLASSIFIER_MODEL || 'google/gemini-2.5-flash',
     );
 
     const totalUsage: TokenUsage = {

@@ -4,6 +4,7 @@
  * Detect contradictions, loops, forced segues, stuck moments.
  */
 
+import { resolveModel } from '../ai/models';
 import { telemetry } from '../langfuse';
 import { generateObject } from 'ai';
 import { z } from 'zod';
@@ -208,7 +209,7 @@ If no contradictions found, return an empty array.`;
       async () => {
         return generateObject({
         experimental_telemetry: telemetry('detect-narrative-issues'),
-          model: 'google/gemini-2.5-flash',
+          model: resolveModel('google/gemini-2.5-flash', 'classifier'),
           schema: contradictionsArraySchema,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.2,

@@ -1,0 +1,96 @@
+{
+  "criterion": "character_creation",
+  "labeller": "JudgeCalibration (single transcript-reading labeller)",
+  "method": "Bands assigned from saved turn-006 checkpoint conversationHistory before consulting judgments. Agreement means score lies inclusively within band; not an exact-score oracle. Setup questions are grouped by directed addressee, with subquestions retained in quotes. Turn 0 is pre-game. All sessions have two players and six saved turns.",
+  "sessions": [
+    {
+      "sessionId": "wuI3U41D-bp6QK58DyTBK", "stack": "step-5 gateway", "expectedScoreBand": [4, 6], "uncertain": false,
+      "players": ["Johann", "Velma"], "characters": {"Johann": "Finn Carter", "Velma": "Eleanor Voss"}, "sceneStartTurn": 3,
+      "facts": [
+        {"turn": 0, "quote": "I’ll play Eleanor Voss, a journalist", "observation": "Velma explicitly owns Eleanor, not a third character."},
+        {"turn": 1, "quote": "Eleanor: What did you bring with you on this trip?", "observation": "Velma replies with uncle’s journal, locket and UV light. Johann answers identity, equipment and motivation: 'I'm Finn Carter, freelance photographer chasing a shot.' Narrator also asks 'Anyone else at the table?' with no third player reply."},
+        {"turn": 2, "quote": "Three characters, three secrets", "observation": "Two players have named two characters. Narrator splits Velma/Eleanor into separate characters."},
+        {"turn": 2, "quote": "Eleanor ... What does it feel like when you hold it?", "observation": "No answer to locket sensation before scene starts."},
+        {"turn": 2, "quote": "Finn ... What's the one image you're still chasing?", "observation": "Johann replies 'there was this silhouette in one frame' at turn 2."},
+        {"turn": 2, "quote": "Velma ... What's the last entry?", "observation": "Velma replies 'They’re not just in the water anymore. They’re waking up. And they remember me.' at turn 2, answering journal not locket question."},
+        {"turn": 3, "quote": "you've never shown that photo to anyone, have you?", "observation": "Finn also receives 'when you try to describe it, the shape feels like it shifts in your memory' (a narrator assertion, not a reply). Velma is asked 'Was the smudge from water, or from something else?' and 'does the locket ever feel warmer when you read those words?'; Eleanor is asked 'you've been holding the locket this whole time, haven't you?' and 'What does the engraving actually say?' All appear before the bus scene in the same narrator message, without waiting. Scene: 'The bus groans as it crests the final hill'. Neither turn-3 player answers those specific questions; they react to arriving in town."}
+      ]
+    },
+    {
+      "sessionId": "yfhnFIJPKDF810qASOjW3", "stack": "step-5 gateway", "expectedScoreBand": [9, 10], "uncertain": false,
+      "players": ["Celia", "Marcelo"], "characters": {"Celia": "Althea Reed", "Marcelo": "Leo Vance"}, "sceneStartTurn": 3,
+      "facts": [
+        {"turn": 1, "quote": "Give me your names, your faces, your reasons", "observation": "Both directed identity/belongings/motivation requests answered: 'I'll play Althea Reed' with journal/recorder/mentor theory; 'I'll be Leo Vance' with Leica/sketches/missing great-uncle. Two players, two characters."},
+        {"turn": 2, "quote": "Celia ... What happened to them? ... what's the one superstition ... couldn't explain away?", "observation": "Celia answers mentor’s heart attack, unsent 'It's a pump' letter and Norwegian slow-bell story at turn 2."},
+        {"turn": 2, "quote": "Marcelo ... What was the code, what did it say ... And the Leica", "observation": "Marcelo answers architectural substitution cipher, 'It's built for something else entirely', and camera found at grandmother’s house at turn 2."},
+        {"turn": 3, "quote": "The bus spits you out onto a cracked asphalt apron", "observation": "First scene follows both complete personal replies."}
+      ]
+    },
+    {
+      "sessionId": "uO3Zx7_gdUPxwb53gc3we", "stack": "step-5 gateway", "expectedScoreBand": [4, 6], "uncertain": true,
+      "uncertainty": "Both identities and basic details are established and one rich follow-up is answered; 7 might be defensible under the old broad 'genuine exploration' anchor. Band 4-6 reflects one of two characters missing the required personal reply before play, not a claim that all setup was skipped.",
+      "players": ["Furman", "Johanna"], "characters": {"Furman": "Elias Crane", "Johanna": "Dr. Eleanor Vance"}, "sceneStartTurn": 3,
+      "facts": [
+        {"turn": 1, "quote": "And both of you: what's the real reason neither of you said no to this trip?", "observation": "Spokesperson and Johanna identity, bag and motivation prompts answered by both players. Furman: 'I'll play Elias Crane' with typewriter/flask/estate letter. Johanna: 'I'll play Dr. Eleanor Vance' with maps/magnifying glass/grandfather’s journal."},
+        {"turn": 2, "quote": "To Elias: This uncle—was he a close one ... what did it look like?", "observation": "Furman answers 'Met him twice' and describes shaky handwriting/fish-anchor watermark at turn 2."},
+        {"turn": 2, "quote": "To Eleanor: Your grandfather's journal—when did you last open it ... particular page ... Marsh convergence", "observation": "No Johanna reply at turn 2; only Furman speaks. His answer does not answer Eleanor’s journal questions."},
+        {"turn": 3, "quote": "The bus lets the two of you out", "observation": "Scene starts before Eleanor’s personal reply. Johanna’s later turn-3 warding-symbol investigation is after scene start, not the missing setup answer. Narrator also calls her 'Elenora'."}
+      ]
+    },
+    {
+      "sessionId": "M_aahwcuZI4xtBAqrMtwH", "stack": "step-4 gateway minimal-character", "expectedScoreBand": [1, 2], "uncertain": false,
+      "players": ["Johann", "Velma"], "characters": {"Johann": null, "Velma": "Eleanor Marsh"}, "sceneStartTurn": 1,
+      "facts": [
+        {"turn": 0, "quote": "Eleanor Marsh, local historian and skeptic, here to document the madness", "observation": "One volunteered character for two players; no completed two-character equipment/motivation inventory."},
+        {"turn": 1, "quote": "The road to Innsmouth peels away from the coastal highway", "observation": "Scene starts immediately; narrator addresses Eleanor and real-player Johann. No directed identity/equipment/motivation or personal setup questions before play, hence no setup replies to wait for. 'Where do you want to take this rust-bucket of a story first' is an in-scene action question, not setup."}
+      ], "directedSetupQuestions": []
+    },
+    {
+      "sessionId": "Byu4CNy79RjGsV0R8yl-E", "stack": "step-4 gateway minimal-character", "expectedScoreBand": [1, 2], "uncertain": false,
+      "players": ["Celia", "Marcelo"], "characters": {"Celia": null, "Marcelo": null}, "sceneStartTurn": 1,
+      "facts": [
+        {"turn": 0, "quote": "hoping I’ll spot the inconsistencies before the narrator does?", "observation": "Table banter only; two real players, no named characters."},
+        {"turn": 1, "quote": "The bus wheezes to a halt at the end of a cracked asphalt road", "observation": "First scene begins without any identity/belongings/motivation or personal setup questions/replies. Both players discuss driver, hymn and note after scene begins."}
+      ], "directedSetupQuestions": []
+    },
+    {
+      "sessionId": "eVYHdhgk8lvS-k7LgkTP2", "stack": "step-4 gateway minimal-character", "expectedScoreBand": [1, 2], "uncertain": false,
+      "players": ["Furman", "Johanna"], "characters": {"Furman": "Thomas Vance", "Johanna": "Eleanor Vance"}, "sceneStartTurn": 1,
+      "facts": [
+        {"turn": 0, "quote": "I think I’ll play… a scholar this time", "observation": "Tentative occupation, not completed identity/gear/personal setup."},
+        {"turn": 1, "quote": "The bus wheezes to a halt at the end of a cracked asphalt road", "observation": "No directed setup questions or personal follow-ups; scene first. Two identities volunteered only after this narrator scene: Furman 'I'll be Thomas Vance' and Johanna 'I'm Eleanor Vance, folklorist'."},
+        {"turn": 3, "quote": "Eleanor answers after a beat: \"Just a shovel.", "observation": "Narrator-authored character speech is not a player setup reply."}
+      ], "directedSetupQuestions": []
+    },
+    {
+      "sessionId": "KmdnL8NCL-Zr9G2J5lQ12", "stack": "step-3 Codex", "expectedScoreBand": [9, 10], "uncertain": false,
+      "players": ["Johann", "Velma"], "characters": {"Johann": "Arthur Bell", "Velma": "Clara Whitcomb"}, "sceneStartTurn": 3,
+      "facts": [
+        {"turn": 1, "quote": "what brings you to Innsmouth specifically? ... what belongings does each of you bring?", "observation": "Johann replies 'I’ll play Arthur Bell' with missing brother/letter/camera/film/notebook/flashlight; Velma 'I’ll play Clara Whitcomb' with mother’s song/cylinder/phonograph/notes/torch. Two players, two characters."},
+        {"turn": 2, "quote": "Arthur ... what unresolved quarrel ... disappearance hardest to bear?", "observation": "Johann answers brother accused him of caring more for photographs than people, 'go find someone else to rescue him', before scene."},
+        {"turn": 2, "quote": "Clara ... what memory of your mother ... so unsettling?", "observation": "Velma answers mother stopped same melody, 'If you ever hear the rest, Clara, don’t sing along', before scene."},
+        {"turn": 3, "quote": "At the Innsmouth bus stop, fog beads on Arthur’s camera case", "observation": "Scene starts after both replies, weaving both backstories into window clues."}
+      ]
+    },
+    {
+      "sessionId": "Le5_LF08N56fJo1aGS4wI", "stack": "step-5 Codex", "expectedScoreBand": [9, 10], "uncertain": false,
+      "players": ["Celia", "Marcelo"], "characters": {"Celia": "Ruth Bellamy", "Marcelo": "Silas Venn"}, "sceneStartTurn": 3,
+      "facts": [
+        {"turn": 1, "quote": "who is your character, what belongings have they brought, and what has drawn them to Innsmouth?", "observation": "Celia answers insurance investigator Ruth with camera/notebook/claims; Marcelo mechanic Silas with tools/torch/brother’s letter/ticket. Two players, two characters."},
+        {"turn": 2, "quote": "Celia, what would make Ruth doubt a conclusion she could prove on paper?", "observation": "Celia answers 'someone she trusted contradicted it with a detail they couldn’t possibly know' at turn 2."},
+        {"turn": 2, "quote": "Marcelo, what is Silas afraid his brother might say", "observation": "Marcelo answers 'I needed you to believe I was dead, because you’d have come looking' at turn 2."},
+        {"turn": 3, "quote": "The bus leaves you both in Innsmouth’s market square", "observation": "Scene starts after both personal replies. Later spatial/timeline quality is not part of this label."}
+      ]
+    },
+    {
+      "sessionId": "-6TRhe9i-Xvg2bMJCcaKP", "stack": "step-5 Codex", "expectedScoreBand": [9, 10], "uncertain": false,
+      "players": ["Furman", "Johanna"], "characters": {"Furman": "Thomas Bell", "Johanna": "Clara Whitcomb"}, "sceneStartTurn": 3,
+      "facts": [
+        {"turn": 1, "quote": "please clarify whether those are your characters’ names or your own", "observation": "Spokesperson answers for both: 'Furman and Johanna are our names; we’re playing Thomas Bell and Clara Whitcomb', surveyor and archivist with charts/compass/letter and notebook/pencil/ledger, brother/grandfather motivations."},
+        {"turn": 2, "quote": "Thomas, what unresolved quarrel with your brother makes his disappearance harder to bear?", "observation": "Furman replies 'refused to lend him the fare home' and kept letter unanswered at turn 2."},
+        {"turn": 2, "quote": "Clara, what cherished belief about your grandfather would you be most reluctant to question?", "observation": "Johanna replies belief grandfather supported dockworkers vs settlement at turn 2."},
+        {"turn": 3, "quote": "The bus leaves Thomas and Clara beside Innsmouth’s shuttered ticket office", "observation": "First scene follows both replies; ownership explicitly disambiguated."}
+      ]
+    }
+  ]
+}

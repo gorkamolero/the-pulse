@@ -1,0 +1,299 @@
+{
+  "overall": {
+    "score": 7.14,
+    "summary": "The Narrator builds vivid horror, establishes both characters before play, and rewards investigation with personal clues. However, it executes an intended route for the players, gives equipment limited practical significance, and lets increasingly elaborate reveals crowd out the disagreement about retreating.",
+    "verdict": "good"
+  },
+  "agencyRespect": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The road ahead forks.",
+        "assessment": "Presents alternatives and stops without selecting a destination."
+      },
+      {
+        "turn": 4,
+        "quote": "you slip left ... You emerge into a cramped service yard",
+        "assessment": "Converts Leo's intention to find a back entrance into completed travel and ambiguously moves both characters, although Althea had not committed."
+      },
+      {
+        "turn": 6,
+        "quote": "The workbench lamp flicks on by itself",
+        "assessment": "A responsive environmental consequence is legitimate, but the sequence of new revelations postpones the unresolved retreat-versus-investigation decision."
+      }
+    ],
+    "notes": "The main violation is concentrated in turn 4. The Narrator otherwise avoids authoring player speech or explicit decisions; most character emotions in the transcript come from players themselves."
+  },
+  "equipmentEngagement": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "And the Leica — was it passed down to him",
+        "assessment": "Makes a declared item emotionally significant through an answered personal question."
+      },
+      {
+        "turn": 5,
+        "quote": "the pane behind it is cracked",
+        "assessment": "Provides an optical obstacle relevant to the camera, but does not distinguish what Leo's equipment enables."
+      },
+      {
+        "turn": 6,
+        "quote": "a brass plate engraved with a single word: VANCE",
+        "assessment": "Rewards the family investigation, but overlooks Leo's specifically declared use of the Leica viewfinder; Althea's recorder remains unused by the world."
+      }
+    ],
+    "notes": "Equipment is remembered during setup but seldom changes perception or available actions. The recorder is an especially clear missed opportunity around the patterned tapping."
+  },
+  "npcDialogue": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "An old woman in a black shawl pauses her sweeping to watch you.",
+        "assessment": "Gives a background NPC observable behavior, but no conversational personality."
+      },
+      {
+        "turn": 5,
+        "quote": "two quick strikes, then a pause, then one",
+        "assessment": "Suggests responsive communication from an unseen presence without delivering exposition."
+      }
+    ],
+    "notes": "No spoken NPC conversation occurs, so dialogue quality is largely untested. There are no monologues or ignored direct questions, but insufficient evidence for a high conversational score."
+  },
+  "spatialConsistency": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "To the left ... THE GILMAN HOUSE ... To the right, a narrow lane",
+        "assessment": "Establishes a readable initial layout."
+      },
+      {
+        "turn": 4,
+        "quote": "one basement window gapes half-open ... Nearby, a stairwell",
+        "assessment": "Places multiple interactable features in a coherent service yard."
+      },
+      {
+        "turn": 5,
+        "quote": "Leo's breath fogs the glass",
+        "assessment": "The previously half-open window becomes a glass-obstructed viewpoint without clarifying the opening or sightline."
+      }
+    ],
+    "notes": "The overall geography holds together, with no teleporting NPCs. Collective 'you' obscures Althea's location, and the window's condition and visibility could be clearer."
+  },
+  "characterCreation": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "I'll play Althea Reed.",
+        "assessment": "Celia explicitly owns Althea and supplies occupation, belongings, and both public and private motivations."
+      },
+      {
+        "turn": 1,
+        "quote": "I'll be Leo Vance. Freelance photographer.",
+        "assessment": "Marcelo explicitly owns Leo and supplies equipment and a personal reason for coming."
+      },
+      {
+        "turn": 2,
+        "quote": "The superstition I couldn't explain?",
+        "assessment": "Celia answers the personal follow-up before the story begins, as Marcelo also does for the letters and camera."
+      }
+    ],
+    "notes": "Setup audit: two real players and two explicitly declared characters: Celia owns Althea Reed; Marcelo, also labeled spokesperson, owns Leo Vance. First story scene: turn 3, 'The bus spits you out'; turn 1's sea-air remark is introductory framing, not an enacted scene. Turn 1 to Celia: who she is/room presence, occupation, belongings, and hoped-for discovery. Celia's turn 1 answers 'folklorist and archivist,' journal and recorder, comparative study and mentor's theory; room presence is only indirectly characterized through skepticism. Turn 1 to Marcelo: identity/person behind the grin, business, pockets, and pull toward Innsmouth. Marcelo's turn 1 answers 'Leo Vance,' freelance photographer, Leica and sketches, and 'I want to see what he saw'; personality is conveyed through stubborn disbelief. The closing request to both for 'names, your faces, your reasons' receives names and reasons in turn 1; physical appearance remains unanswered. Turn 2 to Celia/Althea: what happened to her mentor, whether death/disappearance/silence left something unsettled, and one unexplained superstition. Celia's turn 2 answers official heart attack, suspicious final behavior and letter, and the underwater bell with crew transfers. Turn 2 to Marcelo/Leo: the last letter's code, contents, decisive final line, and whether the Leica was inherited or found somewhere personally significant. Marcelo's turn 2 answers architectural substitution cipher, unstable foundations and light-swallowing corners, 'It's built for something else entirely,' and discovery at his grandmother's house with an impossible photograph. All substantive personal follow-ups are answered before turn 3. Later player changes to the mentor's identity do not retroactively invalidate setup."
+  },
+  "invitationArchitecture": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The old woman's broom goes still.",
+        "assessment": "Ends with an unsettled social opening after presenting two routes."
+      },
+      {
+        "turn": 4,
+        "quote": "a single note sounds—metal on stone",
+        "assessment": "Offers an investigable sound alongside a window and stairwell."
+      },
+      {
+        "turn": 6,
+        "quote": "Waiting for you to understand the stage is yours.",
+        "assessment": "Invites response, but frames understanding the staged display as the expected next move."
+      }
+    ],
+    "notes": "Most endings leave room to act. Openings are weakened by long preceding passages and occasional language implying a preferred interpretation."
+  },
+  "atmosphere": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "old church incense left to mold",
+        "assessment": "An unusual smell anchors dread in a concrete sensory detail that players immediately adopt."
+      },
+      {
+        "turn": 4,
+        "quote": "like breathing through a cellar keyhole",
+        "assessment": "Makes the alley feel constricted and physically unpleasant."
+      },
+      {
+        "turn": 5,
+        "quote": "a pair of binoculars facing the window. Facing him.",
+        "assessment": "Turns observation into vulnerability with an economical horror image."
+      }
+    ],
+    "notes": "Consistently strong sensory horror and patient menace. Repeated personification of objects as watching or waiting becomes somewhat predictable."
+  },
+  "curiosityFollowing": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "a cramped service yard",
+        "assessment": "Builds a substantial scene around Leo's invented interest in service alleys instead of insisting on the inn's front entrance."
+      },
+      {
+        "turn": 5,
+        "quote": "a basement that doesn't match the hotel above",
+        "assessment": "Answers the window inspection with architectural anomalies tailored to Leo."
+      },
+      {
+        "turn": 6,
+        "quote": "VANCE",
+        "assessment": "Develops the player's curated-display interpretation into a personal connection, though Althea's wish to withdraw receives less attention."
+      }
+    ],
+    "notes": "Player inventions shape the investigation substantially. Attention favors Leo's curiosity over Althea's competing caution and scholarly tools."
+  },
+  "pacingBreath": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "I need one more thing from each of you.",
+        "assessment": "Allows meaningful setup rather than rushing immediately into plot."
+      },
+      {
+        "turn": 5,
+        "quote": "Facing him.",
+        "assessment": "A short isolated reveal gives the unsettling image room to land."
+      },
+      {
+        "turn": 6,
+        "quote": "The workbench lamp flicks on ... a heavy ledger ... the cracked pane shudders",
+        "assessment": "Stacks several developments while the players are still negotiating whether to leave."
+      }
+    ],
+    "notes": "The session has atmospheric pauses, but routinely exceeds the requested 2–4 sentences per message. Timeout leaves the first investigation unresolved; six turns, including proper setup, are too little evidence to demand a full story ending."
+  },
+  "declarationVsAcknowledgment": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "as you slip left ... You emerge",
+        "assessment": "Declares the execution of an intended approach instead of presenting the alley and waiting for commitment."
+      },
+      {
+        "turn": 5,
+        "quote": "What he sees is a basement",
+        "assessment": "Appropriately resolves an inspection Leo already explicitly performed."
+      },
+      {
+        "turn": 6,
+        "quote": "you can now see a heavy ledger",
+        "assessment": "Acknowledges the established viewing position without declaring that anyone enters or reads the ledger."
+      }
+    ],
+    "notes": "Mixed practice: one substantial plan-to-accomplishment transition, followed by responses that mostly describe consequences of already declared actions."
+  },
+  "branchingPersistence": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "To the left ... an inn ... To the right ... a church",
+        "assessment": "Offers distinct initial destinations."
+      },
+      {
+        "turn": 4,
+        "quote": "a basement window ... Nearby, a stairwell",
+        "assessment": "Accepts an unexpected approach and supplies multiple local options."
+      },
+      {
+        "turn": 6,
+        "quote": "a brass plate ... VANCE",
+        "assessment": "Intensifies the basement's personal lure without closing retreat, but alternative consequences remain untested."
+      }
+    ],
+    "notes": "Players materially redirect the opening toward a back entrance. No forced convergence is demonstrated, although later attention concentrates heavily on a single staged mystery."
+  },
+  "actionableVsAtmospheric": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "THE GILMAN HOUSE ... a church of dark stone",
+        "assessment": "Concrete destinations translate atmosphere into choices."
+      },
+      {
+        "turn": 4,
+        "quote": "a rusted grate ... crates and barrels",
+        "assessment": "Provides obstacles and objects players could inspect, manipulate, or use."
+      },
+      {
+        "turn": 6,
+        "quote": "a heavy ledger ... open to a page",
+        "assessment": "Provides a clear investigative target, though access and legibility through the cracked window remain uncertain."
+      }
+    ],
+    "notes": "Descriptions usually contain usable physical anchors. More precise access constraints would make the window investigation easier to adjudicate."
+  },
+  "smellTest": {
+    "railroadedReported": false,
+    "linearLanguageUsed": false,
+    "declarationPhrases": true,
+    "experientiallyWrong": true,
+    "cappedScore": true,
+    "notes": "CRITICAL ISSUES: Turn 4's 'you slip left' and 'You emerge' function as the prohibited declaration of group movement, although the exact stock phrases are absent. It also feels experientially wrong to move Althea along without resolving her different preference. No player explicitly reports railroading; 'off-script' and 'read the script' describe play and the fictional display, respectively. The 8.5 cap does not change the weighted score: 103.5 / 14.5 = 7.14."
+  },
+  "agencyViolations": [
+    {
+      "turn": 3,
+      "quote": "The bus spits you out onto a cracked asphalt apron",
+      "explanation": "Minor opening-placement assumption: establishes both characters disembarking without an explicit player action. Less serious than overriding an active choice."
+    },
+    {
+      "turn": 4,
+      "quote": "you slip left ... your shoulders brush ... You emerge into a cramped service yard",
+      "explanation": "Clear execution of travel beyond a stated intention, with collective wording that includes an uncommitted character."
+    }
+  ],
+  "strengths": [
+    {
+      "turn": 2,
+      "description": "Personal questions receive substantive answers before play.",
+      "why": "Both characters enter the story with motives, meaningful possessions, and unresolved personal histories."
+    },
+    {
+      "turn": 4,
+      "description": "The back-alley approach becomes a substantial investigative scene.",
+      "why": "An unexpected player contribution changes the location and available interactions."
+    },
+    {
+      "turn": 5,
+      "description": "Binoculars face the investigating character.",
+      "why": "A concrete object reverses the observer's sense of safety without an exposition dump."
+    }
+  ],
+  "recommendations": [
+    "At turn 4, describe the alley entrance and its visible features, then ask who proceeds; establish Althea's position separately.",
+    "When retreat and investigation conflict, hold new major reveals until both players can clarify their immediate actions.",
+    "Give the Leica and recorder practical roles: distinguish viewfinder details, offer recordable tapping, and clarify photographic sightlines.",
+    "Keep narration to 2–4 sentences, with one principal development and a concrete response opening per turn.",
+    "Clarify the window's opening, grate, visibility, and access before offering readable evidence beyond it.",
+    "Introduce a brief, responsive NPC exchange when players seek contact so social investigation becomes a meaningful alternative."
+  ]
+}

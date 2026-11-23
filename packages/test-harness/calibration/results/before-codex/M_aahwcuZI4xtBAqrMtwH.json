@@ -1,0 +1,324 @@
+{
+  "overall": {
+    "score": 5.52,
+    "summary": "Strong sensory horror and concrete investigative hooks kept players engaged, but the Narrator skipped required character creation and repeatedly supplied player actions. Long responses, unsolicited quest exposition, and selective attention to player questions weakened an otherwise inviting opening. The weighted score reflects only six turns; the timeout does not establish that a natural resolution should already have occurred.",
+    "verdict": "acceptable"
+  },
+  "agencyRespect": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "Johann, you've been counting the dead cars in the yards",
+        "assessment": "Clearly invents a player activity before Johann establishes it."
+      },
+      {
+        "turn": 4,
+        "quote": "The old man doesn't move as you cross the threshold.",
+        "assessment": "Moves both characters inside despite Eleanor only stepping out of the car and Johann not declaring entry."
+      },
+      {
+        "turn": 6,
+        "quote": "makes the hair stand on the back of Eleanor's neck",
+        "assessment": "Minor boundary slip: assigns a bodily fear response instead of letting the player determine her reaction."
+      }
+    ],
+    "notes": "Multiple clear action violations outweigh the generally open endings. Player uptake of invented actions afterward does not retroactively authorize them."
+  },
+  "equipmentEngagement": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "Eleanor, your notebook is open in your lap.",
+        "assessment": "Remembers the notebook, but dictates its position rather than responding to its use."
+      },
+      {
+        "turn": 3,
+        "quote": "His head tilts as your headlights wash over him",
+        "assessment": "The vehicle's equipment produces an observable NPC response."
+      },
+      {
+        "turn": 5,
+        "quote": "He slides it across the counter toward Eleanor.",
+        "assessment": "Introduces an interactable object without forcing its acceptance, although this does not compensate for the missing belongings inventory."
+      }
+    ],
+    "notes": "The sedan and notebook receive attention, but no proper inventory is established. Johann's phone never receives a meaningful world response; the box becomes the main equipment-related focus."
+  },
+  "npcDialogue": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "Or just friends of the road, passing through?",
+        "assessment": "A short, guarded question gives the shopkeeper a conversational agenda."
+      },
+      {
+        "turn": 5,
+        "quote": "You're the first to notice the joints.",
+        "assessment": "Directly rewards Eleanor's observation and makes the exchange responsive."
+      },
+      {
+        "turn": 5,
+        "quote": "Ask for the drowned sailor. At the dock. Name's Zadok Allen.",
+        "assessment": "Expands into unsolicited directions, a purchase instruction, and safety advice rather than answering the questions about Dagon and whom he awaits."
+      },
+      {
+        "turn": 6,
+        "quote": "The hotel's two streets up.",
+        "assessment": "More quest directions replace an answer to Johann's direct question about whether the sailor is literally drowned."
+      }
+    ],
+    "notes": "The shopkeeper has a distinctive voice and guarded demeanor, but increasingly functions as a quest dispenser. Both players' questions deserve attention, even if the answers are evasive."
+  },
+  "spatialConsistency": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "To the left, a narrow storefront ... To the right, a sagging church",
+        "assessment": "Establishes useful relative positions for the initial choice."
+      },
+      {
+        "turn": 4,
+        "quote": "as you cross the threshold",
+        "assessment": "The transition is physically plausible but unearned, with Johann's movement particularly unclear."
+      },
+      {
+        "turn": 6,
+        "quote": "The back door, which was closed a moment ago, stands open.",
+        "assessment": "Provides a plausible exit for the disappearance rather than requiring unexplained teleportation, although the door was not previously established."
+      }
+    ],
+    "notes": "The main locations remain understandable. The church changes from being on the right to across the street without enough mapping to establish a contradiction; movement authorization is the larger problem."
+  },
+  "characterCreation": {
+    "score": 1,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "The road to Innsmouth peels away from the coastal highway",
+        "assessment": "Begins the scene instead of asking the explicitly required opening character questions."
+      },
+      {
+        "turn": 1,
+        "quote": "Johann, you've been counting the dead cars",
+        "assessment": "Assigns Johann an activity while his character identity, belongings, and motivation remain unestablished."
+      }
+    ],
+    "notes": "Eleanor supplies a partial identity and motivation in turn 0, but neither character receives the required inventory and personal follow-up. The Narrator mistakes table banter for completed setup and never repairs the omission."
+  },
+  "invitationArchitecture": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "find a place to stay, or look for a living soul to interrogate?",
+        "assessment": "Offers an immediate opening, though phrased as a narrow binary."
+      },
+      {
+        "turn": 2,
+        "quote": "Its door hangs open",
+        "assessment": "The church and occupied store present concrete invitations without requiring an explicit question."
+      },
+      {
+        "turn": 5,
+        "quote": "The shopkeeper waits.",
+        "assessment": "Stops before the players accept the box or select a destination."
+      }
+    ],
+    "notes": "Most responses leave something to investigate or answer. However, lengthy narration and the turn 4 entry override reduce the space available inside those responses."
+  },
+  "atmosphere": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "breathing through a wet wool coat",
+        "assessment": "Makes the coastal damp physically tangible."
+      },
+      {
+        "turn": 3,
+        "quote": "the iris. It's been refreshed recently.",
+        "assessment": "A precise visual irregularity suggests active surveillance and rewards scrutiny."
+      },
+      {
+        "turn": 6,
+        "quote": "The church's rocking chair has stopped.",
+        "assessment": "An established sound's absence creates effective unease."
+      }
+    ],
+    "notes": "Sensory detail consistently evokes decay and dread, and Velma explicitly reports enjoying the game. Repeated unblinking eyes and lantern flickers become predictable, while occasional assigned reactions weaken the otherwise effective mood."
+  },
+  "curiosityFollowing": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "An old man with the widest eyes you've ever seen",
+        "assessment": "The selected store provides an elderly resident, matching Eleanor's investigative interest."
+      },
+      {
+        "turn": 5,
+        "quote": "You're the first to notice the joints.",
+        "assessment": "Accepts and develops a detail introduced by Eleanor."
+      },
+      {
+        "turn": 6,
+        "quote": "The tide doesn't choose",
+        "assessment": "Responds to Eleanor's interpretation, but Johann's question about the drowned sailor remains unanswered."
+      }
+    ],
+    "notes": "Eleanor's interpretations shape the shopkeeper's presentation, but Johann's inquiries about Dagon and the sailor are neglected. The hotel hook repeatedly displaces unresolved conversational interests."
+  },
+  "pacingBreath": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "The fog thickens. The lantern flickers. The rocking continues.",
+        "assessment": "Allows a quiet atmospheric beat before a destination is selected."
+      },
+      {
+        "turn": 5,
+        "quote": "For the Gilman House hotel. Room 7.",
+        "assessment": "Introduces a hotel objective alongside the sailor, rum requirement, and dusk warning in one response."
+      },
+      {
+        "turn": 6,
+        "quote": "when it steadies, the shopkeeper is gone",
+        "assessment": "Adds a dramatic exit before outstanding questions can receive answers."
+      }
+    ],
+    "notes": "There is room for player banter, but every Narrator response exceeds the requested 2–4 sentences, often substantially. The six-turn timeout leaves an opening unresolved; a full conclusion was not necessarily appropriate, but shorter exchanges would have allowed more decisions within the limit."
+  },
+  "declarationVsAcknowledgment": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The sedan lurches forward",
+        "assessment": "Converts the store plan into executed travel. The stated ignition action makes this less severe than the subsequent forced entry, but it violates the requested wait-for-commitment approach."
+      },
+      {
+        "turn": 4,
+        "quote": "as you cross the threshold",
+        "assessment": "Treats intended investigation as completed entry for both characters."
+      },
+      {
+        "turn": 5,
+        "quote": "The box sits warm in the lantern light. The shopkeeper waits.",
+        "assessment": "Correctly leaves acceptance of the offered object unresolved."
+      }
+    ],
+    "notes": "The pattern is mixed: movement plans become accomplished facts, while the box handoff is handled as an invitation. The exact phrases 'The decision is made' and 'You have chosen' do not appear."
+  },
+  "branchingPersistence": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "Two buildings show any sign of life.",
+        "assessment": "Offers distinct investigative targets, and the players' store selection is honored."
+      },
+      {
+        "turn": 5,
+        "quote": "You can stay at the hotel, or you can leave.",
+        "assessment": "Explicitly preserves departure, while the dock contact supplies another possible lead."
+      },
+      {
+        "turn": 6,
+        "quote": "Room 7's at the end of the hall, past the portrait of Obed Marsh",
+        "assessment": "Repeatedly foregrounds the hotel despite the players continuing to question the shopkeeper."
+      }
+    ],
+    "notes": "Several alternatives are offered, but their consequences and continued availability are not tested before timeout. Hotel-directed exposition creates funneling pressure without proving a fully predetermined plot."
+  },
+  "actionableVsAtmospheric": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "a silhouette shifting behind the glass",
+        "assessment": "Provides a visible person to approach, alongside the church's open doorway."
+      },
+      {
+        "turn": 3,
+        "quote": "OPEN. FOR FRIENDS OF THE TIDE.",
+        "assessment": "The sign can be questioned, interpreted, or used as a conversational opening."
+      },
+      {
+        "turn": 5,
+        "quote": "He'll talk if you buy him a bottle of rum",
+        "assessment": "Supplies a concrete way to pursue the dock lead."
+      }
+    ],
+    "notes": "Descriptions usually contain usable objects, people, routes, or clues. The main weakness is crowding several hooks into long passages rather than a shortage of actionable detail."
+  },
+  "smellTest": {
+    "railroadedReported": false,
+    "linearLanguageUsed": false,
+    "declarationPhrases": true,
+    "experientiallyWrong": true,
+    "cappedScore": true,
+    "notes": "Critical issues: equivalent action-declaration language appears in turns 3–4, especially 'as you cross the threshold'; the exact example phrases do not appear. Forced entry and the shopkeeper's departure before answering direct questions undermine experiential agency. No player reports railroading; Velma instead says 'I love this game.' The 8.5 cap does not change the weighted score of 5.52."
+  },
+  "agencyViolations": [
+    {
+      "turn": 1,
+      "quote": "Johann, you've been counting the dead cars in the yards",
+      "explanation": "Invents sustained player behavior without authorization."
+    },
+    {
+      "turn": 1,
+      "quote": "your notebook is open in your lap",
+      "explanation": "Places an item and establishes character posture beyond the supplied setup; a minor action-state assumption."
+    },
+    {
+      "turn": 3,
+      "quote": "As you roll toward the Gilman House Supplies",
+      "explanation": "Executes planned travel instead of setting up the approach and waiting, although the players had clearly selected that destination."
+    },
+    {
+      "turn": 4,
+      "quote": "as you cross the threshold",
+      "explanation": "Moves both characters into the shop without either explicitly entering."
+    },
+    {
+      "turn": 6,
+      "quote": "makes the hair stand on the back of Eleanor's neck",
+      "explanation": "Assigns Eleanor a fear response; less severe than deciding her actions or beliefs."
+    }
+  ],
+  "strengths": [
+    {
+      "turn": 2,
+      "description": "Presents the occupied store and unsettling church as separate investigative invitations.",
+      "why": "Combines mood with an understandable immediate choice."
+    },
+    {
+      "turn": 3,
+      "description": "Highlights fresh paint in the otherwise faded eye symbol.",
+      "why": "Turns atmosphere into a specific clue the players subsequently discuss."
+    },
+    {
+      "turn": 5,
+      "description": "Has the shopkeeper react to Eleanor's observation about his joints.",
+      "why": "Rewards player-created detail and makes her scrutiny matter."
+    },
+    {
+      "turn": 5,
+      "description": "Leaves the offered box on the counter and waits.",
+      "why": "Preserves the players' authority to accept, refuse, or investigate it."
+    }
+  ],
+  "recommendations": [
+    "Complete setup before scene narration: acknowledge Eleanor's supplied identity and motivation, ask for missing belongings and Johann's character details, then ask each a personal follow-up and wait.",
+    "Stop before uncommitted movement: after Eleanor exits the car, describe the shop door and shopkeeper's reaction without moving either character inside.",
+    "Keep responses to 2–4 sentences, usually delivering one reaction, one concrete detail, and an opening.",
+    "Track unanswered questions from both players. Answer or visibly evade the Dagon and drowned-sailor questions before adding hotel directions.",
+    "Introduce one lead at a time and preserve opportunities to question the shopkeeper before he exits.",
+    "Give established equipment practical consequences, such as phone reception or a reaction to note-taking, without inventing how players use their belongings."
+  ]
+}

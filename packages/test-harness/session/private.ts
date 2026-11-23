@@ -5,6 +5,7 @@
  * Bypasses spokesperson for private interactions.
  */
 
+import { resolveModel } from '../ai/models';
 import { telemetry } from '../langfuse';
 import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
@@ -117,7 +118,7 @@ Evaluate:
 
     const result = await generateObject({
         experimental_telemetry: telemetry('classify-private-moment', { model: 'google/gemini-2.5-flash' }),
-      model: 'google/gemini-2.5-flash',
+      model: resolveModel('google/gemini-2.5-flash', 'classifier'),
       schema: privateMomentValidationSchema,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
@@ -215,7 +216,7 @@ Answer with ONLY: true or false`;
 
       const { text } = await generateText({
         experimental_telemetry: telemetry('classify-private-moment', { model: 'google/gemini-2.5-flash' }),
-        model: 'google/gemini-2.5-flash',
+        model: resolveModel('google/gemini-2.5-flash', 'classifier'),
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
       });

@@ -1,0 +1,304 @@
+{
+  "overall": {
+    "score": 7.55,
+    "summary": "Strong character setup and vivid horror reward the players' architectural interests, but unauthorized movement and unclear party positions weaken agency. The weighted score is 7.55/10; NPC conversation and sustained branching remain largely untested in this short, unfinished session.",
+    "verdict": "good"
+  },
+  "agencyRespect": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "But before the tide turns, I need one more thing from each of you.",
+        "assessment": "Waits for personal follow-up answers before beginning play."
+      },
+      {
+        "turn": 4,
+        "quote": "as you slip left ... into the gap between buildings",
+        "assessment": "Clear violation: executes Leo's proposed exploration and implicitly moves Althea without her agreement."
+      },
+      {
+        "turn": 5,
+        "quote": "On the stool, a pair of binoculars facing the window. Facing him.",
+        "assessment": "Describes a discovery following Leo's explicitly enacted inspection, leaving his response open."
+      }
+    ],
+    "notes": "Mostly preserves decisions and speech, with one substantial movement takeover. The bus arrival is a smaller imposed opening action. Environmental reactions after player actions are legitimate consequences."
+  },
+  "equipmentEngagement": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "And the Leica — was it passed down to him",
+        "assessment": "Explores the camera's personal significance during setup."
+      },
+      {
+        "turn": 5,
+        "quote": "What he sees is a basement that doesn't match the hotel above",
+        "assessment": "Provides photographic subject matter, but no specific equipment interaction."
+      },
+      {
+        "turn": 6,
+        "quote": "The workbench lamp flicks on by itself",
+        "assessment": "Answers the viewfinder inspection with a general reveal rather than acknowledging what the Leica shows."
+      }
+    ],
+    "notes": "The camera receives meaningful setup attention, but remains mechanically and perceptually interchangeable with ordinary looking. Althea's recorder and journal receive no substantive engagement during play."
+  },
+  "npcDialogue": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "Two men on a porch go silent mid-conversation",
+        "assessment": "Suggests social hostility and private agendas, but supplies no actual conversation."
+      },
+      {
+        "turn": 5,
+        "quote": "Like a question asked in a language of stone.",
+        "assessment": "Creates a possible nonverbal exchange without an identifiable conversational partner."
+      }
+    ],
+    "notes": "Provisional score: no NPC dialogue occurs, so responsiveness, conversational rhythm, and individual voices cannot be assessed. There are no exposition monologues, but that alone does not establish strong dialogue."
+  },
+  "spatialConsistency": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "You emerge into a cramped service yard",
+        "assessment": "Establishes a usable yard layout, but assumes collective travel."
+      },
+      {
+        "turn": 4,
+        "quote": "one basement window gapes half-open",
+        "assessment": "Makes the window accessible for inspection."
+      },
+      {
+        "turn": 5,
+        "quote": "Leo's breath fogs the glass.",
+        "assessment": "The viewing geometry becomes unclear: the previously half-open window now functions as a closed pane without explanation."
+      }
+    ],
+    "notes": "Local landmarks remain reasonably stable. However, Althea subsequently places herself at the alley mouth, and her relationship to the yard, reef sightline, and Leo is never clarified. Her later movement toward Leo is player-authored, not NPC teleportation."
+  },
+  "characterCreation": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "What does she do, what does she carry, and what's she hoping to find",
+        "assessment": "Explicitly requests identity, belongings, and motivation rather than treating banter as completed setup."
+      },
+      {
+        "turn": 2,
+        "quote": "what's the one superstition she's collected that she couldn't explain away?",
+        "assessment": "Probes Althea's skepticism and personal vulnerability."
+      },
+      {
+        "turn": 2,
+        "quote": "what was the final line that made Leo pack his bags",
+        "assessment": "Deepens Leo's emotional motivation and waits for his answer."
+      }
+    ],
+    "notes": "Excellent compliance with the setup checkpoint. Follow-ups explore relationships and meaningful objects, though they emphasize mystery hooks more than everyday personality."
+  },
+  "invitationArchitecture": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The road ahead forks.",
+        "assessment": "Offers concrete destinations without choosing one."
+      },
+      {
+        "turn": 4,
+        "quote": "a single note sounds—metal on stone",
+        "assessment": "Leaves an investigable sound alongside window and stairwell options."
+      },
+      {
+        "turn": 6,
+        "quote": "Waiting for you to understand the stage is yours.",
+        "assessment": "Stops before a response, although the wording privileges interpreting and accepting the staged invitation."
+      }
+    ],
+    "notes": "Responses generally leave strong openings without interrogating players. Their considerable length reduces space within the exchange and repeatedly violates the requested two-to-four-sentence format."
+  },
+  "atmosphere": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "old church incense left to mold",
+        "assessment": "A distinctive sensory detail that players immediately incorporate into their investigation."
+      },
+      {
+        "turn": 4,
+        "quote": "your shoulders brush salt-crusted clapboard",
+        "assessment": "Creates tactile confinement, despite embedding an unauthorized movement."
+      },
+      {
+        "turn": 5,
+        "quote": "a pair of binoculars facing the window. Facing him.",
+        "assessment": "Turns observation into apparent surveillance through a concrete, unsettling image."
+      }
+    ],
+    "notes": "Consistently evocative sensory horror elicits cautious and emotionally invested player responses. Repeated personification and fragments occasionally overwork otherwise effective images."
+  },
+  "curiosityFollowing": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "a cramped service yard",
+        "assessment": "Builds a substantial location around Leo's unexpected interest in service alleys."
+      },
+      {
+        "turn": 5,
+        "quote": "Brick arches that should carry weight meet at angles that carry nothing",
+        "assessment": "Rewards the architectural investigation with specific anomalies."
+      },
+      {
+        "turn": 6,
+        "quote": "a brass plate engraved with a single word: VANCE",
+        "assessment": "Connects the discovery to Leo's personal mystery."
+      }
+    ],
+    "notes": "Player interests materially determine the opening investigation. Attention increasingly favors Leo; Althea's reef interpretation, rhythmic pattern, and withdrawal proposal receive less direct engagement."
+  },
+  "pacingBreath": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 2,
+        "quote": "I need one more thing from each of you.",
+        "assessment": "Allows character exploration instead of rushing into plot."
+      },
+      {
+        "turn": 5,
+        "quote": "Behind, the tapping in the stairwell changes rhythm",
+        "assessment": "Adds another escalation immediately after the binocular reveal."
+      },
+      {
+        "turn": 6,
+        "quote": "The workbench lamp flicks on by itself",
+        "assessment": "Stacks illumination, surname, ledger, handwriting, and window disturbance into one response."
+      }
+    ],
+    "notes": "The opening breathes, but later turns repeatedly escalate and exceed the sentence limit. Timeout leaves the story unresolved; a six-turn budget limits what resolution was realistic, especially with required setup."
+  },
+  "declarationVsAcknowledgment": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "You emerge into a cramped service yard",
+        "assessment": "Converts a proposed approach into completed travel rather than presenting the alley and waiting for commitment."
+      },
+      {
+        "turn": 5,
+        "quote": "What he sees is a basement",
+        "assessment": "Properly resolves an inspection Leo explicitly performed."
+      },
+      {
+        "turn": 6,
+        "quote": "you can now see a heavy ledger",
+        "assessment": "Reveals environmental information without declaring entry, reading, or acceptance."
+      }
+    ],
+    "notes": "Mixed execution: one major plan-to-accomplishment transition contrasts with later discoveries that appropriately acknowledge enacted actions."
+  },
+  "branchingPersistence": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "To the left, a ramshackle inn ... To the right, a narrow lane",
+        "assessment": "Provides distinct initial destinations."
+      },
+      {
+        "turn": 4,
+        "quote": "one basement window gapes half-open ... Nearby, a stairwell",
+        "assessment": "Accommodates an unlisted approach and offers multiple investigation points."
+      },
+      {
+        "turn": 6,
+        "quote": "a heavy ledger bound in black leather",
+        "assessment": "Strengthens the basement lure while the proposed retreat remains unaddressed."
+      }
+    ],
+    "notes": "Real flexibility is demonstrated by the back-route investigation. Persistent alternatives and different consequences remain untested; the transcript does not establish that retreat was forbidden or that all routes would converge."
+  },
+  "actionableVsAtmospheric": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "An old woman in a black shawl pauses her sweeping",
+        "assessment": "Provides a potential social interaction alongside navigable routes."
+      },
+      {
+        "turn": 4,
+        "quote": "a collapsed delivery wagon ... a rusted grate ... crates and barrels",
+        "assessment": "Supplies tangible objects suitable for inspection, entry attempts, concealment, or distraction."
+      },
+      {
+        "turn": 6,
+        "quote": "open to a page of tight, slanted handwriting",
+        "assessment": "Creates a concrete investigative target, although readability and access through the window remain uncertain."
+      }
+    ],
+    "notes": "Descriptions consistently support player actions. Some architectural language remains impressionistic, and the final clue would benefit from clearer distance and visibility."
+  },
+  "smellTest": {
+    "railroadedReported": false,
+    "linearLanguageUsed": false,
+    "declarationPhrases": true,
+    "experientiallyWrong": true,
+    "cappedScore": true,
+    "notes": "CRITICAL ISSUES: Turn 4's equivalent declaration, 'You emerge into a cramped service yard,' completes proposed movement and implicitly relocates a cautious companion. This creates an experiential agency problem despite subsequent open decision points. The 8.5 cap applies but does not reduce the weighted score. No player explicitly reports railroading; 'off-script' and 'read the script' are not such reports."
+  },
+  "agencyViolations": [
+    {
+      "turn": 3,
+      "quote": "The bus spits you out onto a cracked asphalt apron",
+      "explanation": "Minor opening imposition: establishes arrival by narrating disembarkation without an explicit player action."
+    },
+    {
+      "turn": 4,
+      "quote": "as you slip left ... into the gap between buildings",
+      "explanation": "Executes proposed exploration and implicitly includes Althea despite her preference for securing lodgings."
+    },
+    {
+      "turn": 4,
+      "quote": "You emerge into a cramped service yard",
+      "explanation": "Completes the same unauthorized travel sequence before the players can determine who follows or how they approach."
+    }
+  ],
+  "strengths": [
+    {
+      "turn": 2,
+      "description": "Personal follow-ups explore the mentor, letters, and inherited Leica.",
+      "why": "Establishes emotionally useful character material before play."
+    },
+    {
+      "turn": 4,
+      "description": "The back-route proposal produces a service yard with several investigable features.",
+      "why": "Player curiosity changes the location and available interactions."
+    },
+    {
+      "turn": 5,
+      "description": "Binoculars face the investigating photographer.",
+      "why": "A simple physical arrangement evokes surveillance without explanatory lore."
+    }
+  ],
+  "recommendations": [
+    "Present the alley entrance and its visible hazards, then wait for Leo to enter and Althea to choose whether to follow.",
+    "Keep each response to two to four sentences, concentrating on one discovery and a clear response window.",
+    "Clarify Althea's position and the window's opening, sightline, and distance from the ledger before resolving further inspection.",
+    "Give the Leica a specific perceptual payoff and offer opportunities for Althea's recorder or journal to matter without activating them for her.",
+    "Acknowledge both retreat and investigation proposals through available routes and observable risks; leave the disagreement to the players.",
+    "Introduce an interruptible NPC exchange when appropriate, and prioritize Althea's established hooks alongside Leo's."
+  ]
+}

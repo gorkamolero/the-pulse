@@ -3,6 +3,7 @@
  *
  * Provides retry logic with exponential backoff for AI operations.
  */
+import { CodexLocalError } from '../ai/codex-local';
 
 export interface RetryOptions {
   maxRetries?: number;
@@ -57,6 +58,7 @@ export async function withRetry<T>(
     try {
       return await fn();
     } catch (error) {
+      if (error instanceof CodexLocalError) throw error;
       lastError = error instanceof Error ? error : new Error(String(error));
 
       if (attempt < maxRetries) {
@@ -153,6 +155,7 @@ export async function withModelFallback<T>(
         const result = await fn(currentModelId);
         return { result, modelUsed: currentModelId };
       } catch (error) {
+        if (error instanceof CodexLocalError) throw error;
         const errorMsg = error instanceof Error ? error.message : String(error);
         console.warn(`   ⚠ ${label} failed (${currentModelId}, attempt ${attempt}/${retriesPerModel}): ${errorMsg.slice(0, 80)}`);
 

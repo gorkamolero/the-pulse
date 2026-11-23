@@ -1,0 +1,319 @@
+{
+  "overall": {
+    "score": 6.31,
+    "summary": "Strong sensory horror and memorable props supported engaged player responses, but incomplete setup, long NPC speeches, and missed questions weakened the session. The Narrator generally left major choices to players, yet imposed some reactions and removed an NPC before players could interrupt. Score uses the requested weighted formula.",
+    "verdict": "acceptable"
+  },
+  "agencyRespect": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "Where do you go first?",
+        "assessment": "Leaves the first substantive destination choice to the players."
+      },
+      {
+        "turn": 4,
+        "quote": "even as you both try to pretend you're not hearing it",
+        "assessment": "Clearly assigns both characters an unchosen coping response."
+      },
+      {
+        "turn": 6,
+        "quote": "He doesn't wait for an answer.",
+        "assessment": "The ensuing speech and departure run past multiple opportunities for players to question or interrupt him."
+      }
+    ],
+    "notes": "Major objectives and player dialogue generally remain player-controlled. Boundary slips concern imposed reactions, opening placement, and advancing an extended NPC sequence without yielding."
+  },
+  "equipmentEngagement": {
+    "score": 7,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "what's actually in your bag",
+        "assessment": "Explicitly requests belongings rather than letting equipment remain undefined."
+      },
+      {
+        "turn": 3,
+        "quote": "The letter is warm against Elias's chest.",
+        "assessment": "Makes a player-provided object part of the unsettling sensory world."
+      },
+      {
+        "turn": 6,
+        "quote": "Your grandfather's maps.",
+        "assessment": "The NPC connects Eleanor's equipment to a concrete destination and investigation."
+      }
+    ],
+    "notes": "The letter, journal, and maps become central investigative hooks. The typewriter, flask, and magnifying glass receive little independent world response; equipment engagement is selective rather than comprehensive."
+  },
+  "npcDialogue": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "You got business with Marsh, you'd best say so quick.",
+        "assessment": "Establishes suspicion and urgency through an NPC with an apparent agenda."
+      },
+      {
+        "turn": 5,
+        "quote": "Zadok'd tell you about the gold, the ceremonies, the deals made in the dark.",
+        "assessment": "Substitutes unsolicited historical exposition for Eleanor's request for the family head or property office."
+      },
+      {
+        "turn": 6,
+        "quote": "He doesn't wait for an answer. Instead, he turns to Eleanor",
+        "assessment": "Explicitly prevents conversational exchange and continues another extended speech."
+      }
+    ],
+    "notes": "The fisherman has recognizable mannerisms and secrecy, but functions primarily as a clue dispenser. Eleanor's questions about safe paths and inheritance receive no direct answer or clearly motivated refusal."
+  },
+  "spatialConsistency": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "From the wharf at the end of the road",
+        "assessment": "Establishes an intelligible relationship between arrival point and waterfront."
+      },
+      {
+        "turn": 4,
+        "quote": "At the end of the wharf, a figure sits on an overturned crate.",
+        "assessment": "Locates the NPC and sack clearly within the destination the players selected."
+      },
+      {
+        "turn": 6,
+        "quote": "The sack, left on the crate",
+        "assessment": "The sack was previously at his feet; its relocation onto the crate is asserted without a described transfer."
+      }
+    ],
+    "notes": "Overall geography and NPC movement are coherent. The sack's relocation is a minor continuity lapse; the disappearance into spray is an explicitly narrated horror event, not unexplained teleportation."
+  },
+  "characterCreation": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 1,
+        "quote": "I'll play Elias Crane.",
+        "assessment": "Furman explicitly establishes his character, appearance, belongings, and motivations."
+      },
+      {
+        "turn": 1,
+        "quote": "I'll play Dr. Eleanor Vance, historical archivist.",
+        "assessment": "Johanna explicitly establishes her character, equipment, and reasons for coming."
+      },
+      {
+        "turn": 2,
+        "quote": "when did you last open it before this trip?",
+        "assessment": "A personal follow-up directed to Eleanor remains unanswered when the scene begins."
+      },
+      {
+        "turn": 3,
+        "quote": "The bus lets the two of you out",
+        "assessment": "Begins the first story scene before Eleanor's follow-up answers arrive."
+      }
+    ],
+    "notes": "Setup audit: Two real players and two explicitly declared characters: Furman owns Elias Crane; Johanna owns Dr. Eleanor Vance. SPOKESPERSON Furman is the same player, not a third participant. First story scene: Narrator turn 3. Turn 1, to Furman: character name, appearance, bag contents, and concealed item; answered in Furman's turn 1 with 'Elias Crane,' 'Forty-two, weathered,' flask/typewriter, and 'A letter from my uncle's estate.' The implied reason for Innsmouth is answered by the Marsh property letter. Turn 1, to Johanna: character name, belongings expressing identity, and why Innsmouth; answered in Johanna's turn 1 with 'Dr. Eleanor Vance,' maps/magnifying glass/journal, and 'I need to see what they tried to erase.' Turn 1, to both: real reason neither refused the trip; Furman answers 'Deadlines don't scare me. Silence does'; Johanna answers that she would rather investigate 'with someone watching my back.' Turn 2, to Elias: closeness to uncle; letter appearance; handwriting; paper; anything strange beyond its words. All answered in Furman's turn 2: 'Met him twice,' shaky handwriting, thin cheap paper, and fish-and-anchor watermark, with additional quoted contents. Turn 2, to Eleanor: when she last opened the journal before the trip; a recurring page or phrase; whether 'Marsh convergence' means a place, family, or something else. All three remain unanswered before turn 3. Later in-scene journal references do not complete pre-story setup. The Narrator's thinking claims everyone answered, but the transcript does not support that claim."
+  },
+  "invitationArchitecture": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The town waits.",
+        "assessment": "An effective pause followed by an explicit invitation to choose."
+      },
+      {
+        "turn": 4,
+        "quote": "A pause. The sack at his feet squirms.",
+        "assessment": "Creates an apparent opening, but continues speaking within the same response rather than actually yielding."
+      },
+      {
+        "turn": 6,
+        "quote": "The sack remains on the crate, still moving slightly",
+        "assessment": "Ends with an actionable object, although only after the NPC's lengthy departure sequence closes conversation."
+      }
+    ],
+    "notes": "Responses usually leave something to investigate. Their excessive length and embedded, noninteractive pauses reduce the actual space available to players."
+  },
+  "atmosphere": {
+    "score": 9,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "salt, rot, and something sweeter beneath it, like flowers left too long in a closed room",
+        "assessment": "Specific sensory layering makes the arrival immediately unsettling."
+      },
+      {
+        "turn": 4,
+        "quote": "like something singing a single note just beneath the surface of hearing",
+        "assessment": "Suggests a submerged presence without explaining it."
+      },
+      {
+        "turn": 4,
+        "quote": "that's going to live in my head for three days",
+        "assessment": "Furman's explicit response confirms that the sound imagery landed emotionally."
+      }
+    ],
+    "notes": "Atmosphere is the strongest dimension: vivid smells, decayed textures, ambiguous sounds, and bodily details sustain dread. Occasional prescribed reactions are weaker than the imagery itself."
+  },
+  "curiosityFollowing": {
+    "score": 6,
+    "evidence": [
+      {
+        "turn": 4,
+        "quote": "MARSH & SONS—EST. 1846",
+        "assessment": "Connects the players' waterfront choice and property interest to a discoverable location."
+      },
+      {
+        "turn": 5,
+        "quote": "Aye ... Fast as the moon pulls it.",
+        "assessment": "Directly acknowledges Elias's question about the tide."
+      },
+      {
+        "turn": 6,
+        "quote": "Gold Street's at the edge of town, past the church.",
+        "assessment": "Eventually serves the property investigation, but bypasses Eleanor's more specific questions about safe routes and inheritance."
+      }
+    ],
+    "notes": "Player backstory inventions meaningfully enter the fiction, but the fisherman repeatedly steers toward a prepared lore-and-house lead. The session ends before the Narrator can respond to the player-invented sack contents."
+  },
+  "pacingBreath": {
+    "score": 4,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "The street is empty. The windows are empty.",
+        "assessment": "Provides a strong quiet interval before direct contact."
+      },
+      {
+        "turn": 5,
+        "quote": "They call it the Deep One curse. But Zadok called it the inheritance.",
+        "assessment": "Introduces a major explanatory label very early, reducing mystery before much investigation."
+      },
+      {
+        "turn": 6,
+        "quote": "He steps into the haze of sea spray",
+        "assessment": "One response covers interrogation, property lore, warnings, standing, departure, and disappearance."
+      }
+    ],
+    "notes": "Every Narrator response exceeds the requested 2–4 sentences, often substantially. The six-turn timeout leaves the party only preparing to visit its first major investigative site; this does not require a forced ending, but the long speeches consume interaction opportunities while accelerating revelations."
+  },
+  "declarationVsAcknowledgment": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "Where do you go first?",
+        "assessment": "Requests a decision rather than announcing one."
+      },
+      {
+        "turn": 4,
+        "quote": "he doesn't move as you approach",
+        "assessment": "Assumes the final approach to the NPC, although players had already explicitly begun walking toward the water."
+      }
+    ],
+    "notes": "No explicit finality phrases or forced Gold Street commitment appear. The waterfront transition mostly resolves movement already declared by the spokesperson; approaching the seated stranger adds a minor assumption. The final Gold Street declaration belongs to the players, not the Narrator."
+  },
+  "branchingPersistence": {
+    "score": 5,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "Where do you go first?",
+        "assessment": "The wall marking, street, and wharf offer an initially open investigative field."
+      },
+      {
+        "turn": 6,
+        "quote": "Gold Street's at the edge of town, past the church.",
+        "assessment": "Provides one strongly emphasized next objective without developing comparable alternatives."
+      },
+      {
+        "turn": 6,
+        "quote": "The sack remains on the crate",
+        "assessment": "Preserves an optional local interaction, which Furman chooses before pursuing the house."
+      }
+    ],
+    "notes": "There is flexibility and no demonstrated refusal of a player deviation, but limited evidence of persistent branches with different consequences. The NPC's disappearance removes an available conversational path."
+  },
+  "actionableVsAtmospheric": {
+    "score": 8,
+    "evidence": [
+      {
+        "turn": 3,
+        "quote": "a crude circle with three wavy lines inside",
+        "assessment": "Offers a concrete marking to inspect and compare against the journal."
+      },
+      {
+        "turn": 4,
+        "quote": "a burlap sack writhes faintly",
+        "assessment": "Creates a tangible mystery players can question, avoid, or open."
+      },
+      {
+        "turn": 6,
+        "quote": "Gold Street's at the edge of town, past the church",
+        "assessment": "Gives usable navigation and a recognizable destination."
+      }
+    ],
+    "notes": "Most atmosphere is anchored to inspectable objects, locations, or NPCs. Excessive prose and unanswered practical questions occasionally obscure otherwise clear options."
+  },
+  "smellTest": {
+    "railroadedReported": false,
+    "linearLanguageUsed": false,
+    "declarationPhrases": false,
+    "experientiallyWrong": true,
+    "cappedScore": true,
+    "notes": "CRITICAL ISSUES: Turn 6 asks questions, explicitly declines to wait, and removes the fisherman before players can respond. This creates an experiential agency problem despite leaving the next destination technically optional. The 8.5 cap does not change the lower weighted score. Players express enthusiasm rather than reporting railroading."
+  },
+  "agencyViolations": [
+    {
+      "turn": 3,
+      "quote": "The bus lets the two of you out",
+      "explanation": "Establishes disembarkation without player declaration. This is a minor opening-scene assumption rather than a major forced decision."
+    },
+    {
+      "turn": 3,
+      "quote": "you can feel them anyway—the weight of watching",
+      "explanation": "Assigns a shared subjective impression instead of relying entirely on observable signs."
+    },
+    {
+      "turn": 4,
+      "quote": "even as you both try to pretend you're not hearing it",
+      "explanation": "Writes both characters' unchosen response to the sound."
+    },
+    {
+      "turn": 6,
+      "quote": "He doesn't wait for an answer.",
+      "explanation": "Continues through questions and the NPC's departure without a player response window."
+    }
+  ],
+  "strengths": [
+    {
+      "turn": 2,
+      "description": "Follow-ups target the uncle's letter and grandfather's journal.",
+      "why": "Player-provided belongings become personal investigative material."
+    },
+    {
+      "turn": 3,
+      "description": "The arrival combines oppressive sensory detail with an open destination question.",
+      "why": "Atmosphere supports a choice rather than replacing one."
+    },
+    {
+      "turn": 4,
+      "description": "The submerged single note draws explicit player appreciation.",
+      "why": "The transcript directly demonstrates successful emotional immersion."
+    },
+    {
+      "turn": 6,
+      "description": "The abandoned sack remains available for interaction.",
+      "why": "A physical mystery prompts a player-selected action beyond simply following directions."
+    }
+  ],
+  "recommendations": [
+    "Before starting the scene, obtain Johanna's three unanswered journal follow-ups; preserve the already completed identity, equipment, and motivation answers.",
+    "Keep responses to 2–4 sentences and yield after an NPC asks a meaningful question or makes a provocative claim.",
+    "Answer Eleanor's property-office, safe-path, and inheritance questions directly, or make the fisherman's refusal explicit and playable.",
+    "Replace prescribed reactions with observable cues, allowing players to choose fear, denial, curiosity, or composure.",
+    "Keep the fisherman available until players can respond, and develop alternative leads alongside Gold Street.",
+    "Track prop locations consistently and give the less-used equipment occasional practical relevance."
+  ]
+}
